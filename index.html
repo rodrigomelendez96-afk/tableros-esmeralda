@@ -1,0 +1,1761 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tableros Esmeralda Sub-5</title>
+<meta name="theme-color" content="#B71C1C">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="favicon.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Tableros">
+<style>
+  :root {
+    --rojo: #B71C1C; --rojo-osc: #7F1414; --tinta: #1F2328; --gris: #5B6470;
+    --borde: #D5D9DE; --fondo: #F2F3F5; --card: #FFFFFF;
+    --ok: #1E7B34; --ok-bg: #D9F2E0; --no: #B3261E; --no-bg: #FBE0DE; --na: #4A5562; --na-bg: #E4E7EB;
+    --aviso: #8A5A00; --aviso-bg: #FFF1CC;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--fondo); color: var(--tinta);
+    font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header.top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px; padding-top: max(10px, env(safe-area-inset-top));
+    background: var(--rojo); color: #fff; }
+  .logo { width: 40px; height: 40px; border-radius: 10px; background: #fff; padding: 4px; flex: none; }
+  .logo img { display: block; width: 100%; height: 100%; }
+  .brand { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+  .brand b { display: block; font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .brand small { opacity: .85; font-size: 12px; }
+  .chip { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+  .chip.on { background: #fff; color: var(--ok); }
+  .chip.off { background: #3A0A0A; color: #FFD7D3; }
+  main { max-width: 720px; margin: 0 auto; padding: 16px; padding-bottom: 80px; }
+  .card { background: var(--card); border: 1px solid var(--borde); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+  h2 { margin: 0 0 6px; font-size: 20px; }
+  h3 { margin: 0 0 10px; font-size: 17px; }
+  .muted { color: var(--gris); font-size: 14px; margin: 0 0 10px; }
+  label { display: block; font-weight: 600; font-size: 14px; margin: 12px 0 6px; }
+  input, select, textarea { width: 100%; font: inherit; padding: 12px; border: 1px solid var(--borde);
+    border-radius: 8px; background: #fff; color: var(--tinta); min-height: 48px; }
+  textarea { min-height: 80px; resize: vertical; }
+  input:focus, select:focus, textarea:focus { outline: 3px solid #F3B3AE; border-color: var(--rojo); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+  @media (max-width: 420px) { .row2 { grid-template-columns: 1fr; } }
+  button { font: inherit; font-weight: 700; border-radius: 10px; border: 1px solid var(--borde);
+    background: #fff; color: var(--tinta); padding: 12px 16px; min-height: 48px; cursor: pointer; }
+  button.primary { background: var(--rojo); border-color: var(--rojo); color: #fff; }
+  button.big { width: 100%; font-size: 17px; min-height: 56px; margin-bottom: 12px; }
+  button:disabled { opacity: .5; }
+  .seg { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+  .seg button.sel { background: var(--tinta); border-color: var(--tinta); color: #fff; }
+  .item { border-top: 1px solid var(--borde); padding: 12px 0; }
+  .item:first-child { border-top: 0; }
+  .item p { margin: 0 0 8px; font-size: 15px; }
+  .item .n { color: var(--gris); font-weight: 700; margin-right: 4px; }
+  .sna { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .sna button { min-height: 52px; font-size: 16px; }
+  .sna button.si.sel { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .sna button.no.sel { background: var(--no); border-color: var(--no); color: #fff; }
+  .sna button.na.sel { background: var(--na); border-color: var(--na); color: #fff; }
+  .item.falta p { color: var(--no); font-weight: 600; }
+  .progreso { font-size: 14px; color: var(--gris); margin-bottom: 8px; }
+  .foto { border: 1px dashed var(--borde); border-radius: 10px; padding: 12px; margin-top: 10px; }
+  .foto span { display: block; font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+  .btn-foto { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 16px;
+    border-radius: 10px; background: var(--tinta); color: #fff; font-weight: 700; margin: 0; cursor: pointer; }
+  .foto.falta { border-color: var(--no); }
+  .error { color: var(--no); font-weight: 700; min-height: 1em; }
+  .actions { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; }
+  .sync { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .sync .txt { flex: 1; min-width: 180px; }
+  .sync b { font-size: 22px; }
+  .sync.pend { background: var(--aviso-bg); border-color: #E8C76A; }
+  ul.lista { list-style: none; margin: 0; padding: 0; }
+  ul.lista li { border-top: 1px solid var(--borde); padding: 10px 0; display: flex; gap: 10px; align-items: center; }
+  ul.lista li:first-child { border-top: 0; }
+  ul.lista .info { flex: 1; min-width: 0; }
+  ul.lista .info b { display: block; }
+  ul.lista .info small { color: var(--gris); }
+  ul.lista button { min-height: 40px; padding: 6px 12px; font-size: 14px; }
+  .badge { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+  .badge.no { background: var(--no-bg); color: var(--no); }
+  .badge.ok { background: var(--ok-bg); color: var(--ok); }
+  dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 10px 0 0; font-size: 15px; }
+  dt { color: var(--gris); }
+  dd { margin: 0; font-weight: 600; white-space: pre-line; }
+  #v-scan video { width: 100%; border-radius: 12px; background: #000; aspect-ratio: 3/4; object-fit: cover; }
+  #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--tinta); color: #fff;
+    padding: 12px 18px; border-radius: 10px; font-weight: 600; max-width: calc(100% - 32px); opacity: 0;
+    transition: opacity .25s; pointer-events: none; z-index: 20; }
+  #toast.show { opacity: 1; }
+  a { color: var(--rojo); font-weight: 600; }
+  /* Texto libre siempre en MAYÚSCULAS (el placeholder se ve normal) */
+  #f input:not([type=date]):not([type=file]), #f textarea { text-transform: uppercase; }
+  #f input::placeholder, #f textarea::placeholder { text-transform: none; }
+  .etq img { width: 100%; max-width: 420px; display: block; margin: 0 auto; border: 1px solid var(--borde); border-radius: 8px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .aviso { background: var(--aviso-bg); border: 1px solid #E8C76A; border-radius: 10px; padding: 12px; font-size: 14px; margin-bottom: 14px; }
+  /* Fotos del estado del tablero */
+  .galeria { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; margin: 10px 0; }
+  .galeria:empty { display: none; }
+  .th { position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; border: 1px solid var(--borde); background: var(--na-bg); }
+  .th img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .th a { display: grid; place-items: center; width: 100%; height: 100%; font-size: 13px; text-align: center; }
+  .th button { position: absolute; top: 4px; right: 4px; width: 32px; height: 32px; min-height: 0; padding: 0;
+    border: 0; border-radius: 50%; background: rgba(0,0,0,.65); color: #fff; font-size: 16px; line-height: 1; }
+  .fila-btn { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn-foto.sec { background: #fff; color: var(--tinta); border: 1px solid var(--borde); }
+  .item-foto { margin-top: 10px; }
+  .item-foto .btn-foto { min-height: 42px; font-size: 14px; }
+  .foto .prev { margin-top: 10px; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+  .foto .prev:empty { display: none; }
+  .foto .prev .archivo { grid-column: 1 / -1; }
+  .card.falta { border-color: var(--no); }
+  .opcion { display: block; text-align: left; }
+  .opcion b { display: block; font-size: 18px; }
+  .opcion small { display: block; font-weight: 400; color: var(--gris); margin-top: 4px; font-size: 14px; }
+  label.chk { display: flex; align-items: center; gap: 10px; font-weight: 600; margin: 8px 0 0; }
+  label.chk input { width: 22px; height: 22px; min-height: 0; margin: 0; flex: none; accent-color: var(--rojo); }
+  .adj { display: grid; gap: 8px; margin: 10px 0; }
+  .adj:empty { display: none; }
+  .archivo { display: flex; align-items: center; gap: 10px; border: 1px solid var(--borde); border-radius: 8px; padding: 8px 10px; background: #fff; }
+  .archivo .ico { width: 44px; height: 44px; flex: none; border-radius: 6px; background: var(--na-bg); display: grid; place-items: center; overflow: hidden; font-size: 22px; }
+  .archivo .ico img { width: 100%; height: 100%; object-fit: cover; }
+  .archivo .nom { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+  .archivo .nom small { display: block; color: var(--gris); font-weight: 400; }
+  .archivo button { min-height: 38px; padding: 4px 12px; font-size: 14px; }
+  .alertas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .alertas:empty { display: none; }
+  .badge.warn { background: var(--aviso-bg); color: var(--aviso); }
+  .badge.gris { background: var(--na-bg); color: var(--na); }
+  .resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 6px; }
+  .resumen div { border-radius: 10px; padding: 10px 12px; font-size: 13px; font-weight: 600; line-height: 1.25; }
+  .resumen b { display: block; font-size: 24px; }
+  .r-no { background: var(--no-bg); color: var(--no); }
+  .r-warn { background: var(--aviso-bg); color: var(--aviso); }
+  .r-gris { background: var(--na-bg); color: var(--na); }
+  .may { text-transform: uppercase; }
+  .bloque-fotos { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--borde); }
+  .version { text-align: center; font-size: 12px; margin-top: 18px; }
+  input.fijo { background: var(--fondo); color: var(--tinta); font-weight: 700; border-style: dashed; }
+  /* Cámara propia (abre la cámara también donde el navegador mostraría el explorador de archivos) */
+  #camara { position: fixed; inset: 0; z-index: 50; background: #000; display: flex; flex-direction: column; }
+  #cam-video { flex: 1; width: 100%; min-height: 0; object-fit: contain; background: #000; }
+  #cam-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; transition: opacity .15s; }
+  #cam-flash.on { opacity: .8; transition: none; }
+  .cam-top { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top)); }
+  #cam-cont { color: #fff; font-weight: 700; background: rgba(0,0,0,.5); border-radius: 999px; padding: 4px 12px; }
+  #cam-cont:empty { visibility: hidden; }
+  #cam-girar { width: 48px; height: 48px; min-height: 0; padding: 0; border-radius: 50%; border: 0; background: rgba(0,0,0,.5); font-size: 22px; }
+  .cam-bar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; padding: 18px 16px;
+    padding-bottom: max(18px, env(safe-area-inset-bottom)); background: #000; }
+  .cam-bar button { background: transparent; color: #fff; border: 0; font-size: 17px; }
+  #cam-cancelar { justify-self: start; } #cam-listo { justify-self: end; }
+  #cam-disparar { width: 74px; height: 74px; min-height: 0; padding: 0; border-radius: 50%; background: #fff;
+    border: 5px solid #fff; box-shadow: inset 0 0 0 3px #000; }
+  #cam-disparar:active { transform: scale(.94); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <div class="logo"><img src="logo-globo.png" alt="GEOVITA"></div>
+    <div><b>Tableros Esmeralda Sub-5</b><small>GEOVITA · El Teniente</small></div>
+  </div>
+  <span id="net" class="chip">…</span>
+</header>
+
+<main>
+  <!-- ============ INICIO ============ -->
+  <section id="v-inicio">
+    <div class="card sync" id="box-sync">
+      <div class="txt"><b id="n-pend">0</b> registros pendientes de envío<br>
+        <small class="muted" id="sync-msg">Se envían solos cuando hay señal.</small></div>
+      <button id="btn-sync">Enviar ahora</button>
+    </div>
+    <button class="big primary" id="btn-iniciar">Iniciar actividad</button>
+
+    <div class="card" id="card-alertas" hidden>
+      <h3>Alertas</h3>
+      <div class="resumen" id="al-resumen"></div>
+      <ul class="lista" id="lista-alertas"></ul>
+    </div>
+
+    <div class="card">
+      <h3>Buscar tablero</h3>
+      <input id="buscar" type="search" placeholder="ID, TAG GOM, ubicación o tipo">
+      <ul class="lista" id="lista-tab"></ul>
+      <p class="muted" id="cache-info" style="margin-top:10px"></p>
+    </div>
+    <div class="card" id="card-pend" hidden>
+      <h3>Pendientes en este teléfono</h3>
+      <ul class="lista" id="lista-pend"></ul>
+    </div>
+    <div class="card" id="card-etq" hidden>
+      <h3>Etiquetas QR creadas en este teléfono</h3>
+      <p class="muted">Imprímelas y pégalas en cada tablero.</p>
+      <ul class="lista" id="lista-etq"></ul>
+    </div>
+    <div class="card" id="card-env" hidden>
+      <h3>Enviados recientemente</h3>
+      <ul class="lista" id="lista-env"></ul>
+    </div>
+    <p class="muted version" id="version-app"></p>
+  </section>
+
+  <!-- ============ TIPO DE ACTIVIDAD ============ -->
+  <section id="v-actividad" hidden>
+    <div class="card">
+      <h2>¿Qué actividad vas a realizar?</h2>
+      <p class="muted">Elige el tipo de actividad. Define el checklist y los documentos que se solicitarán.</p>
+    </div>
+    <button class="big opcion" data-act="INSP">
+      <b>Inspección mensual</b>
+      <small>Revisión superficial: condiciones generales, estado visible, señalética, orden y aseo.</small>
+    </button>
+    <button class="big opcion" data-act="MANT">
+      <b>Mantención trimestral</b>
+      <small>Checklist de mantención del tipo de tablero + checklist físico firmado.</small>
+    </button>
+    <button class="big" data-ir="inicio">Cancelar</button>
+  </section>
+
+  <!-- ============ PREGUNTA QR ============ -->
+  <section id="v-pregunta" hidden>
+    <div class="card">
+      <p class="muted" id="preg-act" style="margin-bottom:4px"></p>
+      <h2>¿El tablero tiene código QR?</h2>
+      <p class="muted">Si tiene etiqueta QR, escanéala para cargar su ficha e historial. Si no tiene, se creará su ficha y su etiqueta QR.</p>
+    </div>
+    <button class="big primary" id="btn-tiene-qr">Sí, escanear QR</button>
+    <button class="big" id="btn-sin-qr">No, crear ficha del tablero</button>
+    <button class="big" id="btn-qr-danado">QR dañado: buscar por ID o TAG</button>
+    <button class="big" data-ir="inicio">Cancelar</button>
+  </section>
+
+  <!-- ============ ETIQUETA QR ============ -->
+  <section id="v-etiqueta" hidden>
+    <div class="card etq">
+      <h2 id="etq-titulo">Etiqueta QR</h2>
+      <p class="muted" id="etq-info"></p>
+      <img id="etq-img" alt="Etiqueta QR del tablero">
+    </div>
+    <button class="big primary" id="btn-pdf-desc">Descargar ficha PDF</button>
+    <div class="grid2">
+      <button class="big" id="btn-pdf-comp">Compartir PDF</button>
+      <button class="big" id="btn-etq-descargar">Solo QR (imagen)</button>
+    </div>
+    <button class="big" data-ir="inicio">Listo</button>
+  </section>
+
+  <!-- ============ FICHA ============ -->
+  <section id="v-ficha" hidden>
+    <div class="card">
+      <p class="muted">Ficha del tablero</p>
+      <h2 id="fi-id"></h2>
+      <p class="muted" id="fi-fuente" style="margin:4px 0 0"></p>
+      <div class="alertas" id="fi-alertas"></div>
+      <dl id="fi-dl"></dl>
+    </div>
+    <div class="card" id="fi-uni-card">
+      <h3>Diagrama unilineal</h3>
+      <div id="fi-uni"></div>
+      <button class="big" id="btn-cargar-uni" hidden style="margin:12px 0 0">Cargar diagrama unilineal confeccionado</button>
+    </div>
+    <div class="card" id="fi-hist-card" hidden>
+      <h3>Historial</h3>
+      <ul class="lista" id="fi-hist"></ul>
+    </div>
+    <div class="card" id="fi-fotos-card" hidden>
+      <h3>Fotos del estado del tablero</h3>
+      <p class="muted" id="fi-fotos-info"></p>
+      <div class="galeria" id="fi-fotos"></div>
+      <a id="fi-carpeta" href="#" target="_blank" rel="noopener" hidden>Abrir carpeta del tablero en Drive</a>
+    </div>
+    <div class="grid2">
+      <button class="big primary" data-nueva="INSP">Inspección mensual</button>
+      <button class="big primary" data-nueva="MANT">Mantención trimestral</button>
+    </div>
+    <button class="big" id="btn-fi-qr">Etiqueta QR y ficha PDF</button>
+    <button class="big" data-ir="inicio">Volver al inicio</button>
+  </section>
+
+  <!-- ============ CARGAR UNILINEAL CONFECCIONADO ============ -->
+  <section id="v-unilineal" hidden>
+    <div class="card">
+      <h2>Cargar diagrama unilineal</h2>
+      <p class="muted" id="uni-info"></p>
+      <div class="foto" id="uni-box">
+        <span>Diagrama unilineal confeccionado (imagen o PDF) *</span>
+        <div class="fila-btn">
+          <label class="btn-foto">📷 Tomar foto<input type="file" accept="image/*" capture="environment" hidden class="uni-file"></label>
+          <label class="btn-foto sec">📎 Elegir archivo<input type="file" accept="image/*,application/pdf" hidden class="uni-file"></label>
+        </div>
+        <div class="prev" id="uni-prev"></div>
+      </div>
+      <div class="row2">
+        <div><label for="uniPor">Cargado por *</label><input id="uniPor" class="may"></div>
+        <div><label for="uniCargo">Cargo *</label><select id="uniCargo" class="sel-cargo"></select></div>
+      </div>
+      <label for="uniObs">Observación</label>
+      <textarea id="uniObs" class="may"></textarea>
+      <p class="error" id="uni-error"></p>
+    </div>
+    <button class="big primary" id="btn-uni-guardar">Guardar diagrama</button>
+    <button class="big" id="btn-uni-cancel">Cancelar</button>
+  </section>
+
+  <!-- ============ FORMULARIO ============ -->
+  <section id="v-form" hidden>
+    <form id="f" novalidate autocomplete="off">
+      <div class="card">
+        <h2 id="f-titulo">Registro de tablero</h2>
+        <p class="muted" id="f-id-info"></p>
+        <label>Tipo de actividad *</label>
+        <div class="seg" id="seg-act"></div>
+        <p class="muted" id="act-ayuda" style="margin:8px 0 0"></p>
+      </div>
+
+      <div class="card">
+        <h3>Identificación del tablero</h3>
+        <label>Nivel *</label>
+        <div class="seg" id="seg-nivel"></div>
+        <label for="tipo">Tipo de tablero *</label>
+        <select id="tipo" name="tipoKey"><option value="">Seleccione…</option></select>
+        <label for="ubicacion">Ubicación *</label>
+        <input id="ubicacion" name="ubicacion">
+        <div class="row2">
+          <div><label for="numero">N° de tablero</label><input id="numero" name="numero"></div>
+          <div><label for="contrato">N° de contrato</label><input id="contrato" class="fijo" readonly tabindex="-1"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Última mantención registrada</h3>
+        <p class="muted">Antecedente de la mantención anterior del tablero.</p>
+        <label class="chk"><input type="checkbox" id="sinMantPrev"> No existe registro de mantención anterior</label>
+        <div id="box-mant-prev">
+          <label for="fMantPrev">Fecha de la última mantención *</label>
+          <input type="date" id="fMantPrev" name="fMantPrev">
+          <div class="row2">
+            <div><label for="mantPrev">Mantenedor que la realizó *</label><input id="mantPrev" name="mantPrev"></div>
+            <div><label for="cargoPrev">Cargo *</label><select id="cargoPrev" name="cargoPrev" class="sel-cargo"></select></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 id="ejec-titulo">Mantenedor que realiza esta actividad</h3>
+        <label for="fAct" id="fAct-label">Fecha de la actividad *</label>
+        <input type="date" id="fAct" name="fAct">
+        <div class="row2">
+          <div><label for="realizadoPor">Nombre del mantenedor *</label><input id="realizadoPor" name="realizadoPor"></div>
+          <div><label for="cargo">Cargo *</label><select id="cargo" name="cargo" class="sel-cargo"></select></div>
+        </div>
+      </div>
+
+      <div class="card" id="card-check" hidden>
+        <h3 id="check-titulo"></h3>
+        <div class="progreso" id="check-prog"></div>
+        <div id="check-extra" hidden>
+          <div class="row2">
+            <div><label for="marcaTrafo">Marca del transformador</label><input id="marcaTrafo" name="marcaTrafo"></div>
+            <div><label for="tempTrafo">Temperatura transformador (°C)</label><input id="tempTrafo" name="tempTrafo" inputmode="decimal"></div>
+          </div>
+        </div>
+        <div id="check-items"></div>
+        <label for="obsChecklist">Observaciones del checklist</label>
+        <textarea id="obsChecklist" name="obsChecklist"></textarea>
+      </div>
+
+      <div class="card" id="card-fotos-estado">
+        <h3>Fotos del estado del tablero</h3>
+        <p class="muted">Registra cómo se encontró el tablero: exterior, interior, conexiones y cualquier hallazgo. Hasta 8 fotos.</p>
+        <div class="galeria" id="gal-estado"></div>
+        <div class="fila-btn">
+          <label class="btn-foto">📷 Tomar foto<input type="file" accept="image/*" capture="environment" hidden data-estado></label>
+          <label class="btn-foto sec">🖼 Elegir de la galería<input type="file" accept="image/*" multiple hidden data-estado></label>
+        </div>
+        <p class="muted" id="gal-info" style="margin:10px 0 0"></p>
+      </div>
+
+      <div class="card">
+        <h3>TAG GOM</h3>
+        <label>¿El tablero cuenta con TAG GOM? *</label>
+        <div class="seg" id="seg-tag"></div>
+        <div id="box-tag" hidden>
+          <label for="tagGom">N° TAG GOM *</label>
+          <input id="tagGom" name="tagGom">
+        </div>
+        <div id="lugar-fotos-tag"></div>
+      </div>
+
+      <div class="card" id="card-uni">
+        <h3>Diagrama unilineal</h3>
+        <label>¿El tablero cuenta con diagrama unilineal? *</label>
+        <div class="seg" id="seg-uni"></div>
+        <div id="box-uni-si" hidden>
+          <div class="foto" data-campo="unilineal">
+            <span id="uni-si-label">Imagen o PDF del diagrama unilineal *</span>
+            <div class="fila-btn">
+              <label class="btn-foto">📷 Tomar foto<input type="file" accept="image/*" capture="environment" hidden></label>
+              <label class="btn-foto sec">📎 Elegir archivo<input type="file" accept="image/*,application/pdf" hidden></label>
+            </div>
+            <div class="prev"></div>
+          </div>
+        </div>
+        <div id="box-uni-no" hidden>
+          <div class="aviso" style="margin-top:12px">Al enviar este registro se creará una <b>alerta para confeccionar el diagrama unilineal</b>. Cuando esté hecho, se carga desde la ficha del tablero.</div>
+          <label for="obsUni">Observación *</label>
+          <textarea id="obsUni" name="obsUni" placeholder="Cantidad de circuitos y salidas, protecciones, estado general, etc."></textarea>
+          <label for="alimDesde">Alimentación principal proviene desde *</label>
+          <input id="alimDesde" name="alimDesde" placeholder="Ej.: CDD, TDF o tablero de origen">
+          <div class="row2">
+            <div><label for="bloqueo">Punto de bloqueo *</label><input id="bloqueo" name="bloqueo" placeholder="Dónde se bloquea"></div>
+            <div><label for="calibre">Calibre cable de alimentación *</label><input id="calibre" name="calibre" placeholder="Ej.: 3x6 mm² o 4 AWG"></div>
+          </div>
+          <div id="lugar-fotos-uni"></div>
+          <p class="aviso" id="fotos-uni-arriba" hidden style="margin:14px 0 0">Las fotos del frontis y del interior se adjuntan arriba, en la sección <b>TAG GOM</b>; sirven también para confeccionar el diagrama.</p>
+        </div>
+      </div>
+
+      <!-- Bloque de fotos de identificación: se muestra dentro de TAG GOM o de Diagrama unilineal, según la respuesta -->
+      <div id="bloque-fotos-id" class="bloque-fotos" hidden>
+        <p class="muted" id="fotos-ayuda"></p>
+        <div id="fotos"></div>
+      </div>
+
+      <div class="card" id="card-docs">
+        <h3>Checklist físico</h3>
+        <p class="muted" id="chk-fis-ayuda"></p>
+        <div class="adj" id="adj-checklist"></div>
+        <div class="fila-btn">
+          <label class="btn-foto">📷 Foto del checklist<input type="file" accept="image/*" capture="environment" hidden data-adj="checklist"></label>
+          <label class="btn-foto sec">📎 PDF o imagen<input type="file" accept="image/*,application/pdf" multiple hidden data-adj="checklist"></label>
+        </div>
+        <h3 style="margin-top:22px">Documentación adicional complementaria</h3>
+        <p class="muted">Informes, mediciones, certificados, planillas u otros archivos que complementen la actividad (opcional).</p>
+        <div class="adj" id="adj-doc"></div>
+        <div class="fila-btn">
+          <label class="btn-foto sec">📎 Adjuntar archivos<input type="file" multiple hidden data-adj="doc"></label>
+        </div>
+      </div>
+
+      <div class="card">
+        <label for="obsGeneral" style="margin-top:0">Observación general</label>
+        <textarea id="obsGeneral" name="obsGeneral"></textarea>
+      </div>
+
+      <p class="error" id="f-error"></p>
+      <div class="actions">
+        <button type="button" data-ir="inicio">Cancelar</button>
+        <button type="submit" class="primary">Guardar registro</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ============ ESCÁNER ============ -->
+  <section id="v-scan" hidden>
+    <div class="card">
+      <h3>Apunte al código QR del tablero</h3>
+      <video id="video" playsinline muted></video>
+      <p class="muted" id="scan-msg" style="margin-top:10px"></p>
+    </div>
+    <button class="big" id="btn-scan-cancel">Cancelar</button>
+  </section>
+</main>
+<!-- ============ CÁMARA DE LA APP ============ -->
+<div id="camara" hidden>
+  <video id="cam-video" playsinline muted autoplay></video>
+  <div id="cam-flash"></div>
+  <div class="cam-top">
+    <span id="cam-cont"></span>
+    <button type="button" id="cam-girar" aria-label="Cambiar cámara">🔄</button>
+  </div>
+  <div class="cam-bar">
+    <button type="button" id="cam-cancelar">Cancelar</button>
+    <button type="button" id="cam-disparar" aria-label="Tomar foto"></button>
+    <button type="button" id="cam-listo">Listo</button>
+  </div>
+</div>
+<div id="toast"></div>
+<canvas id="canvas" hidden></canvas>
+
+<script src="lib/jsQR.js" defer></script>
+<script src="lib/qrcode.js"></script>
+<script src="lib/jspdf.umd.min.js" defer></script>
+<script>
+// ===================== CONFIGURACIÓN =====================
+const CONFIG = {
+  // URL de la aplicación web de Apps Script (termina en /exec)
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwdHUJ7ttERO6ZJ2qHJl6wS-mfGYgE48UD_m686Ooy20gl_zCfZ0zLe7S-GTIZ0xfPD/exec',
+  // Debe ser igual a CONFIG.CLAVE en Codigo.gs
+  CLAVE: 'geovita-esm-2026',
+  // N° de contrato fijo (se registra en todas las fichas; no se puede modificar en el formulario)
+  CONTRATO: '4600030339'
+};
+
+// Versión visible al pie de la pantalla de inicio (sirve para confirmar que el teléfono tiene la última)
+const VERSION_APP = 'v11 · 17-10-2026';
+const NIVELES = ['UCL', 'Producción', 'Acarreo', 'SNV'];
+const SEN = 'Cuadro de señalética (riesgo eléctrico, potencia, nivel de tensión, punto de bloqueo, maniobra RCP, logo empresa, personal autorizado, diagrama unilineal, carga de fuego, programa de mantenimiento)';
+const BASE_TD = ['Orden y aseo en el sector', 'Iluminación', 'Número de TAG', 'Soporte o anclaje del tablero en buen estado',
+  'Estructura del tablero en buenas condiciones', 'Tablero cuenta con cinta reflectante al exterior',
+  'Gabinete cuenta con candado y aldaba', 'Limpieza de tablero (paño, brocha y aspirado)', 'Contratapa y cerradura',
+  'Diagrama unilineal', 'Conexiones de tierras a bornes', 'Revisión puestas a tierra de panel eléctrico, contratapa y puerta',
+  SEN, 'Prueba relé fuga a tierra', 'Prueba de interruptor diferencial', 'Estado de breaker principal',
+  'Estado de breakers secundarios', 'Repartidor de barras y acrílico'];
+const FIN_TD = ['Reapriete de conexionado', 'Ordenamiento y estado de cableados', 'Conexiones de neutro a bornes',
+  'Estado de luces piloto', 'Estado parada de emergencia'];
+const conIlum = (txt) => BASE_TD.map(x => x === 'Iluminación' ? txt : x);
+
+const CHECKLISTS = {
+  CDD: { titulo: 'Checklist CDD – Centro de Distribución (RE-4600030339-ELEC-005)', items: [
+    'Orden y aseo interior y exterior del centro', 'Estado y limpieza de gabinete', 'Gabinete cuenta con candado y aldaba',
+    'Revisión puesta a tierra, incluyendo partes metálicas y puertas aterrizadas', 'Malla a tierra con 2 chicotes',
+    'Estado de cableado y ordenamiento de cables', 'Estado de transformador', 'Reapriete de conexionado (torque de tuercas)',
+    'Mediciones de aislación', 'Estado de alumbrado del centro',
+    'Cierre perimetral: malla tipo Acma o similar, puertas y bisagras, altura mín. 1,80 m, color amarillo y cerrado con candado',
+    SEN, 'Kit de emergencia: careta, pértiga de rescate y guantes dieléctricos (goma y cuero) acorde a energía incidente y nivel de tensión',
+    'Revisión de extintor (soporte o caja, vencimiento anual y mensual, logos, manómetro, manguera, seguro, manilla de disparo, cilindro)'] },
+  TDA: { titulo: 'Checklist TDA – Tablero de Alumbrado 400 V (RE-4600030339-ELEC-006)', items: [
+    ...conIlum('Iluminación del sector'), 'Estado de enchufe macho trifásico 5x32A', 'Rotulación de cables',
+    'Revisión de prensa cable', 'Estado de enchufes hembra monofásicos embutidos 3x16A', ...FIN_TD] },
+  TDF400: { titulo: 'Checklist TDF – Tablero de Fuerza 400 V (RE-4600030339-ELEC-007)', items: [
+    ...conIlum('Iluminación de tablero'), 'Estado de enchufes hembra trifásicos embutidos 5x32A', 'Rotulación de cables',
+    'Revisión de prensa cable', 'Estado de enchufes hembra monofásicos embutidos 3x16A', ...FIN_TD] },
+  TDF600: { titulo: 'Checklist TDF – Tablero de Fuerza 600 V (RE-4600030339-ELEC-008)', items: [
+    ...conIlum('Iluminación de tablero'), 'Rotulación de cables', 'Revisión de prensa cable', ...FIN_TD] },
+  GENERAL: { titulo: 'Checklist Mantenimiento Tablero Eléctrico (RE-4600030339-ELEC-010)', items: [
+    'El acceso al tablero está despejado y cercano al área de trabajo', 'Tiene señalización de "Riesgo Eléctrico" en la puerta frontal',
+    'Tiene unidades y simbología apropiadas (voltios, amperios, Hertz, watts, etc.)', 'Tablero eléctrico cuenta con diagrama unilineal',
+    'Tablero cuenta con índice de protección (IP)', 'Posee tapa interior que NO permite el contacto con partes energizadas',
+    'El cuerpo metálico (incluyendo la puerta) está conectado a tierra', 'El diferencial termomagnético funciona correctamente',
+    'Se comprobó el tiempo y la intensidad de disparo de los equipos diferenciales', 'Cuenta con parada de emergencia',
+    'Al interior del tablero, todos los interruptores están identificados', 'La puesta a tierra está instalada correctamente (cobre desnudo)',
+    'Enchufes hembra industriales cuentan con tapa de protección y están firmemente asegurados al chasis'] }
+};
+
+const TIPOS = [
+  { key: 'TDA',    codigo: 'TDA',   nombre: 'TDA – Tablero de Alumbrado',          checklist: 'TDA' },
+  { key: 'TSM',    codigo: 'TSM',   nombre: 'TSM – Tablero de Servicios Menores',  checklist: 'GENERAL' },
+  { key: 'TDFYC',  codigo: 'TDFYC', nombre: 'TDFYC – Tablero de Fuerza y Control', checklist: 'GENERAL' },
+  { key: 'TEJ',    codigo: 'TEJ',   nombre: 'TEJ – Tablero Eléctrico Jumbo',       checklist: 'GENERAL' },
+  { key: 'TDF400', codigo: 'TDF',   nombre: 'TDF 400 V – Tablero de Fuerza 400 V', checklist: 'TDF400' },
+  { key: 'TDF600', codigo: 'TDF',   nombre: 'TDF 600 V – Tablero de Fuerza 600 V', checklist: 'TDF600' },
+  { key: 'TPV',    codigo: 'TPV',   nombre: 'TPV – Tablero Partidor Ventilador',   checklist: 'GENERAL' },
+  { key: 'CDD',    codigo: 'CDD',   nombre: 'CDD – Centro de Distribución',        checklist: 'CDD' }
+];
+
+const CODIGO_NIVEL = { 'UCL': 'UCL', 'Producción': 'PRO', 'Acarreo': 'ACA', 'SNV': 'SNV' };
+
+// Periodicidad: inspección mensual (30 días) y mantención trimestral (90 días).
+// "aviso" = días antes del vencimiento en que el tablero pasa a "por vencer".
+const ACT = {
+  INSP: { nombre: 'Inspección mensual',    dias: 30, aviso: 7 },
+  MANT: { nombre: 'Mantención trimestral', dias: 90, aviso: 15 }
+};
+const CARGOS = ['Maestro eléctrico', 'Supervisor eléctrico', 'Jefe de terreno', 'Jefe de departamento'];
+
+// Checklist de la inspección mensual: revisión superficial / condiciones visibles del tablero
+const INSPECCION = { titulo: 'Inspección mensual – Condiciones generales del tablero', items: [
+  'Acceso al tablero despejado', 'Orden y aseo en el sector', 'Iluminación del sector',
+  'Estructura, soporte y anclaje sin daños visibles', 'Puerta, contratapa y cerradura en buen estado',
+  'Gabinete cuenta con candado y aldaba', 'Identificación / número de TAG visible', 'Cinta reflectante al exterior',
+  'Señalética visible (riesgo eléctrico, nivel de tensión, punto de bloqueo, personal autorizado)',
+  'Diagrama unilineal presente en el tablero', 'Sin cables expuestos, dañados o sueltos a la vista',
+  'Prensa cables y entradas de cables en buen estado', 'Sin presencia de agua, humedad o polvo excesivo',
+  'Enchufes y tapas de protección en buen estado', 'Luces piloto funcionando',
+  'Parada de emergencia visible y sin daños', 'Sin signos de sobrecalentamiento (olor, decoloración o ruido anormal)'] };
+const INSP_CDD = ['Cierre perimetral en buen estado y cerrado con candado', 'Kit de emergencia completo (careta, pértiga, guantes dieléctricos)',
+  'Extintor en su lugar y vigente'];
+const MAX_FOTOS_ESTADO = 8;
+// Logo de la empresa para la ficha PDF y la etiqueta QR (queda guardado para uso sin señal)
+const LOGO = new Image(); LOGO.src = 'logo-geovita.png';
+const logoListo = () => LOGO.complete && LOGO.naturalWidth > 0;
+const FOTOS = [
+  { campo: 'frontis',  corto: 'foto del frontis',  label: 'Foto del frontis (número, identificación y condiciones)' },
+  { campo: 'interior', corto: 'foto del interior', label: 'Foto del interior (circuitos, salidas y protecciones)' }
+];
+
+// ===================== UTILIDADES =====================
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ls = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+function toast(msg, ms = 3000) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), ms);
+}
+function uuid() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16);
+  });
+}
+const appUrl = () => location.origin + location.pathname.replace(/index\.html$/, '');
+const fmtFecha = (iso) => { try { return new Date(iso).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' }); } catch { return iso; } };
+const configurado = () => /^https:\/\/script\.google(usercontent)?\.com\//.test(CONFIG.SCRIPT_URL);
+
+// ===================== ALMACÉN LOCAL (IndexedDB) =====================
+const DB = {
+  _db: null,
+  open() {
+    if (this._db) return Promise.resolve(this._db);
+    return new Promise((res, rej) => {
+      const rq = indexedDB.open('tableros-esm', 1);
+      rq.onupgradeneeded = () => rq.result.createObjectStore('pendientes', { keyPath: 'uuid' });
+      rq.onsuccess = () => { this._db = rq.result; res(this._db); };
+      rq.onerror = () => rej(rq.error);
+    });
+  },
+  async tx(modo, fn) {
+    const db = await this.open();
+    return new Promise((res, rej) => {
+      const t = db.transaction('pendientes', modo); const st = t.objectStore('pendientes');
+      const r = fn(st); t.oncomplete = () => res(r && r.result); t.onerror = () => rej(t.error);
+    });
+  },
+  put(o) { return this.tx('readwrite', st => st.put(o)); },
+  del(k) { return this.tx('readwrite', st => st.delete(k)); },
+  all() { return this.tx('readonly', st => st.getAll()); }
+};
+
+// ===================== ESTADO =====================
+let estado = null;
+let actividadInicial = '';   // la elegida al presionar "Iniciar actividad"
+function estadoNuevo(pre = {}) {
+  return { id: pre.id || '', esAlta: !!pre.esAlta, actividad: pre.actividad || '', nivel: pre.nivel || '', tipoKey: pre.tipoKey || '',
+    resp: {}, tieneTag: pre.tieneTag || '', tieneUni: pre.tieneUni || '', uniPrevio: pre.uniLink || '',
+    fotos: {}, fotosEstado: [], fotosItem: {}, adj: { checklist: [], doc: [] } };
+}
+
+// ===================== NAVEGACIÓN =====================
+const VISTAS = ['inicio', 'actividad', 'pregunta', 'etiqueta', 'ficha', 'unilineal', 'form', 'scan'];
+function ir(vista) {
+  VISTAS.forEach(v => $('#v-' + v).hidden = v !== vista);
+  if (vista === 'inicio' && location.search) history.replaceState(null, '', appUrl());
+  if (vista !== 'scan') cerrarScanner();
+  if (vista === 'inicio') renderInicio();
+  window.scrollTo(0, 0);
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-ir]'); if (b) { e.preventDefault(); ir(b.dataset.ir); }
+});
+
+// ===================== CONEXIÓN =====================
+function renderRed() {
+  const on = navigator.onLine;
+  const n = $('#net'); n.textContent = on ? 'En línea' : 'Sin conexión'; n.className = 'chip ' + (on ? 'on' : 'off');
+}
+window.addEventListener('online', () => { renderRed(); sincronizar(); });
+window.addEventListener('offline', renderRed);
+
+// ===================== VENCIMIENTOS Y ALERTAS =====================
+// Próxima fecha = última + periodo. "Por vencer" cuando faltan "aviso" días o menos.
+function venc(fecha, cfg) {
+  const s = String(fecha || '').slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return { est: 'sin', txt: 'sin registro' };
+  const [a, m, d] = s.split('-').map(Number);
+  const prox = new Date(a, m - 1, d + cfg.dias);
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  const rest = Math.round((prox - hoy) / 864e5);
+  const f = prox.toLocaleDateString('es-CL');
+  if (rest < 0) return { est: 'vencida', rest, prox: f, txt: `vencida hace ${-rest} día(s) (${f})` };
+  if (rest <= cfg.aviso) return { est: 'porvencer', rest, prox: f, txt: rest === 0 ? `vence hoy (${f})` : `vence en ${rest} día(s) (${f})` };
+  return { est: 'vigente', rest, prox: f, txt: `vigente hasta ${f}` };
+}
+const uniPendiente = (t) => /PENDIENTE/i.test((t && t.estadoUni) || '');
+const CLS_VENC = { vencida: 'no', porvencer: 'warn', vigente: 'ok', sin: 'gris' };
+
+function alertasDe(t) {
+  const out = [];
+  const m = venc(t.fMant, ACT.MANT), i = venc(t.fInsp, ACT.INSP);
+  if (m.est === 'vencida') out.push({ k: 'mv', cls: 'no', peso: 3, txt: 'Mantención vencida' });
+  else if (m.est === 'porvencer') out.push({ k: 'mp', cls: 'warn', peso: 2, txt: 'Mantención por vencer' });
+  else if (m.est === 'sin') out.push({ k: 'ms', cls: 'gris', peso: 1, txt: 'Sin mantención registrada' });
+  if (i.est === 'vencida') out.push({ k: 'iv', cls: 'no', peso: 3, txt: 'Inspección vencida' });
+  else if (i.est === 'porvencer') out.push({ k: 'ip', cls: 'warn', peso: 2, txt: 'Inspección por vencer' });
+  if (uniPendiente(t)) out.push({ k: 'u', cls: 'warn', peso: 2, txt: 'Unilineal por confeccionar' });
+  return out;
+}
+
+function renderAlertas() {
+  const lista = ls.get('tableros', { lista: [] }).lista;
+  const n = { mv: 0, mp: 0, ms: 0, iv: 0, ip: 0, u: 0 };
+  const filas = [];
+  lista.forEach(t => {
+    const al = alertasDe(t);
+    al.forEach(a => n[a.k]++);
+    if (al.length) filas.push({ t, al, peso: Math.max(...al.map(a => a.peso)) });
+  });
+  $('#card-alertas').hidden = !filas.length;
+  if (!filas.length) return;
+  const caja = (k, txt, cls) => n[k] ? `<div class="r-${cls}"><b>${n[k]}</b>${txt}</div>` : '';
+  $('#al-resumen').innerHTML = caja('mv', 'Mantenciones vencidas', 'no') + caja('iv', 'Inspecciones vencidas', 'no')
+    + caja('mp', 'Mantenciones por vencer', 'warn') + caja('ip', 'Inspecciones por vencer', 'warn')
+    + caja('u', 'Unilineales por confeccionar', 'warn') + caja('ms', 'Sin mantención registrada', 'gris');
+  filas.sort((a, b) => b.peso - a.peso);
+  $('#lista-alertas').innerHTML = filas.slice(0, 40).map(({ t, al }) => `
+    <li><div class="info"><b>${esc(t.id)}</b><small>${esc(t.tipo)} · ${esc(t.ubicacion)}</small>
+      <div class="alertas">${al.map(a => `<span class="badge ${a.cls}">${esc(a.txt)}</span>`).join('')}</div></div>
+      <button type="button" data-ficha="${esc(t.id)}">Ver</button></li>`).join('');
+}
+
+// ===================== INICIO =====================
+async function renderInicio() {
+  const pend = await DB.all().catch(() => []);
+  $('#n-pend').textContent = pend.length;
+  $('#box-sync').classList.toggle('pend', pend.length > 0);
+  $('#card-pend').hidden = !pend.length;
+  $('#lista-pend').innerHTML = pend.sort((a, b) => a.creado.localeCompare(b.creado)).map(p => `
+    <li><div class="info"><b>${esc(p.registro.id || 'Tablero nuevo')}</b>
+      <small>${esc(p.registro.tipoActividad || 'Inspección')} · ${esc(p.registro.tipoNombre)} · ${esc(p.registro.ubicacion)} · ${esc(fmtFecha(p.creado))}${p.fotos.length ? ' · 📎 ' + p.fotos.length : ''}</small></div>
+      <span class="badge no">Pendiente</span></li>`).join('');
+
+  const etq = ls.get('etiquetas', []);
+  $('#card-etq').hidden = !etq.length;
+  $('#lista-etq').innerHTML = etq.slice(0, 30).map(x => `
+    <li><div class="info"><b>${esc(x.id)}</b><small>${esc(x.tipo)} · ${esc(x.nivel)} · ${esc(x.ubicacion)}${x.cambiado ? ' · ⚠ ID corregido, reimprimir' : ''}</small></div>
+      <button type="button" data-etq="${esc(x.id)}">Ver QR</button></li>`).join('');
+
+  const env = ls.get('enviados', []);
+  $('#card-env').hidden = !env.length;
+  $('#lista-env').innerHTML = env.slice(0, 15).map(x => `
+    <li><div class="info"><b>${esc(x.id)}</b><small>${esc(x.act || x.tipo)} · ${esc(fmtFecha(x.fecha))}${x.nuevo ? ' · nuevo' : ''}</small></div>
+      <button type="button" data-ficha="${esc(x.id)}">Ficha</button></li>`).join('');
+  renderAlertas();
+  renderBusqueda();
+}
+
+function renderBusqueda() {
+  const q = $('#buscar').value.trim().toLowerCase();
+  const cache = ls.get('tableros', { lista: [], actualizado: '' });
+  const lista = cache.lista.filter(t => !q || [t.id, t.tag, t.ubicacion, t.tipo, t.nivel, t.numero].join(' ').toLowerCase().includes(q));
+  $('#lista-tab').innerHTML = lista.slice(0, 30).map(t => {
+    const al = alertasDe(t).filter(a => a.cls !== 'gris').sort((a, b) => b.peso - a.peso)[0];
+    return `
+    <li><div class="info"><b>${esc(t.id)}${t.tag ? ' · TAG ' + esc(t.tag) : ''}</b>
+      <small>${esc(t.tipo)} · ${esc(t.nivel)} · ${esc(t.ubicacion)}</small>
+      ${al ? `<div class="alertas"><span class="badge ${al.cls}">${esc(al.txt)}</span></div>` : ''}</div>
+      <span class="badge ${t.itemsNo ? 'no' : 'ok'}">${t.itemsNo ? t.itemsNo + ' NO' : 'OK'}</span>
+      <button type="button" data-ficha="${esc(t.id)}">Ver</button></li>`;
+  }).join('')
+    || `<li><div class="info"><small>${cache.lista.length ? 'Sin resultados.' : 'Aún no hay tableros descargados en este teléfono.'}</small></div></li>`;
+  $('#cache-info').textContent = cache.actualizado
+    ? `${cache.lista.length} tableros · lista actualizada ${fmtFecha(cache.actualizado)}` : '';
+}
+$('#buscar').addEventListener('input', renderBusqueda);
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-ficha]'); if (b) abrirFicha(b.dataset.ficha);
+  const q = e.target.closest('[data-etq]'); if (q) mostrarEtiqueta(q.dataset.etq);
+});
+
+// ===================== FICHA =====================
+let fichaActual = null;
+const buscarCache = (id) => ls.get('tableros', { lista: [] }).lista.find(x => x.id.toUpperCase() === id.toUpperCase());
+const tipoPorNombre = (n) => TIPOS.find(x => x.nombre === n);
+
+// Si el teléfono no tiene datos del tablero, deduce nivel/tipo desde el ID (TIPO-NIVEL-XXXX)
+function datosDesdeId(id) {
+  const [cod, niv] = id.split('-');
+  const nivel = Object.keys(CODIGO_NIVEL).find(k => CODIGO_NIVEL[k] === niv) || '';
+  const tipos = TIPOS.filter(t => t.codigo === cod);
+  return { id, nivel, tipoKey: tipos.length === 1 ? tipos[0].key : '' };
+}
+
+function abrirFicha(id) {
+  id = String(id || '').trim().toUpperCase();
+  if (!id) return;
+  const alias = ls.get('alias', {}); if (alias[id]) id = alias[id];
+  history.replaceState(null, '', appUrl() + '?id=' + encodeURIComponent(id));
+  const t = buscarCache(id);
+  renderFicha(id, t);
+  $('#fi-fuente').textContent = t ? 'Datos guardados en este teléfono.' : '';
+  ir('ficha');
+  consultarFicha(id, t);
+}
+
+function renderFicha(id, t) {
+  fichaActual = t ? Object.assign({ tipoKey: (tipoPorNombre(t.tipo) || {}).key || '' }, t) : datosDesdeId(id);
+  $('#fi-id').textContent = id;
+  const filas = t ? [
+    ['Tipo', t.tipo], ['Nivel', t.nivel], ['Ubicación', t.ubicacion], ['N° tablero', t.numero], ['TAG GOM', t.tag || 'Sin TAG'],
+    ['N° contrato', t.contrato || CONFIG.CONTRATO], ['Fecha de alta', t.alta],
+    ['Últ. mantención', t.fMant], ['Mantenedor', [t.mantenedor, t.cargoMant].filter(Boolean).join(' · ')], ['Últ. inspección', t.fInsp],
+    ['Ítems NO', t.itemsNo ? t.itemsNo + '\n' + (t.detalleNo || '') : '0'],
+    ['Último registro', [t.ultAct, t.ultimo, t.por].filter(Boolean).join(' · ') + (t.pendiente ? ' (pendiente de envío)' : '')]
+  ] : [['Estado', 'Sin datos de este tablero en el teléfono. Puedes registrar la actividad igual; quedará asociada a su ID.']];
+  $('#fi-dl').innerHTML = filas.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v || '—')}</dd>`).join('');
+  $('#fi-alertas').innerHTML = t ? badgesVenc(t) : '';
+  renderUniFicha(t);
+  const hist = (t && t.hist) || [];
+  $('#fi-hist-card').hidden = !hist.length;
+  $('#fi-hist').innerHTML = hist.map(h => `
+    <li><div class="info"><b>${esc(h.fecha)}${h.fotos ? ' · 📷 ' + h.fotos : ''}</b><small>${esc([h.tipo, h.por].filter(Boolean).join(' · '))}${h.detalleNo ? ' · ' + esc(h.detalleNo.split('\n').join(' / ')) : ''}</small></div>
+      <span class="badge ${h.itemsNo ? 'no' : 'ok'}">${h.itemsNo ? h.itemsNo + ' NO' : 'OK'}</span></li>`).join('');
+  // Si se llegó desde "Iniciar actividad", se destaca la actividad elegida
+  document.querySelectorAll('#v-ficha [data-nueva]').forEach(b =>
+    b.classList.toggle('primary', !actividadInicial || b.dataset.nueva === actividadInicial));
+  renderFotosFicha(id, t);
+}
+
+function badgesVenc(t) {
+  const m = venc(t.fMant, ACT.MANT), i = venc(t.fInsp, ACT.INSP);
+  return `<span class="badge ${CLS_VENC[m.est]}">Mantención: ${esc(m.txt)}</span>`
+    + `<span class="badge ${CLS_VENC[i.est]}">Inspección: ${esc(i.txt)}</span>`
+    + (uniPendiente(t) ? '<span class="badge warn">Unilineal por confeccionar</span>' : '');
+}
+
+function renderUniFicha(t) {
+  $('#fi-uni-card').hidden = !t;
+  if (!t) return;
+  let html;
+  if (uniPendiente(t)) {
+    html = `<div class="aviso" style="margin:0 0 4px"><b>Pendiente de confección.</b> El tablero no cuenta con diagrama unilineal; se registraron los datos para levantarlo.</div>
+      <dl>${[['Alimentación desde', t.alim], ['Punto de bloqueo', t.bloqueo], ['Calibre cable', t.calibre], ['Observación', t.obsUni]]
+        .map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v || '—')}</dd>`).join('')}</dl>`;
+  } else if (t.uniLink) {
+    html = `<p style="margin:0">✔ Cuenta con diagrama unilineal${t.fUni ? ' · confeccionado el ' + esc(t.fUni) : ''}.</p>
+      <p style="margin:8px 0 0"><a href="${esc(t.uniLink)}" target="_blank" rel="noopener">Ver diagrama unilineal</a></p>`;
+  } else if (/REALIZADO|CUENTA/i.test(t.estadoUni || '')) {
+    html = `<p style="margin:0">✔ Cuenta con diagrama unilineal${t.pendiente ? ' (cargado en este teléfono, pendiente de envío)' : ''}.</p>`;
+  } else {
+    html = '<p class="muted" style="margin:0">Sin información del diagrama unilineal. Se registra en la próxima inspección o mantención.</p>';
+  }
+  $('#fi-uni').innerHTML = html;
+  const btn = $('#btn-cargar-uni');
+  btn.hidden = false;
+  btn.classList.toggle('primary', uniPendiente(t));
+  btn.textContent = uniPendiente(t) ? 'Cargar diagrama unilineal confeccionado' : (t.uniLink ? 'Reemplazar diagrama unilineal' : 'Cargar diagrama unilineal');
+}
+
+// Fotos del estado en la ficha: primero las aún no enviadas desde este teléfono; si no hay, las del sistema (Drive)
+let urlsFicha = [];
+const idDrive = (u) => (String(u).match(/\/d\/([\w-]{10,})/) || String(u).match(/[?&]id=([\w-]{10,})/) || [])[1] || '';
+async function renderFotosFicha(id, t) {
+  urlsFicha.forEach(u => URL.revokeObjectURL(u)); urlsFicha = [];
+  const card = $('#fi-fotos-card'), gal = $('#fi-fotos'), info = $('#fi-fotos-info'), carp = $('#fi-carpeta');
+  const pend = (await DB.all().catch(() => [])).filter(p => p.registro.id === id && p.fotos.some(f => esFotoEstado(f.campo)))
+    .sort((a, b) => b.creado.localeCompare(a.creado));
+  if (!fichaActual || fichaActual.id !== id) return;
+  carp.hidden = !(t && t.carpeta); if (t && t.carpeta) carp.href = t.carpeta;
+  if (pend.length) {
+    const fs = pend[0].fotos.filter(f => esFotoEstado(f.campo));
+    gal.innerHTML = fs.map(f => { const u = URL.createObjectURL(f.blob); urlsFicha.push(u); return `<div class="th"><img src="${u}" alt=""></div>`; }).join('');
+    info.textContent = `${fs.length} foto(s) del ${fmtFecha(pend[0].creado)} · pendientes de envío.`;
+    card.hidden = false; return;
+  }
+  const fotos = (t && t.fotos) || [];
+  gal.innerHTML = fotos.map((u, i) => {
+    const fid = idDrive(u);
+    return `<div class="th"><a href="${esc(u)}" target="_blank" rel="noopener">${fid
+      ? `<img data-drive="${i + 1}" loading="lazy" src="https://drive.google.com/thumbnail?id=${esc(fid)}&sz=w400" alt="Foto ${i + 1}">`
+      : 'Foto ' + (i + 1)}</a></div>`;
+  }).join('');
+  info.textContent = fotos.length ? `${fotos.length} foto(s) de la última actividad con fotos${t.fFotos ? ' (' + t.fFotos + ')' : ''}. Toca una foto para abrirla.` : '';
+  card.hidden = !fotos.length && !(t && t.carpeta);
+}
+// Si la miniatura de Drive no carga (sin señal o sin permiso), queda el enlace de texto
+document.addEventListener('error', (e) => {
+  const img = e.target; if (img.tagName === 'IMG' && img.dataset.drive) img.replaceWith('Foto ' + img.dataset.drive);
+}, true);
+
+// Con señal: trae del sistema la información respaldada del tablero (siempre la más reciente)
+async function consultarFicha(id, local) {
+  if (!configurado()) return;
+  const fuente = $('#fi-fuente');
+  fuente.textContent = 'Consultando el sistema…';
+  try {
+    const r = await fetchT(CONFIG.SCRIPT_URL + '?accion=ficha&clave=' + encodeURIComponent(CONFIG.CLAVE) + '&id=' + encodeURIComponent(id), {}, 12000);
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'error');
+    if (!fichaActual || fichaActual.id !== id || $('#v-ficha').hidden) return;
+    const pendientes = (await DB.all().catch(() => [])).some(p => p.registro.id === id);
+    if (j.tablero && !pendientes) {
+      const cache = ls.get('tableros', { lista: [], actualizado: '' });
+      cache.lista = [j.tablero].concat(cache.lista.filter(x => x.id !== j.tablero.id));
+      ls.set('tableros', cache);
+      renderFicha(id, j.tablero);
+      fuente.textContent = 'Información del sistema · consultada ' + fmtFecha(j.consultado);
+    } else if (j.tablero) {
+      fuente.textContent = 'Incluye registros de este teléfono aún no enviados.';
+    } else {
+      fuente.textContent = local ? 'Aún no está en el sistema: se enviará desde este teléfono.' : 'Este ID no está registrado en el sistema.';
+    }
+  } catch (err) {
+    if (!$('#v-ficha').hidden) fuente.textContent = local
+      ? 'Sin señal: se muestra la última información guardada en este teléfono.'
+      : 'Sin señal y sin datos guardados de este tablero.';
+  }
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-nueva]'); if (!b) return;
+  const t = fichaActual || {};
+  abrirFormulario({ actividad: b.dataset.nueva, id: t.id, nivel: t.nivel, tipoKey: t.tipoKey, ubicacion: t.ubicacion,
+    numero: t.numero, tieneTag: t.tag ? 'Sí' : (t.tipo ? 'No' : ''), tagGom: t.tag, ficha: t.tipo ? t : null });
+});
+$('#btn-fi-qr').addEventListener('click', () => fichaActual && mostrarEtiqueta(fichaActual.id));
+
+// ===================== ARCHIVOS ADJUNTOS (fotos, PDF y otros) =====================
+const MAX_ARCHIVO = 15 * 1024 * 1024, MAX_REGISTRO = 35 * 1024 * 1024;
+const tamTxt = (b) => b < 1048576 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1048576).toFixed(1) + ' MB';
+const esImagen = (file) => /^image\/(jpeg|png|webp|gif|bmp|heic|heif)/i.test(file.type) || (!file.type && /\.(jpe?g|png|webp|heic)$/i.test(file.name));
+const liberar = (a) => { if (a && a.url) URL.revokeObjectURL(a.url); };
+
+// Las imágenes se comprimen (suben rápido con poca señal); PDF y otros archivos van tal cual
+async function prepararArchivo(file, opt = {}) {
+  if (esImagen(file)) {
+    try {
+      const blob = await comprimir(file, opt.max || 1600, opt.q || 0.75);
+      return { blob, mime: 'image/jpeg', nombre: (file.name || 'foto').replace(/\.\w+$/, '') + '.jpg', url: URL.createObjectURL(blob), img: true };
+    } catch (err) { if (file.size > MAX_ARCHIVO) throw new Error(`No se pudo leer la imagen ${file.name}.`); }
+  }
+  if (file.size > MAX_ARCHIVO) throw new Error(`${file.name} pesa ${tamTxt(file.size)}; el máximo por archivo es 15 MB.`);
+  return { blob: file, mime: file.type || 'application/octet-stream', nombre: file.name || 'archivo', img: false };
+}
+const archivoHTML = (a, clave) => `<div class="archivo"><div class="ico">${a.img ? `<img src="${a.url}" alt="">` : (/pdf/.test(a.mime) ? '📄' : '📎')}</div>
+  <div class="nom">${esc(a.nombre)}<small>${tamTxt(a.blob.size)}</small></div>
+  <button type="button" data-quitar="${clave}">Quitar</button></div>`;
+const thumb = (url, clave) => `<div class="th"><img src="${url}" alt=""><button type="button" data-quitar="${clave}" aria-label="Quitar foto">✕</button></div>`;
+const esFotoEstado = (campo) => /^(estado|hallazgo)_/.test(campo);
+
+// Reduce la foto (por defecto máx. 1600 px y JPEG 75 %) para que suba rápido con poca señal
+async function comprimir(file, max = 1600, q = 0.75) {
+  let src;
+  try { src = await createImageBitmap(file, { imageOrientation: 'from-image' }); }
+  catch {
+    src = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('formato no soportado')); i.src = URL.createObjectURL(file); });
+  }
+  const w = src.width, h = src.height, k = Math.min(1, max / Math.max(w, h));
+  const c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
+  c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+  return new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(new Error('no se pudo comprimir')), 'image/jpeg', q));
+}
+
+// ===================== FORMULARIO =====================
+function botonesSeg(cont, opciones, actual, onSel) {
+  cont.innerHTML = opciones.map(o => {
+    const [val, txt] = Array.isArray(o) ? o : [o, o];
+    return `<button type="button" class="${val === actual ? 'sel' : ''}" data-v="${esc(val)}">${esc(txt)}</button>`;
+  }).join('');
+  cont.onclick = (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    cont.querySelectorAll('button').forEach(x => x.classList.toggle('sel', x === b));
+    onSel(b.dataset.v);
+  };
+}
+document.querySelectorAll('.sel-cargo').forEach(s => {
+  s.innerHTML = '<option value="">Seleccione…</option>' + CARGOS.map(c => `<option>${esc(c)}</option>`).join('');
+});
+// Acepta valores guardados en MAYÚSCULAS o con otro formato
+function fijarCargo(sel, val) {
+  const c = CARGOS.find(x => x.toLocaleUpperCase('es-CL') === String(val || '').toLocaleUpperCase('es-CL'));
+  sel.value = c || '';
+}
+
+function abrirFormulario(pre = {}) {
+  const t = pre.ficha || null;
+  if (t) {
+    pre.tieneUni = uniPendiente(t) ? 'No' : (t.uniLink || /REALIZADO|CUENTA/i.test(t.estadoUni || '') ? 'Sí' : '');
+    pre.uniLink = t.uniLink || (/REALIZADO|CUENTA/i.test(t.estadoUni || '') ? 'local' : '');
+  }
+  if (estado) liberarTodo();
+  estado = estadoNuevo(pre);
+  const f = $('#f'); f.reset();
+  ['ubicacion', 'numero', 'tagGom'].forEach(k => { if (pre[k]) f.elements[k].value = pre[k]; });
+  $('#contrato').value = CONFIG.CONTRATO;
+  // Última mantención registrada (antecedente)
+  if (t && t.fMant) {
+    f.elements.fMantPrev.value = String(t.fMant).slice(0, 10);
+    f.elements.mantPrev.value = t.mantenedor || '';
+    fijarCargo(f.elements.cargoPrev, t.cargoMant);
+  }
+  $('#sinMantPrev').checked = false; $('#box-mant-prev').hidden = false;
+  if (t && uniPendiente(t)) ['obsUni', 'alimDesde', 'bloqueo', 'calibre'].forEach((k, n) => f.elements[k].value = t[['obsUni', 'alim', 'bloqueo', 'calibre'][n]] || '');
+  // Mantenedor que realiza la actividad (se recuerda en el teléfono)
+  f.elements.realizadoPor.value = ls.get('realizadoPor', '');
+  fijarCargo(f.elements.cargo, ls.get('cargo', ''));
+  f.elements.fAct.value = new Date().toLocaleDateString('en-CA');
+  f.elements.fAct.max = f.elements.fMantPrev.max = new Date().toLocaleDateString('en-CA');
+  $('#f-id-info').textContent = estado.esAlta
+    ? 'Al guardar se crea la ficha del tablero, su ID y su etiqueta QR para pegar en él (funciona sin señal).'
+    : 'Los datos de identificación vienen de la ficha del tablero.';
+  botonesSeg($('#seg-act'), [['INSP', ACT.INSP.nombre], ['MANT', ACT.MANT.nombre]], estado.actividad, v => {
+    estado.actividad = v; estado.resp = {};
+    Object.values(estado.fotosItem).forEach(liberar); estado.fotosItem = {};
+    renderActividad();
+  });
+  botonesSeg($('#seg-nivel'), NIVELES, estado.nivel, v => estado.nivel = v);
+  $('#tipo').value = estado.tipoKey;
+  botonesSeg($('#seg-tag'), ['Sí', 'No'], estado.tieneTag, v => { estado.tieneTag = v; renderTag(); });
+  botonesSeg($('#seg-uni'), ['Sí', 'No'], estado.tieneUni, v => { estado.tieneUni = v; renderUni(); });
+  $('#fotos').innerHTML = FOTOS.map(ft => `
+    <div class="foto" data-campo="${ft.campo}"><span></span>
+      <div class="fila-btn">
+        <label class="btn-foto">📷 Tomar foto<input type="file" accept="image/*" capture="environment" hidden></label>
+        <label class="btn-foto sec">🖼 Galería<input type="file" accept="image/*" hidden></label>
+      </div><div class="prev"></div></div>`).join('');
+  document.querySelectorAll('#f .foto .prev').forEach(p => p.innerHTML = '');
+  document.querySelectorAll('#f .falta').forEach(x => x.classList.remove('falta'));
+  renderActividad(); renderTag(); renderUni(); renderGaleria(); renderAdj('checklist'); renderAdj('doc');
+  $('#f-error').textContent = '';
+  ir('form');
+}
+
+function renderActividad() {
+  const a = estado.actividad, mant = a === 'MANT';
+  $('#f-titulo').textContent = (estado.esAlta ? 'Nueva ficha' : estado.id) + (a ? ' · ' + ACT[a].nombre : '');
+  $('#act-ayuda').textContent = !a ? 'Elige si es una inspección mensual o una mantención trimestral.'
+    : mant ? 'Mantención trimestral: checklist completo del tipo de tablero y checklist físico firmado (obligatorio). Actualiza la fecha de mantención y también cuenta como inspección del mes.'
+    : 'Inspección mensual: revisión superficial de condiciones generales del tablero. Actualiza la fecha de inspección.';
+  $('#ejec-titulo').textContent = 'Mantenedor que realiza esta ' + (mant ? 'mantención' : a ? 'inspección' : 'actividad');
+  $('#fAct-label').textContent = 'Fecha de la ' + (mant ? 'mantención' : a ? 'inspección' : 'actividad') + ' *';
+  $('#chk-fis-ayuda').textContent = mant
+    ? 'Obligatorio: foto(s) o PDF del checklist físico firmado, correspondiente a lo declarado en el checklist digital.'
+    : 'Opcional en la inspección: foto(s) o PDF del checklist físico, si se completó.';
+  renderChecklist();
+}
+
+// Convierte a MAYÚSCULAS mientras se escribe, sin mover el cursor
+document.addEventListener('input', (e) => {
+  const el = e.target;
+  if (!el.closest('#f') && !el.classList.contains('may')) return;
+  if (!(el.matches('textarea') || (el.matches('input') && !['date', 'file', 'radio', 'checkbox'].includes(el.type)))) return;
+  if (e.isComposing) return;
+  const may = el.value.toLocaleUpperCase('es-CL');
+  if (may === el.value) return;
+  const a = el.selectionStart, b = el.selectionEnd;
+  el.value = may;
+  try { el.setSelectionRange(a, b); } catch {}
+});
+document.addEventListener('compositionend', (e) => e.target.dispatchEvent(new Event('input', { bubbles: true })));
+
+$('#sinMantPrev').addEventListener('change', (e) => { $('#box-mant-prev').hidden = e.target.checked; });
+
+$('#tipo').innerHTML += TIPOS.map(t => `<option value="${t.key}">${esc(t.nombre)}</option>`).join('');
+$('#tipo').addEventListener('change', (e) => {
+  estado.tipoKey = e.target.value; estado.resp = {};
+  Object.values(estado.fotosItem).forEach(liberar); estado.fotosItem = {};
+  renderChecklist();
+});
+
+function checklistActual() {
+  const t = TIPOS.find(x => x.key === estado.tipoKey);
+  if (!t || !estado.actividad) return null;
+  if (estado.actividad === 'INSP') {
+    return t.key === 'CDD' ? { titulo: INSPECCION.titulo + ' (CDD)', items: INSPECCION.items.concat(INSP_CDD) } : INSPECCION;
+  }
+  return CHECKLISTS[t.checklist];
+}
+
+function renderChecklist() {
+  const cl = checklistActual();
+  $('#card-check').hidden = !cl;
+  if (!cl) return;
+  $('#check-titulo').textContent = cl.titulo;
+  $('#check-extra').hidden = !(estado.tipoKey === 'CDD' && estado.actividad === 'MANT');
+  $('#check-items').innerHTML = cl.items.map((it, i) => `
+    <div class="item" data-i="${i}"><p><span class="n">${i + 1}.</span>${esc(it)}</p>
+      <div class="sna">
+        <button type="button" class="si" data-r="Sí">Sí</button>
+        <button type="button" class="no" data-r="No">No</button>
+        <button type="button" class="na" data-r="N/A">N/A</button>
+      </div>
+      <div class="item-foto" hidden>
+        <label class="btn-foto sec">📷 Foto del hallazgo (opcional)<input type="file" accept="image/*" capture="environment" hidden data-item="${i}"></label>
+        <div class="galeria"></div>
+      </div></div>`).join('');
+  renderProgreso();
+}
+$('#check-items').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-r]'); if (!b) return;
+  const item = b.closest('.item'); const i = +item.dataset.i;
+  estado.resp[i] = b.dataset.r;
+  item.querySelectorAll('.sna button').forEach(x => x.classList.toggle('sel', x === b));
+  item.classList.remove('falta');
+  item.querySelector('.item-foto').hidden = b.dataset.r !== 'No';
+  if (b.dataset.r !== 'No' && estado.fotosItem[i]) quitarFoto('i:' + i);
+  renderProgreso();
+});
+function renderProgreso() {
+  const cl = checklistActual(); if (!cl) return;
+  const n = Object.keys(estado.resp).length, no = Object.values(estado.resp).filter(v => v === 'No').length;
+  $('#check-prog').textContent = `${n} de ${cl.items.length} respondidos` + (no ? ` · ${no} en NO` : '');
+}
+
+// TAG GOM, diagrama unilineal y fotos de identificación
+const fotosIdVisibles = () => estado.tieneUni === 'No' || estado.tieneTag === 'No';
+const fotosIdObligatorias = () => estado.tieneUni === 'No' || (estado.esAlta && estado.tieneTag === 'No');
+function renderTag() {
+  $('#box-tag').hidden = estado.tieneTag !== 'Sí';
+  renderFotosId();
+}
+function renderUni() {
+  $('#box-uni-si').hidden = estado.tieneUni !== 'Sí';
+  $('#box-uni-no').hidden = estado.tieneUni !== 'No';
+  $('#uni-si-label').textContent = estado.uniPrevio
+    ? 'Ya hay un diagrama registrado para este tablero. Adjunta uno nuevo solo si cambió (opcional).'
+    : 'Imagen o PDF del diagrama unilineal *';
+  renderFotosId();
+}
+function renderFotosId() {
+  const bloque = $('#bloque-fotos-id');
+  bloque.hidden = !fotosIdVisibles();
+  // Sin TAG GOM → las fotos van bajo TAG GOM; si solo falta el unilineal → bajo Diagrama unilineal
+  const destino = estado.tieneTag === 'No' ? $('#lugar-fotos-tag') : $('#lugar-fotos-uni');
+  if (bloque.parentElement !== destino) destino.appendChild(bloque);
+  $('#fotos-uni-arriba').hidden = !(estado.tieneTag === 'No' && estado.tieneUni === 'No');
+  const ob = fotosIdObligatorias();
+  $('#fotos-ayuda').textContent = estado.tieneTag === 'No' && estado.tieneUni === 'No'
+    ? 'Sin TAG GOM y sin diagrama unilineal: fotografía el frontis (número, identificación y condiciones) y el interior (cantidad de circuitos, salidas y protecciones).'
+    : estado.tieneUni === 'No'
+    ? 'Sin diagrama unilineal: fotografía el frontis (número, identificación y condiciones) y el interior (cantidad de circuitos, salidas y protecciones) para poder confeccionar el diagrama.'
+    : ob ? 'Sin TAG GOM: adjunta las fotos para identificar el tablero.'
+    : 'Sin TAG GOM: las fotos ya quedaron en la ficha. Adjunta nuevas solo si el tablero cambió.';
+  FOTOS.forEach(ft => {
+    const s = document.querySelector(`#fotos .foto[data-campo="${ft.campo}"] span`);
+    if (s) s.textContent = ft.label + (ob ? ' *' : ' (opcional)');
+  });
+}
+
+// Fotos de identificación y diagrama unilineal (un archivo por campo)
+$('#f').addEventListener('change', async (e) => {
+  const input = e.target, box = input.closest('.foto[data-campo]');
+  if (!box || !input.files || !input.files[0]) return;
+  const file = input.files[0]; input.value = '';
+  const campo = box.dataset.campo;
+  try {
+    const a = await prepararArchivo(file, campo === 'unilineal' ? { max: 2400, q: 0.85 } : {});
+    liberar(estado.fotos[campo]);
+    estado.fotos[campo] = a;
+    box.querySelector('.prev').innerHTML = a.img ? thumb(a.url, 'c:' + campo) : archivoHTML(a, 'c:' + campo);
+    box.classList.remove('falta');
+  } catch (err) { toast(err.message, 5000); }
+});
+
+// ---------- Fotos del estado del tablero y de hallazgos ----------
+function renderGaleria() {
+  $('#gal-estado').innerHTML = estado.fotosEstado.map((f, k) => thumb(f.url, 'e:' + k)).join('');
+  const n = estado.fotosEstado.length;
+  $('#gal-info').textContent = n ? `${n} de ${MAX_FOTOS_ESTADO} fotos.` : 'Aún no hay fotos.';
+  document.querySelectorAll('#card-fotos-estado input[data-estado]').forEach(x => x.disabled = n >= MAX_FOTOS_ESTADO);
+}
+function renderFotoItem(i) {
+  const box = document.querySelector(`#check-items .item[data-i="${i}"] .item-foto .galeria`);
+  if (box) box.innerHTML = estado.fotosItem[i] ? thumb(estado.fotosItem[i].url, 'i:' + i) : '';
+}
+function renderAdj(tipo) {
+  $('#adj-' + tipo).innerHTML = estado.adj[tipo].map((a, k) => archivoHTML(a, `a:${tipo}:${k}`)).join('');
+  if (tipo === 'checklist' && estado.adj.checklist.length) $('#card-docs').classList.remove('falta');
+}
+function quitarFoto(clave) {
+  const [t, k, k2] = clave.split(':');
+  if (t === 'e') { liberar(estado.fotosEstado.splice(+k, 1)[0]); renderGaleria(); }
+  if (t === 'i' && estado.fotosItem[k]) { liberar(estado.fotosItem[k]); delete estado.fotosItem[k]; renderFotoItem(k); }
+  if (t === 'c' && estado.fotos[k]) {
+    liberar(estado.fotos[k]); delete estado.fotos[k];
+    const p = document.querySelector(`#f .foto[data-campo="${k}"] .prev`); if (p) p.innerHTML = '';
+  }
+  if (t === 'a') { liberar(estado.adj[k].splice(+k2, 1)[0]); renderAdj(k); }
+}
+function liberarTodo() {
+  Object.values(estado.fotos).concat(estado.fotosEstado, Object.values(estado.fotosItem), estado.adj.checklist, estado.adj.doc).forEach(liberar);
+}
+$('#f').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-quitar]'); if (b) { e.preventDefault(); quitarFoto(b.dataset.quitar); }
+});
+$('#card-fotos-estado').addEventListener('change', async (e) => {
+  const input = e.target; if (!input.files || !input.files.length) return;
+  const archivos = Array.from(input.files); input.value = '';
+  const libres = MAX_FOTOS_ESTADO - estado.fotosEstado.length;
+  if (archivos.length > libres) toast(`Máximo ${MAX_FOTOS_ESTADO} fotos: se agregan solo ${Math.max(0, libres)}.`);
+  for (const file of archivos.slice(0, Math.max(0, libres))) {
+    try { const blob = await comprimir(file, 1280, 0.72); estado.fotosEstado.push({ blob, url: URL.createObjectURL(blob) }); }
+    catch (err) { toast('No se pudo leer la foto: ' + err.message); }
+  }
+  renderGaleria();
+});
+$('#check-items').addEventListener('change', async (e) => {
+  const input = e.target; if (!input.dataset.item || !input.files || !input.files[0]) return;
+  const i = input.dataset.item, file = input.files[0]; input.value = '';
+  try {
+    const blob = await comprimir(file, 1280, 0.72);
+    liberar(estado.fotosItem[i]);
+    estado.fotosItem[i] = { blob, url: URL.createObjectURL(blob) };
+    renderFotoItem(i);
+  } catch (err) { toast('No se pudo leer la foto: ' + err.message); }
+});
+// Checklist físico y documentación adicional
+$('#card-docs').addEventListener('change', async (e) => {
+  const input = e.target, tipo = input.dataset.adj; if (!tipo || !input.files || !input.files.length) return;
+  const archivos = Array.from(input.files); input.value = '';
+  const lim = tipo === 'checklist' ? 10 : 15;
+  for (const file of archivos) {
+    if (estado.adj[tipo].length >= lim) { toast(`Máximo ${lim} archivos en esta sección.`); break; }
+    try { estado.adj[tipo].push(await prepararArchivo(file, { max: 2200, q: 0.82 })); }   // más resolución: el texto debe leerse
+    catch (err) { toast(err.message, 5000); }
+  }
+  renderAdj(tipo);
+});
+
+$('#f').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const f = e.target;
+  const v = (k) => {
+    const el = f.elements[k], val = (el.value || '').trim();
+    return el.type === 'date' ? val : val.toLocaleUpperCase('es-CL');
+  };
+  const faltan = [];
+  if (!estado.actividad) faltan.push('tipo de actividad');
+  if (!estado.nivel) faltan.push('nivel');
+  if (!estado.tipoKey) faltan.push('tipo de tablero');
+  if (!v('ubicacion')) faltan.push('ubicación');
+  const sinPrev = $('#sinMantPrev').checked;
+  if (!sinPrev) [['fMantPrev', 'fecha de la última mantención'], ['mantPrev', 'mantenedor de la última mantención'], ['cargoPrev', 'cargo del mantenedor anterior']]
+    .forEach(([k, n]) => { if (!v(k)) faltan.push(n); });
+  [['fAct', 'fecha de la actividad'], ['realizadoPor', 'nombre del mantenedor'], ['cargo', 'cargo del mantenedor']]
+    .forEach(([k, n]) => { if (!v(k)) faltan.push(n); });
+  const cl = checklistActual();
+  if (cl) {
+    let sinResp = 0;
+    document.querySelectorAll('#check-items .item').forEach(it => {
+      const falta = !estado.resp[+it.dataset.i]; it.classList.toggle('falta', falta); if (falta) sinResp++;
+    });
+    if (sinResp) faltan.push(`${sinResp} ítems del checklist`);
+  }
+  if (!estado.tieneTag) faltan.push('¿cuenta con TAG GOM?');
+  if (estado.tieneTag === 'Sí' && !v('tagGom')) faltan.push('N° TAG GOM');
+  if (!estado.tieneUni) faltan.push('¿cuenta con diagrama unilineal?');
+  if (estado.tieneUni === 'Sí' && !estado.uniPrevio && !estado.fotos.unilineal) {
+    document.querySelector('.foto[data-campo="unilineal"]').classList.add('falta'); faltan.push('imagen o PDF del diagrama unilineal');
+  }
+  if (estado.tieneUni === 'No') [['obsUni', 'observación del unilineal'], ['alimDesde', 'alimentación principal'], ['bloqueo', 'punto de bloqueo'], ['calibre', 'calibre del cable de alimentación']]
+    .forEach(([k, n]) => { if (!v(k)) faltan.push(n); });
+  if (fotosIdObligatorias()) {
+    FOTOS.forEach(ft => {
+      const ok = !!estado.fotos[ft.campo];
+      document.querySelector(`#fotos .foto[data-campo="${ft.campo}"]`).classList.toggle('falta', !ok);
+      if (!ok) faltan.push(ft.corto);
+    });
+  }
+  if (estado.actividad === 'MANT' && !estado.adj.checklist.length) { $('#card-docs').classList.add('falta'); faltan.push('checklist físico'); }
+  if (faltan.length) { $('#f-error').textContent = 'Falta completar: ' + faltan.join(', ') + '.'; return; }
+  if (!sinPrev && v('fMantPrev') > v('fAct')) {
+    $('#f-error').textContent = 'La fecha de la última mantención no puede ser posterior a la fecha de esta actividad.'; return;
+  }
+  if (!estado.fotosEstado.length && !confirm('No adjuntaste fotos del estado del tablero. ¿Guardar el registro sin fotos?')) {
+    $('#card-fotos-estado').scrollIntoView({ behavior: 'smooth', block: 'center' }); return;
+  }
+
+  // Ficha nueva con un TAG GOM que este teléfono ya conoce → evitar duplicar el tablero
+  if (estado.esAlta && estado.tieneTag === 'Sí') {
+    const ya = ls.get('tableros', { lista: [] }).lista.find(t => t.tag && t.tag.toUpperCase() === v('tagGom'));
+    if (ya && confirm(`El TAG GOM ${v('tagGom')} ya pertenece al tablero ${ya.id}. ¿Registrar esta actividad en ese tablero en vez de crear uno nuevo?`)) {
+      estado.esAlta = false; estado.id = ya.id;
+    }
+  }
+  const tipo = TIPOS.find(x => x.key === estado.tipoKey);
+  const mant = estado.actividad === 'MANT', sinUni = estado.tieneUni === 'No';
+  const idTablero = estado.esAlta ? generarIdLocal(tipo.codigo, CODIGO_NIVEL[estado.nivel]) : estado.id;
+  const registro = {
+    uuid: uuid(), creadoEn: new Date().toISOString(), appUrl: appUrl(), esAlta: estado.esAlta,
+    tipoRegistro: 'actividad', actividad: estado.actividad, tipoActividad: ACT[estado.actividad].nombre,
+    id: idTablero, nivel: estado.nivel, tipoKey: tipo.key, tipoNombre: tipo.nombre, tipoCodigo: tipo.codigo,
+    ubicacion: v('ubicacion'), numero: v('numero'), contrato: CONFIG.CONTRATO,
+    // Antecedente: última mantención registrada
+    sinMantPrev: sinPrev, fMantPrev: sinPrev ? '' : v('fMantPrev'), mantPrev: sinPrev ? '' : v('mantPrev'), cargoPrev: sinPrev ? '' : v('cargoPrev'),
+    // Quién realiza esta actividad
+    fActividad: v('fAct'), realizadoPor: v('realizadoPor'), cargo: v('cargo'),
+    // Estado del tablero después de esta actividad
+    fMant: mant ? v('fAct') : (sinPrev ? '' : v('fMantPrev')),
+    mantenedor: mant ? v('realizadoPor') : (sinPrev ? '' : v('mantPrev')),
+    cargoMant: mant ? v('cargo') : (sinPrev ? '' : v('cargoPrev')),
+    fInsp: v('fAct'),
+    checklistTitulo: cl.titulo, items: cl.items.map((item, i) => ({ item, resp: estado.resp[i] })),
+    marcaTrafo: !$('#check-extra').hidden ? v('marcaTrafo') : '', tempTrafo: !$('#check-extra').hidden ? v('tempTrafo') : '',
+    obsChecklist: v('obsChecklist'), tieneTag: estado.tieneTag, tagGom: estado.tieneTag === 'Sí' ? v('tagGom') : '',
+    tieneUni: estado.tieneUni, obsUni: sinUni ? v('obsUni') : '', alimDesde: sinUni ? v('alimDesde') : '',
+    bloqueo: sinUni ? v('bloqueo') : '', calibre: sinUni ? v('calibre') : '',
+    obsGeneral: v('obsGeneral')
+  };
+  const fotos = [];
+  const agregar = (campo, a) => fotos.push({ campo, mime: a.mime || 'image/jpeg', blob: a.blob, nombre: a.nombre || campo + '.jpg' });
+  if (fotosIdVisibles()) FOTOS.forEach(ft => { if (estado.fotos[ft.campo]) agregar(ft.campo, estado.fotos[ft.campo]); });
+  if (estado.tieneUni === 'Sí' && estado.fotos.unilineal) agregar('unilineal', estado.fotos.unilineal);
+  estado.fotosEstado.forEach((a, k) => agregar('estado_' + (k + 1), a));
+  Object.keys(estado.fotosItem).filter(i => estado.resp[i] === 'No').sort((a, b) => a - b)
+    .forEach(i => agregar('hallazgo_item' + String(+i + 1).padStart(2, '0'), estado.fotosItem[i]));
+  estado.adj.checklist.forEach((a, k) => agregar('checklist_' + (k + 1), a));
+  estado.adj.doc.forEach((a, k) => agregar('doc_' + (k + 1), a));
+  registro.nFotosEstado = fotos.filter(x => esFotoEstado(x.campo)).length;
+  registro.nChecklist = estado.adj.checklist.length; registro.nDocs = estado.adj.doc.length;
+  const total = fotos.reduce((s, x) => s + x.blob.size, 0);
+  if (total > MAX_REGISTRO) {
+    $('#f-error').textContent = `Los archivos adjuntos suman ${tamTxt(total)}; el máximo por registro es 35 MB. Quita o reduce algún documento.`; return;
+  }
+
+  try {
+    await DB.put({ uuid: registro.uuid, creado: registro.creadoEn, registro, fotos });
+  } catch (err) {
+    $('#f-error').textContent = 'No se pudo guardar en el teléfono: ' + err.message; return;
+  }
+  ls.set('realizadoPor', registro.realizadoPor); ls.set('cargo', registro.cargo);
+  liberarTodo();
+  actualizarCacheLocal(registro);
+  actividadInicial = '';
+  if (registro.esAlta) {
+    const etq = ls.get('etiquetas', []);
+    etq.unshift({ id: registro.id, tipo: tipo.codigo + (tipo.key.startsWith('TDF') ? ' ' + tipo.key.slice(3) + ' V' : ''),
+      nivel: registro.nivel, ubicacion: registro.ubicacion, fecha: registro.creadoEn });
+    ls.set('etiquetas', etq.slice(0, 200));
+    toast('Ficha creada: ' + registro.id + ' ✔', 4000);
+    mostrarEtiqueta(registro.id);
+  } else {
+    toast(registro.tipoActividad + ' guardada en el teléfono ✔');
+    ir('inicio');
+  }
+  sincronizar();
+});
+
+// ===================== CARGAR DIAGRAMA UNILINEAL CONFECCIONADO =====================
+let uniArchivo = null;
+$('#btn-cargar-uni').addEventListener('click', () => {
+  const t = fichaActual; if (!t) return;
+  liberar(uniArchivo); uniArchivo = null;
+  $('#uni-prev').innerHTML = ''; $('#uni-error').textContent = ''; $('#uniObs').value = '';
+  $('#uni-info').textContent = `${t.id} · ${t.tipo || ''} · ${t.ubicacion || ''}. El diagrama queda en la ficha del tablero`
+    + (uniPendiente(t) ? ' y se cierra la alerta de confección.' : '.');
+  $('#uniPor').value = ls.get('realizadoPor', '');
+  fijarCargo($('#uniCargo'), ls.get('cargo', ''));
+  ir('unilineal');
+});
+$('#uni-box').addEventListener('change', async (e) => {
+  const input = e.target; if (!input.files || !input.files[0]) return;
+  const file = input.files[0]; input.value = '';
+  try {
+    liberar(uniArchivo); uniArchivo = await prepararArchivo(file, { max: 2400, q: 0.85 });
+    $('#uni-prev').innerHTML = archivoHTML(uniArchivo, 'u'); $('#uni-box').classList.remove('falta');
+  } catch (err) { toast(err.message, 5000); }
+});
+$('#uni-prev').addEventListener('click', (e) => {
+  if (e.target.closest('[data-quitar]')) { liberar(uniArchivo); uniArchivo = null; $('#uni-prev').innerHTML = ''; }
+});
+$('#btn-uni-cancel').addEventListener('click', () => fichaActual ? abrirFicha(fichaActual.id) : ir('inicio'));
+$('#btn-uni-guardar').addEventListener('click', async () => {
+  const may = (s) => s.trim().toLocaleUpperCase('es-CL');
+  const por = may($('#uniPor').value), cargo = may($('#uniCargo').value);
+  const faltan = [];
+  if (!uniArchivo) { faltan.push('archivo del diagrama'); $('#uni-box').classList.add('falta'); }
+  if (!por) faltan.push('cargado por');
+  if (!cargo) faltan.push('cargo');
+  if (faltan.length) { $('#uni-error').textContent = 'Falta completar: ' + faltan.join(', ') + '.'; return; }
+  const t = fichaActual;
+  const registro = {
+    uuid: uuid(), creadoEn: new Date().toISOString(), appUrl: appUrl(), tipoRegistro: 'unilineal', tipoActividad: 'Carga diagrama unilineal',
+    id: t.id, nivel: t.nivel || '', tipoNombre: t.tipo || '', ubicacion: t.ubicacion || '',
+    realizadoPor: por, cargo, obsGeneral: may($('#uniObs').value)
+  };
+  try {
+    await DB.put({ uuid: registro.uuid, creado: registro.creadoEn, registro,
+      fotos: [{ campo: 'unilineal', mime: uniArchivo.mime, blob: uniArchivo.blob, nombre: uniArchivo.nombre }] });
+  } catch (err) { $('#uni-error').textContent = 'No se pudo guardar en el teléfono: ' + err.message; return; }
+  ls.set('realizadoPor', por); ls.set('cargo', cargo);
+  const cache = ls.get('tableros', { lista: [], actualizado: '' });
+  const c = cache.lista.find(x => x.id === t.id);
+  if (c) {
+    Object.assign(c, { tieneUni: 'Sí', estadoUni: 'REALIZADO', pendiente: true, ultAct: registro.tipoActividad });
+    c.hist = [{ fecha: new Date().toLocaleString('sv-SE').slice(0, 16), por, tipo: registro.tipoActividad, itemsNo: 0, detalleNo: '' }].concat(c.hist || []).slice(0, 10);
+    ls.set('tableros', cache);
+  }
+  liberar(uniArchivo); uniArchivo = null;
+  toast('Diagrama unilineal guardado ✔');
+  abrirFicha(t.id);
+  sincronizar();
+});
+// ===================== ID, FICHA LOCAL Y ETIQUETA QR =====================
+function generarIdLocal(codTipo, codNivel) {
+  const ALF = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';   // sin 0/O ni 1/I/L para leerlo sin errores
+  const rnd = new Uint32Array(4);
+  let id;
+  do {
+    crypto.getRandomValues(rnd);
+    id = codTipo + '-' + codNivel + '-' + Array.from(rnd, n => ALF[n % ALF.length]).join('');
+  } while (buscarCache(id));
+  return id;
+}
+
+// Deja la ficha al día en este teléfono aunque aún no se haya enviado
+function actualizarCacheLocal(r) {
+  const cache = ls.get('tableros', { lista: [], actualizado: '' });
+  let t = cache.lista.find(x => x.id === r.id);
+  if (!t) { t = { id: r.id, hist: [] }; cache.lista.unshift(t); }
+  const no = r.items.filter(x => x.resp === 'No').map(x => x.item);
+  const uniOk = r.tieneUni === 'Sí';
+  Object.assign(t, {
+    nivel: r.nivel, tipo: r.tipoNombre, ubicacion: r.ubicacion, numero: r.numero, tag: r.tagGom || t.tag || '',
+    fMant: r.fMant, mantenedor: r.mantenedor, cargoMant: r.cargoMant, fInsp: r.fInsp, itemsNo: no.length, detalleNo: no.join('\n'),
+    ultimo: r.fActividad || r.creadoEn.slice(0, 10), por: r.realizadoPor, ultAct: r.tipoActividad, pendiente: true,
+    contrato: CONFIG.CONTRATO, alta: t.alta || r.creadoEn.slice(0, 10),
+    tieneUni: r.tieneUni,
+    estadoUni: uniOk ? (/REALIZADO/i.test(t.estadoUni || '') ? t.estadoUni : 'CUENTA CON DIAGRAMA') : 'PENDIENTE CONFECCIÓN',
+    alim: uniOk ? (t.alim || '') : r.alimDesde, bloqueo: uniOk ? (t.bloqueo || '') : r.bloqueo,
+    calibre: uniOk ? (t.calibre || '') : r.calibre, obsUni: uniOk ? (t.obsUni || '') : r.obsUni
+  });
+  t.hist = [{ fecha: new Date(r.creadoEn).toLocaleString('sv-SE').slice(0, 16), por: r.realizadoPor, tipo: r.tipoActividad,
+    itemsNo: no.length, detalleNo: no.join('\n'), fotos: r.nFotosEstado || 0 }]
+    .concat(t.hist || []).slice(0, 10);
+  ls.set('tableros', cache);
+}
+
+let etiquetaActual = null;
+LOGO.addEventListener('load', () => { if (etiquetaActual && !$('#v-etiqueta').hidden) mostrarEtiqueta(etiquetaActual.id); });
+function mostrarEtiqueta(id) {
+  const alias = ls.get('alias', {}); if (alias[id]) id = alias[id];
+  const t = buscarCache(id) || datosDesdeId(id);
+  const tipo = tipoPorNombre(t.tipo) || TIPOS.find(x => x.key === t.tipoKey);
+  const canvas = dibujarEtiqueta(id, tipo ? tipo.nombre.split(' – ')[0] : '', t.nivel || '', t.ubicacion || '');
+  etiquetaActual = { id, canvas, t };
+  $('#etq-titulo').textContent = 'Etiqueta QR · ' + id;
+  $('#etq-info').textContent = 'Descarga la ficha PDF (incluye el QR y el detalle del tablero), imprímela en material resistente y adósala a la estructura del tablero.';
+  $('#etq-img').src = canvas.toDataURL('image/png');
+  ir('etiqueta');
+}
+
+// QR (con margen blanco) en un canvas cuadrado de ~lado px
+function canvasQR(id, lado) {
+  const qr = qrcode(0, 'Q'); qr.addData(appUrl() + '?id=' + encodeURIComponent(id)); qr.make();
+  const n = qr.getModuleCount(), cel = Math.max(1, Math.floor(lado / (n + 8))), tam = cel * (n + 8);
+  const c = document.createElement('canvas'); c.width = c.height = tam;
+  const g = c.getContext('2d'); g.fillStyle = '#FFFFFF'; g.fillRect(0, 0, tam, tam); g.fillStyle = '#000000';
+  for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (qr.isDark(r, k)) g.fillRect((k + 4) * cel, (r + 4) * cel, cel, cel);
+  return c;
+}
+
+// Ficha PDF tamaño A5: QR + detalle del tablero (se genera en el teléfono, sin señal)
+function crearPdfFicha(id, t) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a5' });
+  const W = 148, M = 10;
+  if (logoListo()) doc.addImage(LOGO, 'PNG', M, 5.5, 11.5 * LOGO.naturalWidth / LOGO.naturalHeight, 11.5);
+  else { doc.setTextColor(183, 28, 28); doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.text('GEOVITA', M, 14); }
+  doc.setTextColor(31, 35, 40); doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5);
+  doc.text('FICHA DE TABLERO ELÉCTRICO', W - M, 10.5, { align: 'right' });
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(91, 100, 112);
+  doc.text('MINA ESMERALDA SUB-5 · EL TENIENTE · CONTRATO N° ' + CONFIG.CONTRATO, W - M, 15, { align: 'right' });
+  doc.setFillColor(183, 28, 28); doc.rect(0, 20, W, 2, 'F');
+  doc.addImage(canvasQR(id, 800).toDataURL('image/png'), 'PNG', (W - 52) / 2, 24, 52, 52);
+  doc.setTextColor(31, 35, 40); doc.setFont('courier', 'bold'); doc.setFontSize(22); doc.text(id, W / 2, 83, { align: 'center' });
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(91, 100, 112);
+  doc.text('Escanee el código para ver el historial y registrar inspecciones y mantenciones', W / 2, 88.5, { align: 'center' });
+  const vm = venc(t.fMant, ACT.MANT), vi = venc(t.fInsp, ACT.INSP);
+  const det = (t.detalleNo || '').split('\n').filter(Boolean);
+  const filas = [
+    ['Tipo', t.tipo], ['Nivel', t.nivel], ['Ubicación', t.ubicacion], ['N° tablero', t.numero],
+    ['TAG GOM', t.tag || 'SIN TAG GOM'], ['N° contrato', CONFIG.CONTRATO], ['Fecha de alta', t.alta],
+    ['Última mantención', [t.fMant, t.mantenedor, t.cargoMant].filter(Boolean).join(' · ')],
+    ['Próxima mantención', vm.prox ? vm.prox + ' (trimestral)' : 'Sin registro'],
+    ['Última inspección', [t.fInsp, t.por].filter(Boolean).join(' · ')],
+    ['Próxima inspección', vi.prox ? vi.prox + ' (mensual)' : 'Sin registro'],
+    ['Diagrama unilineal', uniPendiente(t) ? 'PENDIENTE DE CONFECCIÓN' : (t.estadoUni || '—')],
+    ['Ítems en NO', t.itemsNo ? `${t.itemsNo}: ${det.slice(0, 3).join(' / ')}${det.length > 3 ? ' / …' : ''}` : 'Ninguno']
+  ];
+  let y = 93; doc.setFontSize(9);
+  doc.setDrawColor(201, 206, 212); doc.setTextColor(31, 35, 40);
+  filas.forEach(([k, v]) => {
+    doc.setFont('helvetica', 'normal');
+    const lineas = doc.splitTextToSize(String(v || '—'), W - 2 * M - 42).slice(0, 3);
+    const h = Math.max(7, lineas.length * 4 + 3);
+    doc.setFillColor(242, 243, 245); doc.rect(M, y, 40, h, 'F'); doc.rect(M, y, W - 2 * M, h); doc.line(M + 40, y, M + 40, y + h);
+    doc.setFont('helvetica', 'bold'); doc.text(k, M + 2, y + 4.8);
+    doc.setFont('helvetica', 'normal'); doc.text(lineas, M + 42, y + 4.8);
+    y += h;
+  });
+  doc.setFontSize(7); doc.setTextColor(91, 100, 112);
+  doc.text('Generado el ' + new Date().toLocaleString('es-CL') + '. La información vigente es la del sistema (escanear QR).', W / 2, 204, { align: 'center' });
+  doc.setDrawColor(31, 35, 40); doc.setLineWidth(0.6); doc.rect(3, 3, W - 6, 210 - 6);
+  return doc;
+}
+
+function dibujarEtiqueta(id, tipoCorto, nivel, ubicacion) {
+  const W = 800, H = 980, c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  g.fillStyle = '#FFFFFF'; g.fillRect(0, 0, W, H);
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  if (logoListo()) { const lh = 66, lw = lh * LOGO.naturalWidth / LOGO.naturalHeight; g.drawImage(LOGO, (W - lw) / 2, 12, lw, lh); }
+  else { g.fillStyle = '#B71C1C'; g.font = 'bold 54px system-ui, sans-serif'; g.fillText('GEOVITA', W / 2, 48); }
+  g.fillStyle = '#B71C1C'; g.fillRect(0, 90, W, 44);
+  g.fillStyle = '#FFFFFF'; g.font = '600 23px system-ui, sans-serif'; g.fillText('ESMERALDA SUB-5 · EL TENIENTE · CONTRATO ' + CONFIG.CONTRATO, W / 2, 113);
+  // QR
+  const qrc = canvasQR(id, 600), tam = qrc.width, y0 = 145;
+  g.drawImage(qrc, (W - tam) / 2, y0);
+  // Textos
+  const yT = y0 + tam + 20;
+  g.fillStyle = '#1F2328';
+  g.font = 'bold 76px ui-monospace, Menlo, Consolas, monospace'; g.fillText(id, W / 2, yT + 45);
+  g.font = '600 34px system-ui, sans-serif';
+  g.fillText([tipoCorto, nivel ? 'NIVEL ' + nivel.toUpperCase() : ''].filter(Boolean).join(' · '), W / 2, yT + 120);
+  let ub = (ubicacion || '').toUpperCase();
+  g.font = '30px system-ui, sans-serif';
+  while (ub && g.measureText(ub).width > W - 60) ub = ub.slice(0, -2) + '…';
+  if (ub) g.fillText(ub, W / 2, yT + 168);
+  g.strokeStyle = '#1F2328'; g.lineWidth = 4; g.strokeRect(2, 2, W - 4, H - 4);
+  return c;
+}
+
+$('#btn-etq-descargar').addEventListener('click', () => {
+  if (!etiquetaActual) return;
+  const a = document.createElement('a');
+  a.href = etiquetaActual.canvas.toDataURL('image/png'); a.download = 'QR_' + etiquetaActual.id + '.png';
+  document.body.appendChild(a); a.click(); a.remove();
+});
+function pdfEtiqueta() {
+  if (!etiquetaActual) return null;
+  if (!window.jspdf) { toast('El generador de PDF aún está cargando, intenta de nuevo.'); return null; }
+  return crearPdfFicha(etiquetaActual.id, Object.assign({ tipo: '', nivel: '' }, etiquetaActual.t));
+}
+$('#btn-pdf-desc').addEventListener('click', () => {
+  const doc = pdfEtiqueta(); if (doc) doc.save('Ficha_' + etiquetaActual.id + '.pdf');
+});
+$('#btn-pdf-comp').addEventListener('click', async () => {
+  const doc = pdfEtiqueta(); if (!doc) return;
+  const file = new File([doc.output('blob')], 'Ficha_' + etiquetaActual.id + '.pdf', { type: 'application/pdf' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: 'Ficha tablero ' + etiquetaActual.id }); } catch {}
+  } else { doc.save(file.name); }
+});
+
+// ===================== SINCRONIZACIÓN =====================
+let sincronizando = false;
+const blobAB64 = (blob) => new Promise((res, rej) => {
+  const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = () => rej(r.error); r.readAsDataURL(blob);
+});
+async function fetchT(url, opt = {}, ms = 90000) {
+  const ac = new AbortController(); const t = setTimeout(() => ac.abort(), ms);
+  try { return await fetch(url, Object.assign({}, opt, { signal: ac.signal, redirect: 'follow', credentials: 'omit', cache: 'no-store' })); }
+  finally { clearTimeout(t); }
+}
+
+async function sincronizar(manual = false) {
+  if (sincronizando) return;
+  if (!configurado()) { $('#sync-msg').textContent = 'Falta configurar SCRIPT_URL en index.html.'; return; }
+  sincronizando = true; $('#btn-sync').disabled = true;
+  let enviados = 0, error = '';
+  try {
+    const pend = (await DB.all()).sort((a, b) => a.creado.localeCompare(b.creado));
+    if (pend.length) $('#sync-msg').textContent = 'Enviando…';
+    for (const p of pend) {
+      try {
+        const alias = ls.get('alias', {});
+        if (alias[p.registro.id]) p.registro.id = alias[p.registro.id];
+        const fotos = [];
+        for (const ft of p.fotos) fotos.push({ campo: ft.campo, mime: ft.mime, nombre: ft.nombre || '', data: await blobAB64(ft.blob) });
+        const peso = fotos.reduce((s, x) => s + x.data.length, 0);
+        const r = await fetchT(CONFIG.SCRIPT_URL, {
+          method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ clave: CONFIG.CLAVE, registro: p.registro, fotos })
+        }, 180000 + Math.round(peso / 25));   // +1 s cada ~25 KB (señal débil)
+        const j = await r.json();
+        if (!j.ok) throw new Error(j.error || 'respuesta inválida');
+        await DB.del(p.uuid);
+        if (j.id && p.registro.id && j.id !== p.registro.id) corregirId(p.registro.id, j.id);
+        const env = ls.get('enviados', []);
+        env.unshift({ uuid: p.uuid, id: j.id, nuevo: j.nuevo, qrUrl: j.qrUrl, tipo: p.registro.tipoNombre, act: p.registro.tipoActividad, fecha: new Date().toISOString() });
+        ls.set('enviados', env.slice(0, 40));
+        enviados++;
+
+      } catch (err) {
+        error = err.name === 'AbortError' ? 'la señal es muy débil (tiempo agotado)'
+          : (err instanceof TypeError ? 'sin conexión a internet' : err.message);
+        break; // se reintenta luego, en orden
+      }
+    }
+    if (!error) await actualizarTableros();
+  } catch (err) { error = err.message; }
+  sincronizando = false; $('#btn-sync').disabled = false;
+  const quedan = (await DB.all().catch(() => [])).length;
+  $('#sync-msg').textContent = error
+    ? `Sin envío: ${error}. Se reintentará automáticamente.`
+    : (quedan ? `${quedan} pendientes.` : (enviados ? `${enviados} enviados correctamente.` : 'Todo enviado.'));
+  if (manual && error) toast('No se pudo enviar: ' + error);
+  if (!$('#v-inicio').hidden) renderInicio();
+}
+$('#btn-sync').addEventListener('click', () => sincronizar(true));
+
+// El servidor cambió el ID (TAG GOM ya registrado o ID repetido): se corrige en todo el teléfono
+function corregirId(viejo, nuevo) {
+  const alias = ls.get('alias', {}); alias[viejo] = nuevo; ls.set('alias', alias);
+  const etq = ls.get('etiquetas', []);
+  etq.forEach(x => { if (x.id === viejo) { x.id = nuevo; x.cambiado = true; } });
+  ls.set('etiquetas', etq);
+  toast(`El tablero ${viejo} quedó registrado como ${nuevo}. Reimprime su etiqueta QR.`, 8000);
+}
+
+async function actualizarTableros() {
+  if (!configurado()) return;
+  const r = await fetchT(CONFIG.SCRIPT_URL + '?accion=tableros&clave=' + encodeURIComponent(CONFIG.CLAVE), {}, 30000);
+  const j = await r.json();
+  if (!j.ok) return;
+  // Conserva las fichas creadas en el teléfono que aún tienen registros sin enviar
+  const pendIds = new Set((await DB.all().catch(() => [])).map(p => p.registro.id));
+  const locales = ls.get('tableros', { lista: [] }).lista.filter(t => t.pendiente && pendIds.has(t.id) && !j.tableros.some(s => s.id === t.id));
+  ls.set('tableros', { lista: locales.concat(j.tableros), actualizado: j.actualizado });
+}
+
+// ===================== ESCÁNER QR (funciona sin señal) =====================
+let stream = null, detector = null;
+$('#btn-scan-cancel').addEventListener('click', () => ir('pregunta'));
+
+async function abrirScanner() {
+  ir('scan');
+  $('#scan-msg').textContent = 'Iniciando cámara…';
+  if ('BarcodeDetector' in window) { try { detector = new BarcodeDetector({ formats: ['qr_code'] }); } catch { detector = null; } }
+  if (!detector && !window.jsQR) { $('#scan-msg').textContent = 'El lector no está disponible. Usa la cámara del teléfono o busca el tablero por ID.'; return; }
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+  } catch (err) { $('#scan-msg').textContent = 'No se pudo abrir la cámara: ' + err.message; return; }
+  const video = $('#video'); video.srcObject = stream; await video.play();
+  $('#scan-msg').textContent = 'Buscando código…';
+  const canvas = $('#canvas'), ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const paso = async () => {
+    if (!stream) return;
+    if (video.readyState >= 2) {
+      let txt = null;
+      if (detector) {
+        try { const r = await detector.detect(video); if (r[0]) txt = r[0].rawValue; } catch {}
+      } else {
+        const k = Math.min(1, 640 / video.videoWidth);
+        canvas.width = video.videoWidth * k; canvas.height = video.videoHeight * k;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const c = window.jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+        if (c) txt = c.data;
+      }
+      if (txt) { leerQR(txt); return; }
+    }
+    requestAnimationFrame(paso);
+  };
+  requestAnimationFrame(paso);
+}
+function cerrarScanner() {
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+}
+function leerQR(txt) {
+  cerrarScanner();
+  let id = '';
+  try { id = new URL(txt).searchParams.get('id') || ''; } catch { id = txt; }
+  if (navigator.vibrate) navigator.vibrate(80);
+  if (id) abrirFicha(id); else { toast('QR no reconocido'); ir('inicio'); }
+}
+
+// ===================== CÁMARA DE LA APP =====================
+// Todos los botones "Tomar foto" usan esta cámara (getUserMedia). Así se abre la cámara aunque el
+// navegador ignore capture="environment" (computadores y algunos Android abren el explorador de archivos).
+// Si la cámara no se puede abrir, se usa el selector normal del teléfono como respaldo.
+const CAM = { stream: null, input: null, fotos: [], multi: false, frontal: false };
+const camaraSoportada = () => !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+
+document.addEventListener('click', (e) => {
+  const lab = e.target.closest('label.btn-foto'); if (!lab) return;
+  const input = lab.querySelector('input[type=file][capture]');
+  if (!input || input.disabled || !camaraSoportada()) return;
+  e.preventDefault();
+  abrirCamara(input);
+}, true);
+
+async function iniciarStream() {
+  if (CAM.stream) CAM.stream.getTracks().forEach(t => t.stop());
+  CAM.stream = await navigator.mediaDevices.getUserMedia({
+    audio: false, video: { facingMode: CAM.frontal ? 'user' : { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1440 } }
+  });
+  const v = $('#cam-video'); v.srcObject = CAM.stream;
+  await v.play().catch(() => {});
+}
+
+async function abrirCamara(input) {
+  CAM.input = input; CAM.fotos = []; CAM.frontal = false;
+  // Fotos del estado y páginas del checklist físico: se pueden tomar varias seguidas
+  CAM.multi = input.hasAttribute('data-estado') || input.dataset.adj === 'checklist';
+  renderCam();
+  $('#camara').hidden = false;
+  try { await iniciarStream(); }
+  catch (err) {
+    cerrarCamara();
+    toast('No se pudo abrir la cámara (' + (err.name === 'NotAllowedError' ? 'permiso denegado' : err.message) + '). Se abre el selector de fotos.', 5000);
+    input.click();   // respaldo: selector del sistema
+  }
+}
+function renderCam() {
+  const n = CAM.fotos.length;
+  $('#cam-cont').textContent = CAM.multi && n ? `${n} foto${n > 1 ? 's' : ''}` : '';
+  $('#cam-listo').hidden = !CAM.multi;
+  $('#cam-listo').textContent = n ? `Listo (${n})` : 'Listo';
+}
+function cerrarCamara() {
+  if (CAM.stream) { CAM.stream.getTracks().forEach(t => t.stop()); CAM.stream = null; }
+  $('#cam-video').srcObject = null;
+  $('#camara').hidden = true;
+}
+// Entrega las fotos al mismo campo, como si se hubieran elegido en el teléfono
+function entregarFotos() {
+  const input = CAM.input, fotos = CAM.fotos;
+  cerrarCamara();
+  if (!input || !fotos.length) return;
+  try {
+    const dt = new DataTransfer(); fotos.forEach(f => dt.items.add(f));
+    input.files = dt.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  } catch (err) { toast('No se pudo adjuntar la foto: ' + err.message); }
+}
+$('#cam-disparar').addEventListener('click', () => {
+  const v = $('#cam-video'); if (!v.videoWidth) return;
+  const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight;
+  c.getContext('2d').drawImage(v, 0, 0);
+  const fl = $('#cam-flash'); fl.classList.add('on'); setTimeout(() => fl.classList.remove('on'), 60);
+  if (navigator.vibrate) navigator.vibrate(30);
+  c.toBlob(b => {
+    if (!b) { toast('No se pudo tomar la foto'); return; }
+    CAM.fotos.push(new File([b], 'foto_' + Date.now() + '.jpg', { type: 'image/jpeg', lastModified: Date.now() }));
+    if (CAM.multi) {
+      const libres = CAM.input.hasAttribute('data-estado') ? MAX_FOTOS_ESTADO - (estado ? estado.fotosEstado.length : 0) : 10;
+      renderCam();
+      if (CAM.fotos.length >= libres) entregarFotos();
+    } else entregarFotos();
+  }, 'image/jpeg', 0.92);
+});
+$('#cam-listo').addEventListener('click', entregarFotos);
+$('#cam-cancelar').addEventListener('click', () => { CAM.fotos = []; cerrarCamara(); });
+$('#cam-girar').addEventListener('click', async () => {
+  CAM.frontal = !CAM.frontal;
+  try { await iniciarStream(); } catch { CAM.frontal = !CAM.frontal; toast('No hay otra cámara disponible'); }
+});
+window.addEventListener('pagehide', cerrarCamara);
+
+// ===================== ARRANQUE =====================
+$('#version-app').textContent = 'Versión ' + VERSION_APP;
+$('#btn-iniciar').addEventListener('click', () => ir('actividad'));
+document.querySelectorAll('#v-actividad [data-act]').forEach(b => b.addEventListener('click', () => {
+  actividadInicial = b.dataset.act;
+  $('#preg-act').textContent = ACT[actividadInicial].nombre;
+  ir('pregunta');
+}));
+$('#btn-tiene-qr').addEventListener('click', abrirScanner);
+$('#btn-sin-qr').addEventListener('click', () => abrirFormulario({ esAlta: true, actividad: actividadInicial }));
+$('#btn-qr-danado').addEventListener('click', () => { ir('inicio'); setTimeout(() => $('#buscar').focus(), 50); });
+renderRed();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+const idInicial = new URLSearchParams(location.search).get('id');
+if (idInicial) abrirFicha(idInicial); else ir('inicio');
+sincronizar();
+setInterval(() => sincronizar(), 60000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) sincronizar(); });
+</script>
+</body>
+</html>
