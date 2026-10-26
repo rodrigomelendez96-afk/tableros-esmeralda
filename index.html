@@ -1,0 +1,2751 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>GEO ELEC</title>
+<meta name="theme-color" content="#B71C1C">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="favicon.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="GEO ELEC">
+<style>
+  :root {
+    --rojo: #B71C1C; --rojo-osc: #7F1414; --tinta: #1F2328; --gris: #5B6470;
+    --borde: #D5D9DE; --fondo: #F2F3F5; --card: #FFFFFF;
+    --ok: #1E7B34; --ok-bg: #D9F2E0; --no: #B3261E; --no-bg: #FBE0DE; --na: #4A5562; --na-bg: #E4E7EB;
+    --aviso: #8A5A00; --aviso-bg: #FFF1CC;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--fondo); color: var(--tinta);
+    font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header.top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px; padding-top: max(10px, env(safe-area-inset-top));
+    background: var(--rojo); color: #fff; }
+  .logo { width: 40px; height: 40px; border-radius: 10px; background: #fff; padding: 4px; flex: none; }
+  .logo img { display: block; width: 100%; height: 100%; }
+  .brand { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+  button.brand { background: transparent; border: 0; color: inherit; padding: 0; min-height: 0; text-align: left; font-weight: 400; border-radius: 0; }
+  .brand b { display: block; font-size: 19px; letter-spacing: .5px; font-weight: 800; }
+  .brand small { display: block; opacity: .9; font-size: 11.5px; line-height: 1.25; }
+  .chip { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+  .chip.on { background: #fff; color: var(--ok); }
+  .chip.off { background: #3A0A0A; color: #FFD7D3; }
+  main { max-width: 720px; margin: 0 auto; padding: 16px; padding-bottom: 80px; }
+  .card { background: var(--card); border: 1px solid var(--borde); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+  h2 { margin: 0 0 6px; font-size: 20px; }
+  h3 { margin: 0 0 10px; font-size: 17px; }
+  .muted { color: var(--gris); font-size: 14px; margin: 0 0 10px; }
+  label { display: block; font-weight: 600; font-size: 14px; margin: 12px 0 6px; }
+  input, select, textarea { width: 100%; font: inherit; padding: 12px; border: 1px solid var(--borde);
+    border-radius: 8px; background: #fff; color: var(--tinta); min-height: 48px; }
+  textarea { min-height: 80px; resize: vertical; }
+  input:focus, select:focus, textarea:focus { outline: 3px solid #F3B3AE; border-color: var(--rojo); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+  @media (max-width: 420px) { .row2 { grid-template-columns: 1fr; } }
+  button { font: inherit; font-weight: 700; border-radius: 10px; border: 1px solid var(--borde);
+    background: #fff; color: var(--tinta); padding: 12px 16px; min-height: 48px; cursor: pointer; }
+  button.primary { background: var(--rojo); border-color: var(--rojo); color: #fff; }
+  button.big { width: 100%; font-size: 17px; min-height: 56px; margin-bottom: 12px; }
+  button:disabled { opacity: .5; }
+  .seg { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+  .seg button.sel { background: var(--tinta); border-color: var(--tinta); color: #fff; }
+  .item { border-top: 1px solid var(--borde); padding: 12px 0; }
+  .item:first-child { border-top: 0; }
+  .item p { margin: 0 0 8px; font-size: 15px; }
+  .item .n { color: var(--gris); font-weight: 700; margin-right: 4px; }
+  .sna { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .sna button { min-height: 52px; font-size: 16px; }
+  .sna button.si.sel { background: var(--ok); border-color: var(--ok); color: #fff; }
+  .sna button.no.sel { background: var(--no); border-color: var(--no); color: #fff; }
+  .sna button.na.sel { background: var(--na); border-color: var(--na); color: #fff; }
+  .item.falta p { color: var(--no); font-weight: 600; }
+  .progreso { font-size: 14px; color: var(--gris); margin-bottom: 8px; }
+  .foto { border: 1px dashed var(--borde); border-radius: 10px; padding: 12px; margin-top: 10px; }
+  .foto span { display: block; font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+  .btn-foto { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 16px;
+    border-radius: 10px; background: var(--tinta); color: #fff; font-weight: 700; margin: 0; cursor: pointer; }
+  .foto.falta { border-color: var(--no); }
+  .error { color: var(--no); font-weight: 700; min-height: 1em; }
+  .actions { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; }
+  .sync { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .sync .txt { flex: 1; min-width: 180px; }
+  .sync b { font-size: 22px; }
+  .sync.pend { background: var(--aviso-bg); border-color: #E8C76A; }
+  ul.lista { list-style: none; margin: 0; padding: 0; }
+  ul.lista li { border-top: 1px solid var(--borde); padding: 10px 0; display: flex; gap: 10px; align-items: center; }
+  ul.lista li:first-child { border-top: 0; }
+  ul.lista .info { flex: 1; min-width: 0; }
+  ul.lista .info b { display: block; }
+  ul.lista .info small { color: var(--gris); }
+  ul.lista button { min-height: 40px; padding: 6px 12px; font-size: 14px; }
+  .badge { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+  .badge.no { background: var(--no-bg); color: var(--no); }
+  .badge.ok { background: var(--ok-bg); color: var(--ok); }
+  dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 10px 0 0; font-size: 15px; }
+  dt { color: var(--gris); }
+  dd { margin: 0; font-weight: 600; white-space: pre-line; }
+  #v-scan video { width: 100%; border-radius: 12px; background: #000; aspect-ratio: 3/4; object-fit: cover; }
+  #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--tinta); color: #fff;
+    padding: 12px 18px; border-radius: 10px; font-weight: 600; max-width: calc(100% - 32px); opacity: 0;
+    transition: opacity .25s; pointer-events: none; z-index: 20; }
+  #toast.show { opacity: 1; }
+  a { color: var(--rojo); font-weight: 600; }
+  /* Texto libre siempre en MAYÚSCULAS (el placeholder se ve normal) */
+  #f input:not([type=date]):not([type=file]), #f textarea { text-transform: uppercase; }
+  #f input::placeholder, #f textarea::placeholder { text-transform: none; }
+  .etq img { width: 100%; max-width: 420px; display: block; margin: 0 auto; border: 1px solid var(--borde); border-radius: 8px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .aviso { background: var(--aviso-bg); border: 1px solid #E8C76A; border-radius: 10px; padding: 12px; font-size: 14px; margin-bottom: 14px; }
+  /* Fotos del estado del tablero */
+  .galeria { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; margin: 10px 0; }
+  .galeria:empty { display: none; }
+  .th { position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; border: 1px solid var(--borde); background: var(--na-bg); }
+  .th img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .th a { display: grid; place-items: center; width: 100%; height: 100%; font-size: 13px; text-align: center; }
+  .th button { position: absolute; top: 4px; right: 4px; width: 32px; height: 32px; min-height: 0; padding: 0;
+    border: 0; border-radius: 50%; background: rgba(0,0,0,.65); color: #fff; font-size: 16px; line-height: 1; }
+  .fila-btn { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn-foto.sec { background: #fff; color: var(--tinta); border: 1px solid var(--borde); }
+  .item-foto { margin-top: 10px; }
+  .item-foto .btn-foto { min-height: 42px; font-size: 14px; }
+  .foto .prev { margin-top: 10px; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+  .foto .prev:empty { display: none; }
+  .foto .prev .archivo { grid-column: 1 / -1; }
+  .card.falta { border-color: var(--no); }
+  .opcion { display: block; text-align: left; }
+  .opcion b { display: block; font-size: 18px; }
+  .opcion small { display: block; font-weight: 400; color: var(--gris); margin-top: 4px; font-size: 14px; }
+  label.chk { display: flex; align-items: center; gap: 10px; font-weight: 600; margin: 8px 0 0; }
+  label.chk input { width: 22px; height: 22px; min-height: 0; margin: 0; flex: none; accent-color: var(--rojo); }
+  .adj { display: grid; gap: 8px; margin: 10px 0; }
+  .adj:empty { display: none; }
+  .archivo { display: flex; align-items: center; gap: 10px; border: 1px solid var(--borde); border-radius: 8px; padding: 8px 10px; background: #fff; }
+  .archivo .ico { width: 44px; height: 44px; flex: none; border-radius: 6px; background: var(--na-bg); display: grid; place-items: center; overflow: hidden; font-size: 22px; }
+  .archivo .ico img { width: 100%; height: 100%; object-fit: cover; }
+  .archivo .nom { flex: 1; min-width: 0; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+  .archivo .nom small { display: block; color: var(--gris); font-weight: 400; }
+  .archivo button { min-height: 38px; padding: 4px 12px; font-size: 14px; }
+  .alertas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .alertas:empty { display: none; }
+  .badge.warn { background: var(--aviso-bg); color: var(--aviso); }
+  .badge.gris { background: var(--na-bg); color: var(--na); }
+  .resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 6px; }
+  .resumen div { border-radius: 10px; padding: 10px 12px; font-size: 13px; font-weight: 600; line-height: 1.25; }
+  .resumen b { display: block; font-size: 24px; }
+  .r-no { background: var(--no-bg); color: var(--no); }
+  .r-warn { background: var(--aviso-bg); color: var(--aviso); }
+  .r-gris { background: var(--na-bg); color: var(--na); }
+  .may { text-transform: uppercase; }
+  .bloque-fotos { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--borde); }
+  .version { text-align: center; font-size: 12px; margin-top: 18px; }
+  input.fijo { background: var(--fondo); color: var(--tinta); font-weight: 700; border-style: dashed; }
+  /* Inicio por categorías */
+  .hero { background: #fff; border: 1px solid var(--borde); border-radius: 14px; padding: 16px; margin-bottom: 14px; text-align: center; }
+  .hero img { display: block; width: 100%; max-width: 260px; height: auto; margin: 0 auto; }
+  .hero small { display: block; margin-top: 8px; color: var(--gris); font-size: 13px; font-weight: 600; letter-spacing: .3px; }
+  /* Sectores: Producción (+UCL) y Acarreo (+SNV) */
+  .sectores { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+  .sectores button { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 64px; padding: 8px 4px; border-radius: 12px; line-height: 1.2; }
+  .sectores button small { font-weight: 500; font-size: 12px; color: var(--gris); margin-top: 2px; }
+  .sectores button.sel { background: var(--rojo); border-color: var(--rojo); color: #fff; }
+  .sectores button.sel small { color: #FFE3E0; }
+  ul.lista li.sub { display: block; padding: 14px 0 4px; border-top: 0; font-size: 13px; font-weight: 800; color: var(--gris); text-transform: uppercase; letter-spacing: .6px; }
+  .nota-bus { font-size: 13px; color: var(--aviso); background: var(--aviso-bg); border-radius: 8px; padding: 6px 10px; margin-top: 10px; }
+  .nota-bus:empty { display: none; }
+  .inicio-act { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 72px; }
+  .inicio-act small { font-weight: 500; font-size: 13px; opacity: .9; }
+  .sec-tit { margin: 18px 2px 8px; font-size: 13px; text-transform: uppercase; letter-spacing: .8px; color: var(--gris); }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tile { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; min-height: 112px;
+    padding: 14px; border-radius: 14px; background: var(--card); border: 1px solid var(--borde); }
+  .tile.ancho { grid-column: 1 / -1; min-height: 0; }
+  .tile .t-ico { font-size: 26px; line-height: 1; margin-bottom: 6px; }
+  .tile b { font-size: 16px; }
+  .tile small { font-weight: 500; font-size: 13px; color: var(--gris); line-height: 1.3; }
+  .tile small .rojo { color: var(--no); font-weight: 700; } .tile small .amar { color: var(--aviso); font-weight: 700; } .tile small .verde { color: var(--ok); font-weight: 700; }
+  .aviso-pend { width: 100%; margin-bottom: 12px; background: var(--aviso-bg); border: 1px solid #E8C76A; color: var(--aviso); text-align: left; }
+  /* Pestañas Mantenciones / Inspecciones y documentación */
+  .tabs { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 4px; background: #E4E7EB; padding: 4px; border-radius: 12px; margin-bottom: 14px; }
+  .tabs button { min-height: 44px; border: 0; border-radius: 9px; background: transparent; color: var(--gris); padding: 8px 6px; }
+  .tabs button.sel { background: #fff; color: var(--tinta); box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+  .tabs-in { margin: 12px 0 0; }
+  .tabs:empty { display: none; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .chips:empty { display: none; }
+  .chips button { min-height: 40px; padding: 6px 14px; border-radius: 999px; font-size: 15px; }
+  .chips button.sel { background: var(--rojo); border-color: var(--rojo); color: #fff; }
+  .menu-docs { display: grid; gap: 8px; }
+  .menu-docs button { text-align: left; }
+  .menu-docs button b { display: block; } .menu-docs button small { display: block; font-weight: 400; color: var(--gris); font-size: 13px; }
+  ul.docs li { flex-wrap: wrap; }
+  ul.docs li > .info { flex: 1 1 100%; }
+  ul.docs .acc { margin-top: 2px; }
+  ul.docs .acc { display: flex; gap: 6px; flex-wrap: wrap; }
+  ul.docs .vers { flex-basis: 100%; margin: 6px 0 0; padding: 8px 10px; background: var(--fondo); border-radius: 8px; font-size: 14px; }
+  ul.docs .vers div { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
+  ul.docs .vers div span { flex: 1; }
+  .bloque-act h4 { margin: 14px 0 4px; font-size: 15px; color: var(--gris); }
+  .cab-act { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .cab-act h3 { margin: 0; }
+  /* RF01 */
+  .rf01 { border: 3px solid var(--rojo); }
+  .rf-cab { display: flex; gap: 12px; align-items: center; background: var(--rojo); color: #fff; margin: -16px -16px 0; padding: 14px 16px; border-radius: 9px 9px 0 0; }
+  .rf-cab b { display: block; font-size: 18px; } .rf-cab small { opacity: .9; }
+  .rf-ico { font-size: 34px; line-height: 1; }
+  .rf-alerta { background: var(--no-bg); color: var(--no); font-weight: 800; padding: 12px; border-radius: 8px; }
+  label.rf-chk { align-items: flex-start; background: var(--aviso-bg); border: 1px solid #E8C76A; border-radius: 10px; padding: 12px; margin-top: 14px; }
+  label.rf-chk input { margin-top: 2px; }
+  .rf-mini { background: var(--no-bg); color: var(--no); font-size: 13px; font-weight: 700; border-radius: 8px; padding: 8px 10px; margin-top: 10px; }
+  .rf-mini:empty { display: none; }
+  /* Visor de documentos */
+  #visor { position: fixed; inset: 0; z-index: 40; background: #2B2F33; display: flex; flex-direction: column; }
+  .vis-top { display: flex; align-items: center; gap: 6px; background: var(--tinta); color: #fff; padding: 8px; padding-top: max(8px, env(safe-area-inset-top)); }
+  .vis-top button { min-height: 42px; min-width: 42px; padding: 0 10px; background: transparent; color: #fff; border: 1px solid #555; font-size: 18px; }
+  .vis-tit { flex: 1; min-width: 0; } .vis-tit b, .vis-tit small { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .vis-tit small { opacity: .75; font-size: 12px; }
+  #vis-cuerpo { flex: 1; overflow: auto; padding: 8px; -webkit-overflow-scrolling: touch; }
+  #vis-cuerpo canvas, #vis-cuerpo img { display: block; margin: 0 auto 8px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.4); }
+  #vis-cuerpo .vis-msg { color: #fff; text-align: center; padding: 40px 16px; }
+  #vis-cuerpo .vis-msg button { margin-top: 14px; }
+  /* Cámara propia (abre la cámara también donde el navegador mostraría el explorador de archivos) */
+  #camara { position: fixed; inset: 0; z-index: 50; background: #000; display: flex; flex-direction: column; }
+  #cam-video { flex: 1; width: 100%; min-height: 0; object-fit: contain; background: #000; }
+  #cam-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; transition: opacity .15s; }
+  #cam-flash.on { opacity: .8; transition: none; }
+  .cam-top { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top)); }
+  #cam-cont { color: #fff; font-weight: 700; background: rgba(0,0,0,.5); border-radius: 999px; padding: 4px 12px; }
+  #cam-cont:empty { visibility: hidden; }
+  #cam-girar { width: 48px; height: 48px; min-height: 0; padding: 0; border-radius: 50%; border: 0; background: rgba(0,0,0,.5); font-size: 22px; }
+  .cam-bar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; padding: 18px 16px;
+    padding-bottom: max(18px, env(safe-area-inset-bottom)); background: #000; }
+  .cam-bar button { background: transparent; color: #fff; border: 0; font-size: 17px; }
+  #cam-cancelar { justify-self: start; } #cam-listo { justify-self: end; }
+  #cam-disparar { width: 74px; height: 74px; min-height: 0; padding: 0; border-radius: 50%; background: #fff;
+    border: 5px solid #fff; box-shadow: inset 0 0 0 3px #000; }
+  #cam-disparar:active { transform: scale(.94); }
+  /* Administración */
+  .card.adm { border: 2px dashed #8A5A00; }
+  .chip.admin { background: #FFF1CC; color: #8A5A00; margin-right: 6px; }
+  .acc-adm { display: flex; gap: 6px; flex-wrap: wrap; flex-basis: 100%; margin-top: 4px; }
+  .acc-adm button { min-height: 36px; padding: 4px 10px; font-size: 13px; border-color: #E8C76A; background: #FFFBEF; }
+  ul.lista li.con-adm { flex-wrap: wrap; }
+  .tag-corr { display: inline-block; margin-top: 2px; font-size: 11px; font-weight: 700; color: var(--aviso); background: var(--aviso-bg); border-radius: 6px; padding: 1px 6px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<header class="top">
+  <button type="button" class="brand" id="btn-marca" aria-label="Ir al inicio">
+    <div class="logo"><img src="logo-globo.png" alt="GEOVITA"></div>
+    <div class="marca"><b>GEO ELEC</b><small>Gestión Departamento Eléctrico Geovita<br>El Teniente · Obras Premin</small></div>
+  </button>
+  <span id="chip-admin" class="chip admin" hidden>ADMIN</span>
+  <span id="net" class="chip">…</span>
+</header>
+
+<main>
+  <!-- ============ INICIO ============ -->
+  <section id="v-inicio">
+    <div class="hero">
+      <img src="logo-geovita.png" alt="GEOVITA">
+      <small>Departamento Eléctrico · El Teniente · Obras Premin</small>
+    </div>
+    <button type="button" class="aviso-pend" id="ini-pend" data-ir="envios" hidden></button>
+    <button class="big primary inicio-act" id="btn-iniciar">⚡ Iniciar actividad<small>Inspección mensual o mantención trimestral</small></button>
+
+    <h3 class="sec-tit">Tableros eléctricos</h3>
+    <div class="tiles">
+      <button type="button" class="tile" data-tab-go="MANT"><span class="t-ico">🔧</span><b>Mantenciones</b><small id="tile-mant"></small></button>
+      <button type="button" class="tile" data-tab-go="INSP"><span class="t-ico">🔍</span><b>Inspecciones</b><small id="tile-insp"></small></button>
+      <button type="button" class="tile" data-ir="etiquetas"><span class="t-ico">🏷️</span><b>Etiquetas QR</b><small id="tile-etq"></small></button>
+      <button type="button" class="tile" data-ir="envios"><span class="t-ico">📤</span><b>Envíos</b><small id="tile-env"></small></button>
+    </div>
+
+    <h3 class="sec-tit">Documentación</h3>
+    <div class="tiles">
+      <button type="button" class="tile" data-docs="GRUPOS"><span class="t-ico">👥</span><b>Grupos de trabajo</b><small>Difusiones y evaluaciones · Grupo 1-4 y TICA</small></button>
+      <button type="button" class="tile" data-docs="PROC"><span class="t-ico">📘</span><b>Procedimientos</b><small>Documentos de las actividades</small></button>
+      <button type="button" class="tile ancho" data-docs="PLANOS"><span class="t-ico">🗺️</span><b>Planos</b><small>Zonas de transición, mapas de calor, puntos de encuentro</small></button>
+    </div>
+    <div id="ini-admin" hidden>
+      <h3 class="sec-tit">Administración</h3>
+      <div class="tiles">
+        <button type="button" class="tile ancho" data-ir="admin"><span class="t-ico">⚙️</span><b>Panel de administración</b><small id="tile-admin">Tableros dados de baja, documentos retirados y registro de cambios</small></button>
+      </div>
+    </div>
+    <p class="muted version" id="version-app"></p>
+    <p class="muted version"><a href="#" class="lnk-admin" id="lnk-admin-ini">Modo administrador</a></p>
+  </section>
+
+  <!-- ============ PANEL DE ADMINISTRACIÓN ============ -->
+  <section id="v-admin" hidden>
+    <div class="card adm">
+      <h2>⚙️ Administración</h2>
+      <p class="muted" id="adm-quien"></p>
+      <p class="muted" style="margin:0">Los cambios se hacen desde cada lugar de la app (ficha del tablero, historial, documentos, envíos) y todos quedan en la hoja <b>Auditoría</b> con fecha, motivo y nombre.</p>
+    </div>
+    <div class="card">
+      <h3>Tableros dados de baja</h3>
+      <ul class="lista" id="adm-bajas"></ul>
+    </div>
+    <div class="card">
+      <h3>Documentos retirados</h3>
+      <ul class="lista" id="adm-docs"></ul>
+    </div>
+    <div class="card">
+      <h3>Últimos cambios</h3>
+      <ul class="lista" id="adm-audit"></ul>
+    </div>
+    <button class="big" id="btn-adm-salir">Salir del modo administrador</button>
+    <button class="big" data-ir="inicio">Volver al inicio</button>
+  </section>
+
+  <!-- ============ FORMULARIO DE CORRECCIÓN (ADMINISTRADOR) ============ -->
+  <section id="v-admin-form" hidden>
+    <div class="card adm">
+      <h2 id="af-titulo"></h2>
+      <p class="muted" id="af-info"></p>
+      <div id="af-campos"></div>
+      <label for="af-motivo">Motivo del cambio *</label>
+      <textarea id="af-motivo" class="may" placeholder="Ej.: error de tipeo, fecha mal ingresada…"></textarea>
+      <p class="error" id="af-error"></p>
+    </div>
+    <button class="big primary" id="btn-af-guardar">Guardar cambios</button>
+    <button class="big" id="btn-af-cancel">Cancelar</button>
+  </section>
+
+  <!-- ============ TABLEROS: MANTENCIONES / INSPECCIONES ============ -->
+  <section id="v-tableros" hidden>
+    <div class="tabs" id="tabs-act" role="tablist">
+      <button type="button" data-tab="MANT">🔧 Mantenciones</button>
+      <button type="button" data-tab="INSP">🔍 Inspecciones</button>
+    </div>
+    <div class="sectores" id="sectores"></div>
+    <div class="card" id="card-alertas" hidden>
+      <h3 id="al-titulo">Alertas</h3>
+      <div class="resumen" id="al-resumen"></div>
+      <ul class="lista" id="lista-alertas"></ul>
+    </div>
+    <div class="card">
+      <h3 id="bus-titulo">Buscar tablero</h3>
+      <input id="buscar" type="search" placeholder="Buscar ID, TAG GOM o ubicación">
+      <p class="nota-bus" id="nota-bus"></p>
+      <ul class="lista" id="lista-tab"></ul>
+      <p class="muted" id="cache-info" style="margin-top:10px"></p>
+    </div>
+    <button class="big" data-ir="inicio">Volver al inicio</button>
+  </section>
+
+  <!-- ============ ENVÍOS ============ -->
+  <section id="v-envios" hidden>
+    <div class="card sync" id="box-sync">
+      <div class="txt"><b id="n-pend">0</b> registros pendientes de envío<br>
+        <small class="muted" id="sync-msg">Se envían solos cuando hay señal.</small></div>
+      <button id="btn-sync">Enviar ahora</button>
+    </div>
+    <div class="card" id="card-pend" hidden>
+      <h3>Pendientes en este teléfono</h3>
+      <ul class="lista" id="lista-pend"></ul>
+    </div>
+    <div class="card" id="card-env">
+      <h3>Enviados recientemente</h3>
+      <ul class="lista" id="lista-env"></ul>
+    </div>
+    <button class="big" data-ir="inicio">Volver al inicio</button>
+  </section>
+
+  <!-- ============ ETIQUETAS QR ============ -->
+  <section id="v-etiquetas" hidden>
+    <div class="card">
+      <h3>Etiquetas QR creadas en este teléfono</h3>
+      <p class="muted">Imprímelas y pégalas en cada tablero. Para la etiqueta de un tablero ya registrado, ábrelo desde Mantenciones o Inspecciones y toca "Etiqueta QR y ficha PDF".</p>
+      <ul class="lista" id="lista-etq"></ul>
+    </div>
+    <button class="big" data-ir="inicio">Volver al inicio</button>
+  </section>
+
+  <!-- ============ RF01: CONTROLES CRÍTICOS ============ -->
+  <section id="v-rf01" hidden>
+    <div class="card rf01">
+      <div class="rf-cab"><span class="rf-ico">⚡</span><div><b>RF01 · ENERGÍA ELÉCTRICA</b><small>Riesgo de fatalidad N°1 · División El Teniente</small></div></div>
+      <p id="rf01-act" class="muted" style="margin:12px 0 0"></p>
+      <p>La energía eléctrica está considerada dentro del <b>riesgo de fatalidad N°1 de la División El Teniente</b>.
+        Antes de realizar cualquier intervención en el tablero, aplica y mantén controlados <b>todos los controles preventivos y mitigadores aplicables al RF01</b>,
+        correspondientes a los <b>Controles Críticos que Salvan Vidas – SIGO-G-012, versión 002, Codelco</b>.</p>
+      <p class="rf-alerta">Cualquier omisión de estos controles puede provocar la muerte del personal.</p>
+      <p>Aplica todo lo requerido y solo entonces procede con la actividad.</p>
+      <button type="button" class="big" id="btn-ver-sigo" hidden>📘 Ver SIGO-G-012</button>
+      <label class="chk rf-chk"><input type="checkbox" id="rf01-ok"> Confirmo que se aplicaron y verificaron todos los controles críticos preventivos y mitigadores del RF01 antes de intervenir.</label>
+    </div>
+    <button class="big primary" id="btn-rf01-seguir" disabled>Continuar con la actividad</button>
+    <button class="big" id="btn-rf01-cancel">Cancelar</button>
+  </section>
+
+  <!-- ============ DOCUMENTACIÓN ============ -->
+  <section id="v-docs" hidden>
+    <div class="card">
+      <h2 id="docs-titulo">Documentación</h2>
+      <p class="muted" id="docs-info" style="margin:4px 0 0"></p>
+      <div class="tabs tabs-in" id="docs-niveles"></div>
+      <div class="chips" id="docs-chips"></div>
+      <p class="nota-bus" id="docs-nota"></p>
+      <div class="tabs tabs-in" id="docs-tipos"></div>
+      <input id="docs-buscar" type="search" placeholder="Buscar por título o código" style="margin-top:12px">
+      <ul class="lista docs" id="docs-lista"></ul>
+    </div>
+    <button class="big primary" id="btn-doc-subir" hidden>Subir documento</button>
+    <button class="big" data-ir="inicio">Volver al inicio</button>
+    <p class="muted version"><a href="#" class="lnk-admin" id="lnk-admin">Modo administrador</a></p>
+  </section>
+
+  <!-- ============ SUBIR DOCUMENTO / NUEVA VERSIÓN ============ -->
+  <section id="v-subir" hidden>
+    <div class="card">
+      <h2 id="sub-titulo">Subir documento</h2>
+      <p class="muted" id="sub-info"></p>
+      <div id="sub-box-grupo"><label for="sub-grupo">Grupo *</label><select id="sub-grupo"></select></div>
+      <div id="sub-box-nivel"><label for="sub-nivel">Nivel *</label><select id="sub-nivel"><option>Producción</option><option>Acarreo</option></select></div>
+      <div id="sub-box-tipo"><label for="sub-tipo">Tipo *</label><select id="sub-tipo"></select></div>
+      <label for="sub-tit">Título *</label><input id="sub-tit" class="may">
+      <div class="row2">
+        <div><label for="sub-cod">Código</label><input id="sub-cod" class="may" placeholder="Ej.: SIGO-G-012"></div>
+        <div><label for="sub-ver">Versión *</label><input id="sub-ver" class="may" placeholder="Ej.: 002"></div>
+      </div>
+      <label for="sub-fecha">Fecha de vigencia *</label><input type="date" id="sub-fecha">
+      <div class="foto" id="sub-box-arch">
+        <span>Archivo * (PDF, imagen, Word, Excel… máx. 25 MB)</span>
+        <div class="fila-btn">
+          <label class="btn-foto">📷 Foto<input type="file" accept="image/*" capture="environment" hidden class="sub-file"></label>
+          <label class="btn-foto sec">📎 Elegir archivo<input type="file" hidden class="sub-file"></label>
+        </div>
+        <div class="prev" id="sub-prev"></div>
+      </div>
+      <label for="sub-por">Subido por *</label><input id="sub-por" class="may">
+      <label for="sub-obs">Observación / cambios de esta versión</label><textarea id="sub-obs" class="may"></textarea>
+      <p class="error" id="sub-error"></p>
+    </div>
+    <button class="big primary" id="btn-sub-guardar">Subir</button>
+    <button class="big" id="btn-sub-cancel">Cancelar</button>
+  </section>
+
+  <!-- ============ TIPO DE ACTIVIDAD ============ -->
+  <section id="v-actividad" hidden>
+    <div class="card">
+      <h2>¿Qué actividad vas a realizar?</h2>
+      <p class="muted">Elige el tipo de actividad. Define el checklist y los documentos que se solicitarán.</p>
+    </div>
+    <button class="big opcion" data-act="INSP">
+      <b>Inspección mensual</b>
+      <small>Revisión superficial: condiciones generales, estado visible, señalética, orden y aseo.</small>
+    </button>
+    <button class="big opcion" data-act="MANT">
+      <b>Mantención trimestral</b>
+      <small>Checklist de mantención del tipo de tablero + checklist físico firmado.</small>
+    </button>
+    <button class="big" data-ir="inicio">Cancelar</button>
+  </section>
+
+  <!-- ============ PREGUNTA QR ============ -->
+  <section id="v-pregunta" hidden>
+    <div class="card">
+      <p class="muted" id="preg-act" style="margin-bottom:4px"></p>
+      <h2>¿El tablero tiene código QR?</h2>
+      <p class="muted">Si tiene etiqueta QR, escanéala para cargar su ficha e historial. Si no tiene, se creará su ficha y su etiqueta QR.</p>
+    </div>
+    <button class="big primary" id="btn-tiene-qr">Sí, escanear QR</button>
+    <button class="big" id="btn-sin-qr">No, crear ficha del tablero</button>
+    <button class="big" id="btn-qr-danado">QR dañado: buscar por ID o TAG</button>
+    <button class="big" data-ir="inicio">Cancelar</button>
+  </section>
+
+  <!-- ============ ETIQUETA QR ============ -->
+  <section id="v-etiqueta" hidden>
+    <div class="card etq">
+      <h2 id="etq-titulo">Etiqueta QR</h2>
+      <p class="muted" id="etq-info"></p>
+      <img id="etq-img" alt="Etiqueta QR del tablero">
+    </div>
+    <button class="big primary" id="btn-pdf-desc">Descargar ficha PDF</button>
+    <div class="grid2">
+      <button class="big" id="btn-pdf-comp">Compartir PDF</button>
+      <button class="big" id="btn-etq-descargar">Solo QR (imagen)</button>
+    </div>
+    <button class="big" data-ir="inicio">Listo</button>
+  </section>
+
+  <!-- ============ FICHA ============ -->
+  <section id="v-ficha" hidden>
+    <div class="card">
+      <p class="muted">Ficha del tablero</p>
+      <h2 id="fi-id"></h2>
+      <p class="muted" id="fi-fuente" style="margin:4px 0 0"></p>
+      <div class="alertas" id="fi-alertas"></div>
+      <div class="aviso" id="fi-baja" hidden style="margin:10px 0 0"></div>
+      <dl id="fi-dl"></dl>
+    </div>
+    <div class="card" id="fi-uni-card">
+      <h3>Diagrama unilineal</h3>
+      <div id="fi-uni"></div>
+      <button class="big" id="btn-cargar-uni" hidden style="margin:12px 0 0">Cargar diagrama unilineal confeccionado</button>
+    </div>
+    <div class="card bloque-act" id="fi-mant">
+      <div class="cab-act"><h3>🔧 Mantención trimestral</h3><span id="fi-mant-badge"></span></div>
+      <dl id="fi-mant-dl"></dl>
+      <h4>Historial de mantenciones</h4>
+      <ul class="lista" id="fi-mant-hist"></ul>
+      <button class="big primary" data-nueva="MANT" style="margin:12px 0 0">Registrar mantención trimestral</button>
+    </div>
+    <div class="card bloque-act" id="fi-insp">
+      <div class="cab-act"><h3>🔍 Inspección mensual</h3><span id="fi-insp-badge"></span></div>
+      <dl id="fi-insp-dl"></dl>
+      <h4>Historial de inspecciones</h4>
+      <ul class="lista" id="fi-insp-hist"></ul>
+      <button class="big primary" data-nueva="INSP" style="margin:12px 0 0">Registrar inspección mensual</button>
+    </div>
+    <div class="card adm" id="fi-admin" hidden>
+      <h3>⚙️ Administración del tablero</h3>
+      <p class="muted">Corrige los datos de la ficha o da de baja el tablero. En el historial de arriba, cada registro tiene "Corregir" y "Anular".</p>
+      <div class="fila-btn">
+        <button type="button" id="btn-adm-editar">✏️ Editar datos</button>
+        <button type="button" id="btn-adm-baja">⛔ Dar de baja</button>
+        <button type="button" id="btn-adm-reactivar" hidden>♻️ Reactivar</button>
+      </div>
+    </div>
+    <div class="card" id="fi-otros-card" hidden>
+      <h3>Otros registros</h3>
+      <ul class="lista" id="fi-otros"></ul>
+    </div>
+    <div class="card" id="fi-fotos-card" hidden>
+      <h3>Fotos del estado del tablero</h3>
+      <p class="muted" id="fi-fotos-info"></p>
+      <div class="galeria" id="fi-fotos"></div>
+      <a id="fi-carpeta" href="#" target="_blank" rel="noopener" hidden>Abrir carpeta del tablero en Drive</a>
+    </div>
+    <button class="big" id="btn-fi-qr">Etiqueta QR y ficha PDF</button>
+    <button class="big" data-ir="inicio">Volver al inicio</button>
+  </section>
+
+  <!-- ============ CARGAR UNILINEAL CONFECCIONADO ============ -->
+  <section id="v-unilineal" hidden>
+    <div class="card">
+      <h2>Cargar diagrama unilineal</h2>
+      <p class="muted" id="uni-info"></p>
+      <div class="foto" id="uni-box">
+        <span>Diagrama unilineal confeccionado (imagen o PDF) *</span>
+        <div class="fila-btn">
+          <label class="btn-foto">📷 Tomar foto<input type="file" accept="image/*" capture="environment" hidden class="uni-file"></label>
+          <label class="btn-foto sec">📎 Elegir archivo<input type="file" accept="image/*,application/pdf" hidden class="uni-file"></label>
+        </div>
+        <div class="prev" id="uni-prev"></div>
+      </div>
+      <div class="row2">
+        <div><label for="uniPor">Cargado por *</label><input id="uniPor" class="may"></div>
+        <div><label for="uniCargo">Cargo *</label><select id="uniCargo" class="sel-cargo"></select></div>
+      </div>
+      <label for="uniObs">Observación</label>
+      <textarea id="uniObs" class="may"></textarea>
+      <p class="error" id="uni-error"></p>
+    </div>
+    <button class="big primary" id="btn-uni-guardar">Guardar diagrama</button>
+    <button class="big" id="btn-uni-cancel">Cancelar</button>
+  </section>
+
+  <!-- ============ FORMULARIO ============ -->
+  <section id="v-form" hidden>
+    <form id="f" novalidate autocomplete="off">
+      <div class="card">
+        <h2 id="f-titulo">Registro de tablero</h2>
+        <p class="muted" id="f-id-info"></p>
+        <div class="rf-mini" id="f-rf01"></div>
+        <label>Tipo de actividad *</label>
+        <div class="seg" id="seg-act"></div>
+        <p class="muted" id="act-ayuda" style="margin:8px 0 0"></p>
+      </div>
+
+      <div class="card">
+        <h3>Identificación del tablero</h3>
+        <label>Nivel *</label>
+        <div class="seg" id="seg-nivel"></div>
+        <label for="tipo">Tipo de tablero *</label>
+        <select id="tipo" name="tipoKey"><option value="">Seleccione…</option></select>
+        <label for="ubicacion">Ubicación *</label>
+        <input id="ubicacion" name="ubicacion">
+        <div class="row2">
+          <div><label for="numero">N° de tablero</label><input id="numero" name="numero"></div>
+          <div><label for="contrato">N° de contrato</label><input id="contrato" class="fijo" readonly tabindex="-1"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Última mantención registrada</h3>
+        <p class="muted">Antecedente de la mantención anterior del tablero.</p>
+        <label class="chk"><input type="checkbox" id="sinMantPrev"> No existe registro de mantención anterior</label>
+        <div id="box-mant-prev">
+          <label for="fMantPrev">Fecha de la última mantención *</label>
+          <input type="date" id="fMantPrev" name="fMantPrev">
+          <div class="row2">
+            <div><label for="mantPrev">Mantenedor que la realizó *</label><input id="mantPrev" name="mantPrev"></div>
+            <div><label for="cargoPrev">Cargo *</label><select id="cargoPrev" name="cargoPrev" class="sel-cargo"></select></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 id="ejec-titulo">Mantenedor que realiza esta actividad</h3>
+        <label for="fAct" id="fAct-label">Fecha de la actividad *</label>
+        <input type="date" id="fAct" name="fAct">
+        <div class="row2">
+          <div><label for="realizadoPor">Nombre del mantenedor *</label><input id="realizadoPor" name="realizadoPor"></div>
+          <div><label for="cargo">Cargo *</label><select id="cargo" name="cargo" class="sel-cargo"></select></div>
+        </div>
+      </div>
+
+      <div class="card" id="card-check" hidden>
+        <h3 id="check-titulo"></h3>
+        <div class="progreso" id="check-prog"></div>
+        <div id="check-extra" hidden>
+          <div class="row2">
+            <div><label for="marcaTrafo">Marca del transformador</label><input id="marcaTrafo" name="marcaTrafo"></div>
+            <div><label for="tempTrafo">Temperatura transformador (°C)</label><input id="tempTrafo" name="tempTrafo" inputmode="decimal"></div>
+          </div>
+        </div>
+        <div id="check-items"></div>
+        <label for="obsChecklist">Observaciones del checklist</label>
+        <textarea id="obsChecklist" name="obsChecklist"></textarea>
+      </div>
+
+      <div class="card" id="card-fotos-estado">
+        <h3>Fotos del estado del tablero</h3>
+        <p class="muted">Registra cómo se encontró el tablero: exterior, interior, conexiones y cualquier hallazgo. Hasta 8 fotos.</p>
+        <div class="galeria" id="gal-estado"></div>
+        <div class="fila-btn">
+          <label class="btn-foto">📷 Tomar foto<input type="file" accept="image/*" capture="environment" hidden data-estado></label>
+          <label class="btn-foto sec">🖼 Elegir de la galería<input type="file" accept="image/*" multiple hidden data-estado></label>
+        </div>
+        <p class="muted" id="gal-info" style="margin:10px 0 0"></p>
+      </div>
+
+      <div class="card">
+        <h3>TAG GOM</h3>
+        <label>¿El tablero cuenta con TAG GOM? *</label>
+        <div class="seg" id="seg-tag"></div>
+        <div id="box-tag" hidden>
+          <label for="tagGom">N° TAG GOM *</label>
+          <input id="tagGom" name="tagGom">
+        </div>
+        <div id="lugar-fotos-tag"></div>
+      </div>
+
+      <div class="card" id="card-uni">
+        <h3>Diagrama unilineal</h3>
+        <label>¿El tablero cuenta con diagrama unilineal? *</label>
+        <div class="seg" id="seg-uni"></div>
+        <div id="box-uni-si" hidden>
+          <div class="foto" data-campo="unilineal">
+            <span id="uni-si-label">Imagen o PDF del diagrama unilineal *</span>
+            <div class="fila-btn">
+              <label class="btn-foto">📷 Tomar foto<input type="file" accept="image/*" capture="environment" hidden></label>
+              <label class="btn-foto sec">📎 Elegir archivo<input type="file" accept="image/*,application/pdf" hidden></label>
+            </div>
+            <div class="prev"></div>
+          </div>
+        </div>
+        <div id="box-uni-no" hidden>
+          <div class="aviso" style="margin-top:12px">Al enviar este registro se creará una <b>alerta para confeccionar el diagrama unilineal</b>. Cuando esté hecho, se carga desde la ficha del tablero.</div>
+          <label for="obsUni">Observación *</label>
+          <textarea id="obsUni" name="obsUni" placeholder="Cantidad de circuitos y salidas, protecciones, estado general, etc."></textarea>
+          <label for="alimDesde">Alimentación principal proviene desde *</label>
+          <input id="alimDesde" name="alimDesde" placeholder="Ej.: CDD, TDF o tablero de origen">
+          <div class="row2">
+            <div><label for="bloqueo">Punto de bloqueo *</label><input id="bloqueo" name="bloqueo" placeholder="Dónde se bloquea"></div>
+            <div><label for="calibre">Calibre cable de alimentación *</label><input id="calibre" name="calibre" placeholder="Ej.: 3x6 mm² o 4 AWG"></div>
+          </div>
+          <div id="lugar-fotos-uni"></div>
+          <p class="aviso" id="fotos-uni-arriba" hidden style="margin:14px 0 0">Las fotos del frontis y del interior se adjuntan arriba, en la sección <b>TAG GOM</b>; sirven también para confeccionar el diagrama.</p>
+        </div>
+      </div>
+
+      <!-- Bloque de fotos de identificación: se muestra dentro de TAG GOM o de Diagrama unilineal, según la respuesta -->
+      <div id="bloque-fotos-id" class="bloque-fotos" hidden>
+        <p class="muted" id="fotos-ayuda"></p>
+        <div id="fotos"></div>
+      </div>
+
+      <div class="card" id="card-docs">
+        <h3>Checklist físico</h3>
+        <p class="muted" id="chk-fis-ayuda"></p>
+        <div class="adj" id="adj-checklist"></div>
+        <div class="fila-btn">
+          <label class="btn-foto">📷 Foto del checklist<input type="file" accept="image/*" capture="environment" hidden data-adj="checklist"></label>
+          <label class="btn-foto sec">📎 PDF o imagen<input type="file" accept="image/*,application/pdf" multiple hidden data-adj="checklist"></label>
+        </div>
+        <h3 style="margin-top:22px">Documentación adicional complementaria</h3>
+        <p class="muted">Informes, mediciones, certificados, planillas u otros archivos que complementen la actividad (opcional).</p>
+        <div class="adj" id="adj-doc"></div>
+        <div class="fila-btn">
+          <label class="btn-foto sec">📎 Adjuntar archivos<input type="file" multiple hidden data-adj="doc"></label>
+        </div>
+      </div>
+
+      <div class="card">
+        <label for="obsGeneral" style="margin-top:0">Observación general</label>
+        <textarea id="obsGeneral" name="obsGeneral"></textarea>
+      </div>
+
+      <p class="error" id="f-error"></p>
+      <div class="actions">
+        <button type="button" id="btn-f-cancel">Cancelar</button>
+        <button type="submit" class="primary">Guardar registro</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ============ ESCÁNER ============ -->
+  <section id="v-scan" hidden>
+    <div class="card">
+      <h3>Apunte al código QR del tablero</h3>
+      <video id="video" playsinline muted></video>
+      <p class="muted" id="scan-msg" style="margin-top:10px"></p>
+    </div>
+    <button class="big" id="btn-scan-cancel">Cancelar</button>
+  </section>
+</main>
+<!-- ============ VISOR DE DOCUMENTOS ============ -->
+<div id="visor" hidden>
+  <div class="vis-top">
+    <button type="button" id="vis-cerrar" aria-label="Cerrar">✕</button>
+    <div class="vis-tit"><b id="vis-titulo"></b><small id="vis-sub"></small></div>
+    <button type="button" id="vis-menos" aria-label="Alejar">−</button>
+    <button type="button" id="vis-mas" aria-label="Acercar">+</button>
+    <button type="button" id="vis-desc" aria-label="Descargar">⤓</button>
+  </div>
+  <div id="vis-cuerpo"></div>
+</div>
+
+<!-- ============ CÁMARA DE LA APP ============ -->
+<div id="camara" hidden>
+  <video id="cam-video" playsinline muted autoplay></video>
+  <div id="cam-flash"></div>
+  <div class="cam-top">
+    <span id="cam-cont"></span>
+    <button type="button" id="cam-girar" aria-label="Cambiar cámara">🔄</button>
+  </div>
+  <div class="cam-bar">
+    <button type="button" id="cam-cancelar">Cancelar</button>
+    <button type="button" id="cam-disparar" aria-label="Tomar foto"></button>
+    <button type="button" id="cam-listo">Listo</button>
+  </div>
+</div>
+<div id="toast"></div>
+<canvas id="canvas" hidden></canvas>
+
+<script src="lib/jsQR.js" defer></script>
+<script src="lib/qrcode.js"></script>
+<script src="lib/jspdf.umd.min.js" defer></script>
+<script>
+// ===================== CONFIGURACIÓN =====================
+const CONFIG = {
+  // URL de la aplicación web de Apps Script (termina en /exec)
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwdHUJ7ttERO6ZJ2qHJl6wS-mfGYgE48UD_m686Ooy20gl_zCfZ0zLe7S-GTIZ0xfPD/exec',
+  // Debe ser igual a CONFIG.CLAVE en Codigo.gs
+  CLAVE: 'geovita-esm-2026',
+  // N° de contrato fijo (se registra en todas las fichas; no se puede modificar en el formulario)
+  CONTRATO: '4600030339'
+};
+
+// Versión visible al pie de la pantalla de inicio (sirve para confirmar que el teléfono tiene la última)
+const VERSION_APP = 'v15 · 26-10-2026';
+const NIVELES = ['UCL', 'Producción', 'Acarreo', 'SNV'];
+const SEN = 'Cuadro de señalética (riesgo eléctrico, potencia, nivel de tensión, punto de bloqueo, maniobra RCP, logo empresa, personal autorizado, diagrama unilineal, carga de fuego, programa de mantenimiento)';
+const BASE_TD = ['Orden y aseo en el sector', 'Iluminación', 'Número de TAG', 'Soporte o anclaje del tablero en buen estado',
+  'Estructura del tablero en buenas condiciones', 'Tablero cuenta con cinta reflectante al exterior',
+  'Gabinete cuenta con candado y aldaba', 'Limpieza de tablero (paño, brocha y aspirado)', 'Contratapa y cerradura',
+  'Diagrama unilineal', 'Conexiones de tierras a bornes', 'Revisión puestas a tierra de panel eléctrico, contratapa y puerta',
+  SEN, 'Prueba relé fuga a tierra', 'Prueba de interruptor diferencial', 'Estado de breaker principal',
+  'Estado de breakers secundarios', 'Repartidor de barras y acrílico'];
+const FIN_TD = ['Reapriete de conexionado', 'Ordenamiento y estado de cableados', 'Conexiones de neutro a bornes',
+  'Estado de luces piloto', 'Estado parada de emergencia'];
+const conIlum = (txt) => BASE_TD.map(x => x === 'Iluminación' ? txt : x);
+
+const CHECKLISTS = {
+  CDD: { titulo: 'Checklist CDD – Centro de Distribución (RE-4600030339-ELEC-005)', items: [
+    'Orden y aseo interior y exterior del centro', 'Estado y limpieza de gabinete', 'Gabinete cuenta con candado y aldaba',
+    'Revisión puesta a tierra, incluyendo partes metálicas y puertas aterrizadas', 'Malla a tierra con 2 chicotes',
+    'Estado de cableado y ordenamiento de cables', 'Estado de transformador', 'Reapriete de conexionado (torque de tuercas)',
+    'Mediciones de aislación', 'Estado de alumbrado del centro',
+    'Cierre perimetral: malla tipo Acma o similar, puertas y bisagras, altura mín. 1,80 m, color amarillo y cerrado con candado',
+    SEN, 'Kit de emergencia: careta, pértiga de rescate y guantes dieléctricos (goma y cuero) acorde a energía incidente y nivel de tensión',
+    'Revisión de extintor (soporte o caja, vencimiento anual y mensual, logos, manómetro, manguera, seguro, manilla de disparo, cilindro)'] },
+  TDA: { titulo: 'Checklist TDA – Tablero de Alumbrado 400 V (RE-4600030339-ELEC-006)', items: [
+    ...conIlum('Iluminación del sector'), 'Estado de enchufe macho trifásico 5x32A', 'Rotulación de cables',
+    'Revisión de prensa cable', 'Estado de enchufes hembra monofásicos embutidos 3x16A', ...FIN_TD] },
+  TDF400: { titulo: 'Checklist TDF – Tablero de Fuerza 400 V (RE-4600030339-ELEC-007)', items: [
+    ...conIlum('Iluminación de tablero'), 'Estado de enchufes hembra trifásicos embutidos 5x32A', 'Rotulación de cables',
+    'Revisión de prensa cable', 'Estado de enchufes hembra monofásicos embutidos 3x16A', ...FIN_TD] },
+  TDF600: { titulo: 'Checklist TDF – Tablero de Fuerza 600 V (RE-4600030339-ELEC-008)', items: [
+    ...conIlum('Iluminación de tablero'), 'Rotulación de cables', 'Revisión de prensa cable', ...FIN_TD] },
+  GENERAL: { titulo: 'Checklist Mantenimiento Tablero Eléctrico (RE-4600030339-ELEC-010)', items: [
+    'El acceso al tablero está despejado y cercano al área de trabajo', 'Tiene señalización de "Riesgo Eléctrico" en la puerta frontal',
+    'Tiene unidades y simbología apropiadas (voltios, amperios, Hertz, watts, etc.)', 'Tablero eléctrico cuenta con diagrama unilineal',
+    'Tablero cuenta con índice de protección (IP)', 'Posee tapa interior que NO permite el contacto con partes energizadas',
+    'El cuerpo metálico (incluyendo la puerta) está conectado a tierra', 'El diferencial termomagnético funciona correctamente',
+    'Se comprobó el tiempo y la intensidad de disparo de los equipos diferenciales', 'Cuenta con parada de emergencia',
+    'Al interior del tablero, todos los interruptores están identificados', 'La puesta a tierra está instalada correctamente (cobre desnudo)',
+    'Enchufes hembra industriales cuentan con tapa de protección y están firmemente asegurados al chasis'] }
+};
+
+const TIPOS = [
+  { key: 'TDA',    codigo: 'TDA',   nombre: 'TDA – Tablero de Alumbrado',          checklist: 'TDA' },
+  { key: 'TSM',    codigo: 'TSM',   nombre: 'TSM – Tablero de Servicios Menores',  checklist: 'GENERAL' },
+  { key: 'TDFYC',  codigo: 'TDFYC', nombre: 'TDFYC – Tablero de Fuerza y Control', checklist: 'GENERAL' },
+  { key: 'TEJ',    codigo: 'TEJ',   nombre: 'TEJ – Tablero Eléctrico Jumbo',       checklist: 'GENERAL' },
+  { key: 'TDF400', codigo: 'TDF',   nombre: 'TDF 400 V – Tablero de Fuerza 400 V', checklist: 'TDF400' },
+  { key: 'TDF600', codigo: 'TDF',   nombre: 'TDF 600 V – Tablero de Fuerza 600 V', checklist: 'TDF600' },
+  { key: 'TPV',    codigo: 'TPV',   nombre: 'TPV – Tablero Partidor Ventilador',   checklist: 'GENERAL' },
+  { key: 'CDD',    codigo: 'CDD',   nombre: 'CDD – Centro de Distribución',        checklist: 'CDD' }
+];
+
+const CODIGO_NIVEL = { 'UCL': 'UCL', 'Producción': 'PRO', 'Acarreo': 'ACA', 'SNV': 'SNV' };
+
+// Periodicidad: inspección mensual (30 días) y mantención trimestral (90 días).
+// "aviso" = días antes del vencimiento en que el tablero pasa a "por vencer".
+const ACT = {
+  INSP: { nombre: 'Inspección mensual',    dias: 30, aviso: 7 },
+  MANT: { nombre: 'Mantención trimestral', dias: 90, aviso: 15 }
+};
+const CARGOS = ['Maestro eléctrico', 'Supervisor eléctrico', 'Jefe de terreno', 'Jefe de departamento'];
+
+// Checklist de la inspección mensual: revisión superficial / condiciones visibles del tablero
+const INSPECCION = { titulo: 'Inspección mensual – Condiciones generales del tablero', items: [
+  'Acceso al tablero despejado', 'Orden y aseo en el sector', 'Iluminación del sector',
+  'Estructura, soporte y anclaje sin daños visibles', 'Puerta, contratapa y cerradura en buen estado',
+  'Gabinete cuenta con candado y aldaba', 'Identificación / número de TAG visible', 'Cinta reflectante al exterior',
+  'Señalética visible (riesgo eléctrico, nivel de tensión, punto de bloqueo, personal autorizado)',
+  'Diagrama unilineal presente en el tablero', 'Sin cables expuestos, dañados o sueltos a la vista',
+  'Prensa cables y entradas de cables en buen estado', 'Sin presencia de agua, humedad o polvo excesivo',
+  'Enchufes y tapas de protección en buen estado', 'Luces piloto funcionando',
+  'Parada de emergencia visible y sin daños', 'Sin signos de sobrecalentamiento (olor, decoloración o ruido anormal)'] };
+const INSP_CDD = ['Cierre perimetral en buen estado y cerrado con candado', 'Kit de emergencia completo (careta, pértiga, guantes dieléctricos)',
+  'Extintor en su lugar y vigente'];
+const MAX_FOTOS_ESTADO = 8;
+// Logo de la empresa para la ficha PDF y la etiqueta QR (queda guardado para uso sin señal)
+const LOGO = new Image(); LOGO.src = 'logo-geovita.png';
+const logoListo = () => LOGO.complete && LOGO.naturalWidth > 0;
+const FOTOS = [
+  { campo: 'frontis',  corto: 'foto del frontis',  label: 'Foto del frontis (número, identificación y condiciones)' },
+  { campo: 'interior', corto: 'foto del interior', label: 'Foto del interior (circuitos, salidas y protecciones)' }
+];
+
+// ===================== UTILIDADES =====================
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ls = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+function toast(msg, ms = 3000) {
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), ms);
+}
+function uuid() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0; return (c === 'x' ? r : (r & 3 | 8)).toString(16);
+  });
+}
+const appUrl = () => location.origin + location.pathname.replace(/index\.html$/, '');
+const fmtFecha = (iso) => { try { return new Date(iso).toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' }); } catch { return iso; } };
+const configurado = () => /^https:\/\/script\.google(usercontent)?\.com\//.test(CONFIG.SCRIPT_URL);
+
+// ===================== ALMACÉN LOCAL (IndexedDB) =====================
+const DB = {
+  _db: null,
+  open() {
+    if (this._db) return Promise.resolve(this._db);
+    return new Promise((res, rej) => {
+      const rq = indexedDB.open('tableros-esm', 1);
+      rq.onupgradeneeded = () => rq.result.createObjectStore('pendientes', { keyPath: 'uuid' });
+      rq.onsuccess = () => { this._db = rq.result; res(this._db); };
+      rq.onerror = () => rej(rq.error);
+    });
+  },
+  async tx(modo, fn) {
+    const db = await this.open();
+    return new Promise((res, rej) => {
+      const t = db.transaction('pendientes', modo); const st = t.objectStore('pendientes');
+      const r = fn(st); t.oncomplete = () => res(r && r.result); t.onerror = () => rej(t.error);
+    });
+  },
+  put(o) { return this.tx('readwrite', st => st.put(o)); },
+  del(k) { return this.tx('readwrite', st => st.delete(k)); },
+  all() { return this.tx('readonly', st => st.getAll()); }
+};
+
+// ===================== ESTADO =====================
+let estado = null;
+let actividadInicial = '';   // la elegida al presionar "Iniciar actividad"
+function estadoNuevo(pre = {}) {
+  return { id: pre.id || '', esAlta: !!pre.esAlta, actividad: pre.actividad || '', nivel: pre.nivel || '', tipoKey: pre.tipoKey || '',
+    resp: {}, tieneTag: pre.tieneTag || '', tieneUni: pre.tieneUni || '', uniPrevio: pre.uniLink || '',
+    fotos: {}, fotosEstado: [], fotosItem: {}, adj: { checklist: [], doc: [] } };
+}
+
+// ===================== NAVEGACIÓN =====================
+const VISTAS = ['inicio', 'admin', 'admin-form', 'tableros', 'envios', 'etiquetas', 'actividad', 'rf01', 'pregunta', 'etiqueta', 'ficha', 'unilineal', 'form', 'scan', 'docs', 'subir'];
+// Botón / gesto "atrás" del teléfono: cada pantalla abierta queda en el historial del navegador,
+// así "atrás" vuelve a la pantalla anterior en vez de salir de la app.
+const pila = [];                 // pantallas abiertas sobre "inicio": { v, id, alInicio }
+const trasPop = [];              // acciones a ejecutar en el próximo "popstate" provocado por la propia app
+const REEMPLAZABLES = ['scan', 'form', 'unilineal', 'rf01', 'subir', 'admin-form'];   // pasos intermedios: no quedan en el historial
+let sinConfirmar = false;
+function ir(vista, opt = {}) {
+  VISTAS.forEach(v => $('#v-' + v).hidden = v !== vista);
+  if (vista === 'inicio') {
+    if (pila.length && !opt.desdeHist) {
+      const n = pila.length;
+      trasPop.push(() => { if (location.search) history.replaceState({ n: 0 }, '', appUrl()); });
+      history.go(-n);
+    } else if (location.search) history.replaceState({ n: 0 }, '', appUrl());
+    pila.length = 0;
+  } else if (!opt.desdeHist) {
+    const ent = { v: vista, id: opt.id || '', alInicio: !!opt.alInicio };
+    const top = pila[pila.length - 1];
+    const url = opt.url || location.href;
+    if (top && top.v === vista && top.id === ent.id) { pila[pila.length - 1] = ent; history.replaceState({ n: pila.length }, '', url); }
+    else if (top && REEMPLAZABLES.includes(top.v)) { pila[pila.length - 1] = ent; history.replaceState({ n: pila.length }, '', url); }
+    else { pila.push(ent); history.pushState({ n: pila.length }, '', url); }
+  } else if (opt.url) history.replaceState(history.state, '', opt.url);
+  if (vista !== 'scan') cerrarScanner();
+  renderVista(vista);
+  window.scrollTo(0, 0);
+}
+// Volver atrás desde la app (botones "Cancelar"), sin preguntar
+function renderVista(v) {
+  if (v === 'inicio') renderInicio();
+  else if (v === 'tableros') { renderTabs(); renderAlertas(); renderBusqueda(); }
+  else if (v === 'envios') renderEnvios();
+  else if (v === 'etiquetas') renderEtiquetas();
+  else if (v === 'admin') renderAdmin();
+}
+const vistaActual = () => VISTAS.find(v => !$('#v-' + v).hidden);
+// Logo / nombre de la app: vuelve al inicio
+$('#btn-marca').addEventListener('click', () => {
+  const v = vistaActual();
+  if (v === 'inicio') return;
+  if ((v === 'form' || v === 'subir') && !confirm('¿Salir sin guardar? Se perderán los datos ingresados.')) return;
+  ir('inicio');
+});
+// Mantenciones / Inspecciones desde el inicio
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-tab-go]'); if (!b) return;
+  tabAct = b.dataset.tabGo; ls.set('tabAct', tabAct);
+  ir('tableros');
+});
+function volver() { if (pila.length) { sinConfirmar = true; history.back(); } else ir('inicio'); }
+
+window.addEventListener('popstate', () => {
+  if (trasPop.length) { trasPop.shift()(); return; }
+  if (!$('#camara').hidden) { CAM.fotos = []; cerrarCamara(true); return; }   // atrás cierra la cámara
+  if (!$('#visor').hidden) { cerrarVisor(true); return; }                     // atrás cierra el documento
+  const top = pila[pila.length - 1];
+  if (!sinConfirmar && top && (top.v === 'form' || (top.v === 'unilineal' && uniArchivo) || (top.v === 'subir' && subArchivo))
+      && !confirm('¿Salir sin guardar? Se perderán los datos ingresados.')) {
+    history.pushState({ n: pila.length }, '', location.href);   // se queda en la pantalla
+    return;
+  }
+  sinConfirmar = false;
+  pila.pop();
+  const prev = pila[pila.length - 1];
+  if (!prev || (top && top.alInicio)) { ir('inicio', { desdeHist: !pila.length }); return; }
+  if (prev.v === 'ficha') abrirFicha(prev.id, true);
+  else if (prev.v === 'etiqueta') mostrarEtiqueta(prev.id, { desdeHist: true });
+  else if (prev.v === 'docs') abrirDocs(prev.id, true);
+  else if (prev.v === 'scan') volver();
+  else ir(prev.v, { desdeHist: true });
+});
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-ir]'); if (b) { e.preventDefault(); ir(b.dataset.ir); }
+});
+
+// ===================== CONEXIÓN =====================
+function renderRed() {
+  const on = navigator.onLine;
+  const n = $('#net'); n.textContent = on ? 'En línea' : 'Sin conexión'; n.className = 'chip ' + (on ? 'on' : 'off');
+}
+window.addEventListener('online', () => { renderRed(); sincronizar(); });
+window.addEventListener('offline', renderRed);
+
+// ===================== VENCIMIENTOS Y ALERTAS =====================
+// Próxima fecha = última + periodo. "Por vencer" cuando faltan "aviso" días o menos.
+function venc(fecha, cfg) {
+  const s = String(fecha || '').slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return { est: 'sin', txt: 'sin registro' };
+  const [a, m, d] = s.split('-').map(Number);
+  const prox = new Date(a, m - 1, d + cfg.dias);
+  const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  const rest = Math.round((prox - hoy) / 864e5);
+  const f = prox.toLocaleDateString('es-CL');
+  if (rest < 0) return { est: 'vencida', rest, prox: f, txt: `vencida hace ${-rest} día(s) (${f})` };
+  if (rest <= cfg.aviso) return { est: 'porvencer', rest, prox: f, txt: rest === 0 ? `vence hoy (${f})` : `vence en ${rest} día(s) (${f})` };
+  return { est: 'vigente', rest, prox: f, txt: `vigente hasta ${f}` };
+}
+const uniPendiente = (t) => /PENDIENTE/i.test((t && t.estadoUni) || '');
+const CLS_VENC = { vencida: 'no', porvencer: 'warn', vigente: 'ok', sin: 'gris' };
+
+// Pestaña elegida en el inicio: mantenciones o inspecciones (no se mezclan)
+let tabAct = ls.get('tabAct', 'MANT');
+const esMant = (h) => /MANTENCI/i.test((h && h.tipo) || '');
+const esInsp = (h) => /INSPECCI/i.test((h && h.tipo) || '') || !(h && h.tipo);   // registros antiguos sin tipo = inspección
+const histDe = (t, tab) => ((t && t.hist) || []).filter(tab === 'MANT' ? esMant : esInsp);
+
+function alertasDe(t, tab = tabAct) {
+  const out = [];
+  if (tab === 'MANT') {
+    const m = venc(t.fMant, ACT.MANT);
+    if (m.est === 'vencida') out.push({ k: 'v', cls: 'no', peso: 3, txt: 'Mantención vencida' });
+    else if (m.est === 'porvencer') out.push({ k: 'p', cls: 'warn', peso: 2, txt: 'Mantención por vencer' });
+    else if (m.est === 'sin') out.push({ k: 's', cls: 'gris', peso: 1, txt: 'Sin mantención registrada' });
+    if (uniPendiente(t)) out.push({ k: 'u', cls: 'warn', peso: 2, txt: 'Unilineal por confeccionar' });
+  } else {
+    const i = venc(t.fInsp, ACT.INSP);
+    if (i.est === 'vencida') out.push({ k: 'v', cls: 'no', peso: 3, txt: 'Inspección vencida' });
+    else if (i.est === 'porvencer') out.push({ k: 'p', cls: 'warn', peso: 2, txt: 'Inspección por vencer' });
+    else if (i.est === 'sin') out.push({ k: 's', cls: 'gris', peso: 1, txt: 'Sin inspección registrada' });
+  }
+  return out;
+}
+
+function renderTabs() {
+  document.querySelectorAll('#tabs-act button').forEach(b => b.classList.toggle('sel', b.dataset.tab === tabAct));
+  const m = tabAct === 'MANT';
+  const sec = sectorAct === 'TODOS' ? '' : ' · ' + SECTORES[sectorAct].nombre;
+  $('#al-titulo').textContent = (m ? 'Alertas de mantención' : 'Alertas de inspección') + sec;
+  renderSectores();
+  $('#bus-titulo').textContent = m ? 'Buscar tablero · mantenciones' : 'Buscar tablero · inspecciones';
+}
+$('#tabs-act').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-tab]'); if (!b) return;
+  tabAct = b.dataset.tab; ls.set('tabAct', tabAct);
+  renderTabs(); renderAlertas(); renderBusqueda();
+});
+
+// Sectores: agrupan los niveles. Producción = Producción + UCL; Acarreo = Acarreo + SNV.
+const SECTORES = {
+  TODOS: { nombre: 'Todos', sub: 'Todos los niveles', niveles: null },
+  PRO: { nombre: 'Producción', sub: 'Producción + UCL', niveles: ['Producción', 'UCL'] },
+  ACA: { nombre: 'Acarreo', sub: 'Acarreo + SNV', niveles: ['Acarreo', 'SNV'] }
+};
+let sectorAct = ls.get('sectorAct', 'TODOS');
+if (!SECTORES[sectorAct]) sectorAct = 'TODOS';
+const enSector = (t, sec = sectorAct) => !SECTORES[sec].niveles || SECTORES[sec].niveles.includes(t.nivel);
+// Tableros vigentes (los dados de baja por un administrador no aparecen en listas ni alertas)
+const tablerosActivos = () => ls.get('tableros', { lista: [] }).lista.filter(t => !t.baja);
+function renderSectores() {
+  const lista = tablerosActivos();
+  $('#sectores').innerHTML = Object.keys(SECTORES).map(k => {
+    const S = SECTORES[k], n = lista.filter(t => enSector(t, k)).length;
+    return `<button type="button" class="${k === sectorAct ? 'sel' : ''}" data-sector="${k}"><b>${esc(S.nombre)}</b><small>${esc(S.sub)}</small><small>${n} tablero${n === 1 ? '' : 's'}</small></button>`;
+  }).join('');
+}
+$('#sectores').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-sector]'); if (!b) return;
+  sectorAct = b.dataset.sector; ls.set('sectorAct', sectorAct);
+  renderTabs(); renderAlertas(); renderBusqueda();
+});
+
+function renderAlertas() {
+  const lista = tablerosActivos().filter(t => enSector(t));
+  const n = { v: 0, p: 0, s: 0, u: 0 };
+  const filas = [];
+  lista.forEach(t => {
+    const al = alertasDe(t);
+    al.forEach(a => n[a.k]++);
+    if (al.length) filas.push({ t, al, peso: Math.max(...al.map(a => a.peso)) });
+  });
+  $('#card-alertas').hidden = !filas.length;
+  if (!filas.length) return;
+  const m = tabAct === 'MANT';
+  const caja = (k, txt, cls) => n[k] ? `<div class="r-${cls}"><b>${n[k]}</b>${txt}</div>` : '';
+  $('#al-resumen').innerHTML = m
+    ? caja('v', 'Mantenciones vencidas', 'no') + caja('p', 'Mantenciones por vencer', 'warn') + caja('u', 'Unilineales por confeccionar', 'warn') + caja('s', 'Sin mantención registrada', 'gris')
+    : caja('v', 'Inspecciones vencidas', 'no') + caja('p', 'Inspecciones por vencer', 'warn') + caja('s', 'Sin inspección registrada', 'gris');
+  filas.sort((a, b) => b.peso - a.peso);
+  $('#lista-alertas').innerHTML = filas.slice(0, 40).map(({ t, al }) => `
+    <li><div class="info"><b>${esc(t.id)}</b><small>${esc(t.tipo)} · ${esc(t.ubicacion)}</small>
+      <div class="alertas">${al.map(a => `<span class="badge ${a.cls}">${esc(a.txt)}</span>`).join('')}</div></div>
+      <button type="button" data-ficha="${esc(t.id)}">Ver</button></li>`).join('');
+}
+
+// Inicio: resumen en cada categoría
+async function renderInicio() {
+  const lista = tablerosActivos();
+  $('#ini-admin').hidden = !esAdmin();
+  const resumen = (tab) => {
+    let v = 0, p = 0, u = 0;
+    lista.forEach(t => alertasDe(t, tab).forEach(a => { if (a.k === 'v') v++; else if (a.k === 'p') p++; else if (a.k === 'u') u++; }));
+    const partes = [];
+    if (v) partes.push(`<span class="rojo">${v} vencida${v > 1 ? 's' : ''}</span>`);
+    if (p) partes.push(`<span class="amar">${p} por vencer</span>`);
+    if (u) partes.push(`<span class="amar">${u} unilineal${u > 1 ? 'es' : ''}</span>`);
+    return partes.length ? partes.join(' · ') : (lista.length ? '<span class="verde">Todo al día</span>' : 'Buscar tableros e historial');
+  };
+  $('#tile-mant').innerHTML = resumen('MANT');
+  $('#tile-insp').innerHTML = resumen('INSP');
+  const etq = ls.get('etiquetas', []).length;
+  $('#tile-etq').textContent = etq ? `${etq} creada${etq > 1 ? 's' : ''} en este teléfono` : 'Etiquetas para imprimir';
+  const pend = (await DB.all().catch(() => [])).length;
+  $('#tile-env').innerHTML = pend ? `<span class="amar">${pend} pendiente${pend > 1 ? 's' : ''}</span>` : '<span class="verde">Todo enviado</span>';
+  $('#ini-pend').hidden = !pend;
+  $('#ini-pend').textContent = `⏳ ${pend} registro${pend > 1 ? 's' : ''} pendiente${pend > 1 ? 's' : ''} de envío · ${$('#sync-msg').textContent}`;
+}
+
+$('#lista-pend').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-descartar]'); if (!b || !esAdmin()) return;
+  if (!confirm('¿Descartar este registro pendiente? Se borra de este teléfono y NO se enviará. No se puede deshacer.')) return;
+  await DB.del(b.dataset.descartar).catch(() => {});
+  toast('Registro descartado'); renderEnvios();
+});
+async function renderEnvios() {
+  const pend = await DB.all().catch(() => []);
+  $('#n-pend').textContent = pend.length;
+  $('#box-sync').classList.toggle('pend', pend.length > 0);
+  $('#card-pend').hidden = !pend.length;
+  $('#lista-pend').closest('.card').querySelector('h3').textContent = 'Pendientes en este teléfono';
+  $('#lista-pend').innerHTML = pend.sort((a, b) => a.creado.localeCompare(b.creado)).map(p => `
+    <li><div class="info"><b>${esc(p.registro.id || 'Tablero nuevo')}</b>
+      <small>${esc(p.registro.tipoActividad || 'Inspección')} · ${esc(p.registro.tipoNombre)} · ${esc(p.registro.ubicacion)} · ${esc(fmtFecha(p.creado))}${p.fotos.length ? ' · 📎 ' + p.fotos.length : ''}</small></div>
+      <span class="badge no">Pendiente</span>
+      ${esAdmin() ? `<div class="acc-adm"><button type="button" data-descartar="${esc(p.uuid)}">🗑 Descartar</button></div>` : ''}</li>`).join('');
+  const env = ls.get('enviados', []);
+  $('#lista-env').innerHTML = env.slice(0, 20).map(x => `
+    <li><div class="info"><b>${esc(x.id)}</b><small>${esc(x.act || x.tipo)} · ${esc(fmtFecha(x.fecha))}${x.nuevo ? ' · nuevo' : ''}</small></div>
+      <button type="button" data-ficha="${esc(x.id)}">Ficha</button></li>`).join('')
+    || '<li><div class="info"><small>Aún no hay registros enviados desde este teléfono.</small></div></li>';
+}
+
+function renderEtiquetas() {
+  const etq = ls.get('etiquetas', []);
+  $('#lista-etq').innerHTML = etq.slice(0, 60).map(x => `
+    <li><div class="info"><b>${esc(x.id)}</b><small>${esc(x.tipo)} · ${esc(x.nivel)} · ${esc(x.ubicacion)}${x.cambiado ? ' · ⚠ ID corregido, reimprimir' : ''}</small></div>
+      <button type="button" data-etq="${esc(x.id)}">Ver QR</button></li>`).join('')
+    || '<li><div class="info"><small>Aún no se crean fichas nuevas en este teléfono.</small></div></li>';
+}
+
+function renderBusqueda() {
+  const q = $('#buscar').value.trim().toLowerCase();
+  const cache = ls.get('tableros', { lista: [], actualizado: '' });
+  const m = tabAct === 'MANT';
+  // Con texto en el buscador se busca en TODOS los sectores; sin texto se muestra el sector elegido
+  const lista = q
+    ? cache.lista.filter(t => (!t.baja || esAdmin()) && [t.id, t.tag, t.ubicacion, t.tipo, t.nivel, t.numero].join(' ').toLowerCase().includes(q))
+    : cache.lista.filter(t => !t.baja && enSector(t));
+  const fuera = q && sectorAct !== 'TODOS' ? lista.filter(t => !enSector(t)).length : 0;
+  $('#nota-bus').textContent = q ? `Buscando en todos los sectores: ${lista.length} resultado(s)${fuera ? ` (${fuera} fuera de ${SECTORES[sectorAct].nombre})` : ''}.` : '';
+  const fila = (t) => {
+    const al = alertasDe(t).filter(a => a.cls !== 'gris').sort((a, b) => b.peso - a.peso)[0];
+    const v = venc(m ? t.fMant : t.fInsp, m ? ACT.MANT : ACT.INSP);
+    const ult = histDe(t, tabAct)[0];
+    const fecha = m ? t.fMant : t.fInsp;
+    const quien = m ? t.mantenedor : (ult ? ult.por : '');
+    const badge = t.baja ? '<span class="badge gris">⛔ Dado de baja</span>' : al ? `<span class="badge ${al.cls}">${esc(al.txt)}</span>`
+      : `<span class="badge ${CLS_VENC[v.est]}">${v.est === 'vigente' ? 'Vigente' : 'Sin registro'}</span>`;
+    return `
+    <li><div class="info"><b>${esc(t.id)}${t.tag ? ' · TAG ' + esc(t.tag) : ''}</b>
+      <small>${esc(t.tipo)} · ${esc(t.nivel)} · ${esc(t.ubicacion)}</small>
+      <small style="display:block">${m ? 'Últ. mantención' : 'Últ. inspección'}: ${esc(fecha || '—')}${quien ? ' · ' + esc(quien) : ''}${ult && ult.itemsNo ? ` · <b style="color:var(--no)">${ult.itemsNo} NO</b>` : ''}</small>
+      <div class="alertas">${badge}</div></div>
+      <button type="button" data-ficha="${esc(t.id)}">Ver</button></li>`;
+  };
+  // Agrupado por nivel (Producción, UCL, Acarreo, SNV)
+  const orden = ['Producción', 'UCL', 'Acarreo', 'SNV', ''];
+  const grupos = orden.map(n => ({ n, ts: lista.filter(t => (orden.includes(t.nivel) ? t.nivel : '') === n)
+    .sort((a, b) => String(a.ubicacion).localeCompare(String(b.ubicacion))) })).filter(g => g.ts.length);
+  let mostrados = 0;
+  $('#lista-tab').innerHTML = grupos.map(g => {
+    const ts = g.ts.slice(0, Math.max(0, 200 - mostrados)); mostrados += ts.length;
+    return ts.length ? `<li class="sub">${esc(g.n || 'Sin nivel')} · ${g.ts.length}</li>` + ts.map(fila).join('') : '';
+  }).join('')
+    || `<li><div class="info"><small>${cache.lista.length ? (q ? 'Sin resultados.' : 'No hay tableros en este sector.') : 'Aún no hay tableros descargados en este teléfono.'}</small></div></li>`;
+  $('#cache-info').textContent = cache.actualizado
+    ? `${cache.lista.length} tableros · lista actualizada ${fmtFecha(cache.actualizado)}` : '';
+}
+$('#buscar').addEventListener('input', renderBusqueda);
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-ficha]'); if (b) abrirFicha(b.dataset.ficha);
+  const q = e.target.closest('[data-etq]'); if (q) mostrarEtiqueta(q.dataset.etq);
+});
+
+// ===================== FICHA =====================
+let fichaActual = null;
+const buscarCache = (id) => ls.get('tableros', { lista: [] }).lista.find(x => x.id.toUpperCase() === id.toUpperCase());
+const tipoPorNombre = (n) => TIPOS.find(x => x.nombre === n);
+
+// Si el teléfono no tiene datos del tablero, deduce nivel/tipo desde el ID (TIPO-NIVEL-XXXX)
+function datosDesdeId(id) {
+  const [cod, niv] = id.split('-');
+  const nivel = Object.keys(CODIGO_NIVEL).find(k => CODIGO_NIVEL[k] === niv) || '';
+  const tipos = TIPOS.filter(t => t.codigo === cod);
+  return { id, nivel, tipoKey: tipos.length === 1 ? tipos[0].key : '' };
+}
+
+function abrirFicha(id, desdeHist = false) {
+  id = String(id || '').trim().toUpperCase();
+  if (!id) return;
+  const alias = ls.get('alias', {}); if (alias[id]) id = alias[id];
+  const t = buscarCache(id);
+  renderFicha(id, t);
+  $('#fi-fuente').textContent = t ? 'Datos guardados en este teléfono.' : '';
+  ir('ficha', { id, url: appUrl() + '?id=' + encodeURIComponent(id), desdeHist });
+  consultarFicha(id, t);
+}
+
+function renderFicha(id, t) {
+  fichaActual = t ? Object.assign({ tipoKey: (tipoPorNombre(t.tipo) || {}).key || '' }, t) : datosDesdeId(id);
+  $('#fi-id').textContent = id;
+  const filas = t ? [
+    ['Tipo', t.tipo], ['Nivel', t.nivel], ['Ubicación', t.ubicacion], ['N° tablero', t.numero], ['TAG GOM', t.tag || 'Sin TAG'],
+    ['N° contrato', t.contrato || CONFIG.CONTRATO], ['Fecha de alta', t.alta],
+    ['Último registro', [t.ultAct, t.ultimo, t.por].filter(Boolean).join(' · ') + (t.pendiente ? ' (pendiente de envío)' : '')]
+  ] : [['Estado', 'Sin datos de este tablero en el teléfono. Puedes registrar la actividad igual; quedará asociada a su ID.']];
+  $('#fi-dl').innerHTML = filas.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v || '—')}</dd>`).join('');
+  $('#fi-alertas').innerHTML = t && uniPendiente(t) ? '<span class="badge warn">Unilineal por confeccionar</span>' : '';
+  $('#fi-baja').hidden = !(t && t.baja);
+  if (t && t.baja) $('#fi-baja').innerHTML = `<b>⛔ Tablero dado de baja.</b> ${esc(t.motivoBaja || '')} No aparece en las listas ni en las alertas.`;
+  $('#fi-admin').hidden = !(esAdmin() && t);
+  $('#btn-adm-baja').hidden = !!(t && t.baja); $('#btn-adm-reactivar').hidden = !(t && t.baja);
+  document.querySelectorAll('#v-ficha [data-nueva]').forEach(b => { b.hidden = !!(t && t.baja && !esAdmin()); });
+  renderUniFicha(t);
+  // Mantenciones e inspecciones: cada una con su estado e historial propio
+  const dl = (f) => f.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v || '—')}</dd>`).join('');
+  const adm = esAdmin();
+  const histHTML = (hs, vacio) => hs.length ? hs.map(h => `
+    <li class="${adm && h.uuid ? 'con-adm' : ''}"><div class="info"><b>${esc(h.fAct || h.fecha)}${h.fotos ? ' · 📷 ' + h.fotos : ''}</b><small>${esc(h.por || '')}${h.detalleNo ? ' · ' + esc(h.detalleNo.split('\n').join(' / ')) : ''}</small>${h.corregido ? '<span class="tag-corr">CORREGIDO</span>' : ''}</div>
+      <span class="badge ${h.itemsNo ? 'no' : 'ok'}">${h.itemsNo ? h.itemsNo + ' NO' : 'OK'}</span>
+      ${adm && h.uuid ? `<div class="acc-adm"><button type="button" data-corregir="${esc(h.uuid)}">✏️ Corregir</button><button type="button" data-anular="${esc(h.uuid)}">⛔ Anular</button></div>` : ''}</li>`).join('')
+    : `<li><div class="info"><small>${vacio}</small></div></li>`;
+  const hm = histDe(t, 'MANT'), hi = histDe(t, 'INSP');
+  const vm = venc(t && t.fMant, ACT.MANT), vi = venc(t && t.fInsp, ACT.INSP);
+  $('#fi-mant-badge').innerHTML = t ? `<span class="badge ${CLS_VENC[vm.est]}">${esc(vm.txt)}</span>` : '';
+  $('#fi-insp-badge').innerHTML = t ? `<span class="badge ${CLS_VENC[vi.est]}">${esc(vi.txt)}</span>` : '';
+  $('#fi-mant-dl').innerHTML = dl([
+    ['Últ. mantención', t && t.fMant], ['Mantenedor', t && [t.mantenedor, t.cargoMant].filter(Boolean).join(' · ')],
+    ['Próxima', vm.prox || '—'], ['Ítems NO', hm[0] ? String(hm[0].itemsNo || 0) : '—']]);
+  $('#fi-insp-dl').innerHTML = dl([
+    ['Últ. inspección', t && t.fInsp], ['Realizada por', hi[0] && hi[0].por],
+    ['Próxima', vi.prox || '—'], ['Ítems NO', hi[0] ? String(hi[0].itemsNo || 0) : '—']]);
+  $('#fi-mant-hist').innerHTML = histHTML(hm, 'Sin mantenciones registradas.');
+  $('#fi-insp-hist').innerHTML = histHTML(hi, 'Sin inspecciones registradas.');
+  const otros = ((t && t.hist) || []).filter(h => !esMant(h) && !esInsp(h));
+  $('#fi-otros-card').hidden = !otros.length;
+  $('#fi-otros').innerHTML = otros.map(h => `<li><div class="info"><b>${esc(h.fecha)}</b><small>${esc([h.tipo, h.por].filter(Boolean).join(' · '))}</small></div></li>`).join('');
+  // Si se llegó desde "Iniciar actividad", la actividad elegida va primero
+  const ficha = $('#v-ficha'), primero = actividadInicial === 'INSP' ? $('#fi-insp') : $('#fi-mant');
+  const otro = primero.id === 'fi-insp' ? $('#fi-mant') : $('#fi-insp');
+  ficha.insertBefore(primero, $('#fi-uni-card')); ficha.insertBefore(otro, $('#fi-uni-card'));
+  renderFotosFicha(id, t);
+}
+
+function badgesVenc(t) {
+  const m = venc(t.fMant, ACT.MANT), i = venc(t.fInsp, ACT.INSP);
+  return `<span class="badge ${CLS_VENC[m.est]}">Mantención: ${esc(m.txt)}</span>`
+    + `<span class="badge ${CLS_VENC[i.est]}">Inspección: ${esc(i.txt)}</span>`
+    + (uniPendiente(t) ? '<span class="badge warn">Unilineal por confeccionar</span>' : '');
+}
+
+function renderUniFicha(t) {
+  $('#fi-uni-card').hidden = !t;
+  if (!t) return;
+  let html;
+  if (uniPendiente(t)) {
+    html = `<div class="aviso" style="margin:0 0 4px"><b>Pendiente de confección.</b> El tablero no cuenta con diagrama unilineal; se registraron los datos para levantarlo.</div>
+      <dl>${[['Alimentación desde', t.alim], ['Punto de bloqueo', t.bloqueo], ['Calibre cable', t.calibre], ['Observación', t.obsUni]]
+        .map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v || '—')}</dd>`).join('')}</dl>`;
+  } else if (t.uniLink) {
+    html = `<p style="margin:0">✔ Cuenta con diagrama unilineal${t.fUni ? ' · confeccionado el ' + esc(t.fUni) : ''}.</p>
+      <p style="margin:8px 0 0"><a href="${esc(t.uniLink)}" target="_blank" rel="noopener">Ver diagrama unilineal</a></p>`;
+  } else if (/REALIZADO|CUENTA/i.test(t.estadoUni || '')) {
+    html = `<p style="margin:0">✔ Cuenta con diagrama unilineal${t.pendiente ? ' (cargado en este teléfono, pendiente de envío)' : ''}.</p>`;
+  } else {
+    html = '<p class="muted" style="margin:0">Sin información del diagrama unilineal. Se registra en la próxima inspección o mantención.</p>';
+  }
+  $('#fi-uni').innerHTML = html;
+  const btn = $('#btn-cargar-uni');
+  btn.hidden = false;
+  btn.classList.toggle('primary', uniPendiente(t));
+  btn.textContent = uniPendiente(t) ? 'Cargar diagrama unilineal confeccionado' : (t.uniLink ? 'Reemplazar diagrama unilineal' : 'Cargar diagrama unilineal');
+}
+
+// Fotos del estado en la ficha: primero las aún no enviadas desde este teléfono; si no hay, las del sistema (Drive)
+let urlsFicha = [];
+const idDrive = (u) => (String(u).match(/\/d\/([\w-]{10,})/) || String(u).match(/[?&]id=([\w-]{10,})/) || [])[1] || '';
+async function renderFotosFicha(id, t) {
+  urlsFicha.forEach(u => URL.revokeObjectURL(u)); urlsFicha = [];
+  const card = $('#fi-fotos-card'), gal = $('#fi-fotos'), info = $('#fi-fotos-info'), carp = $('#fi-carpeta');
+  const pend = (await DB.all().catch(() => [])).filter(p => p.registro.id === id && p.fotos.some(f => esFotoEstado(f.campo)))
+    .sort((a, b) => b.creado.localeCompare(a.creado));
+  if (!fichaActual || fichaActual.id !== id) return;
+  carp.hidden = !(t && t.carpeta); if (t && t.carpeta) carp.href = t.carpeta;
+  if (pend.length) {
+    const fs = pend[0].fotos.filter(f => esFotoEstado(f.campo));
+    gal.innerHTML = fs.map(f => { const u = URL.createObjectURL(f.blob); urlsFicha.push(u); return `<div class="th"><img src="${u}" alt=""></div>`; }).join('');
+    info.textContent = `${fs.length} foto(s) del ${fmtFecha(pend[0].creado)} · pendientes de envío.`;
+    card.hidden = false; return;
+  }
+  const fotos = (t && t.fotos) || [];
+  gal.innerHTML = fotos.map((u, i) => {
+    const fid = idDrive(u);
+    return `<div class="th"><a href="${esc(u)}" target="_blank" rel="noopener">${fid
+      ? `<img data-drive="${i + 1}" loading="lazy" src="https://drive.google.com/thumbnail?id=${esc(fid)}&sz=w400" alt="Foto ${i + 1}">`
+      : 'Foto ' + (i + 1)}</a></div>`;
+  }).join('');
+  info.textContent = fotos.length ? `${fotos.length} foto(s) de la última actividad con fotos${t.fFotos ? ' (' + t.fFotos + ')' : ''}. Toca una foto para abrirla.` : '';
+  card.hidden = !fotos.length && !(t && t.carpeta);
+}
+// Si la miniatura de Drive no carga (sin señal o sin permiso), queda el enlace de texto
+document.addEventListener('error', (e) => {
+  const img = e.target; if (img.tagName === 'IMG' && img.dataset.drive) img.replaceWith('Foto ' + img.dataset.drive);
+}, true);
+
+// Con señal: trae del sistema la información respaldada del tablero (siempre la más reciente)
+async function consultarFicha(id, local) {
+  if (!configurado()) return;
+  const fuente = $('#fi-fuente');
+  fuente.textContent = 'Consultando el sistema…';
+  try {
+    const r = await fetchT(CONFIG.SCRIPT_URL + '?accion=ficha&clave=' + encodeURIComponent(CONFIG.CLAVE) + '&id=' + encodeURIComponent(id), {}, 12000);
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'error');
+    if (!fichaActual || fichaActual.id !== id || $('#v-ficha').hidden) return;
+    const pendientes = (await DB.all().catch(() => [])).some(p => p.registro.id === id);
+    if (j.tablero && !pendientes) {
+      const cache = ls.get('tableros', { lista: [], actualizado: '' });
+      cache.lista = [j.tablero].concat(cache.lista.filter(x => x.id !== j.tablero.id));
+      ls.set('tableros', cache);
+      renderFicha(id, j.tablero);
+      fuente.textContent = 'Información del sistema · consultada ' + fmtFecha(j.consultado);
+    } else if (j.tablero) {
+      fuente.textContent = 'Incluye registros de este teléfono aún no enviados.';
+    } else {
+      fuente.textContent = local ? 'Aún no está en el sistema: se enviará desde este teléfono.' : 'Este ID no está registrado en el sistema.';
+    }
+  } catch (err) {
+    if (!$('#v-ficha').hidden) fuente.textContent = local
+      ? 'Sin señal: se muestra la última información guardada en este teléfono.'
+      : 'Sin señal y sin datos guardados de este tablero.';
+  }
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-nueva]'); if (!b) return;
+  const t = fichaActual || {};
+  const act = b.dataset.nueva;
+  // Antes de intervenir: confirmación de controles críticos RF01
+  exigirRF01(act, () => abrirFormulario({ actividad: act, id: t.id, nivel: t.nivel, tipoKey: t.tipoKey, ubicacion: t.ubicacion,
+    numero: t.numero, tieneTag: t.tag ? 'Sí' : (t.tipo ? 'No' : ''), tagGom: t.tag, ficha: t.tipo ? t : null }));
+});
+
+// ===================== RF01 · CONTROLES CRÍTICOS =====================
+let rf01Siguiente = null, rf01Hora = '';
+function exigirRF01(act, siguiente) {
+  rf01Siguiente = siguiente; rf01Hora = '';
+  $('#rf01-ok').checked = false; $('#btn-rf01-seguir').disabled = true;
+  $('#rf01-act').textContent = 'Actividad: ' + ACT[act].nombre;
+  $('#btn-ver-sigo').hidden = !docSigo();
+  ir('rf01');
+}
+$('#rf01-ok').addEventListener('change', (e) => { $('#btn-rf01-seguir').disabled = !e.target.checked; });
+$('#btn-rf01-seguir').addEventListener('click', () => {
+  if (!$('#rf01-ok').checked) return;
+  rf01Hora = new Date().toISOString();
+  const sig = rf01Siguiente; rf01Siguiente = null;
+  if (sig) sig();
+});
+$('#btn-rf01-cancel').addEventListener('click', volver);
+const docSigo = () => (ls.get('docs', { lista: [] }).lista || []).find(d => d.estado === 'VIGENTE' && /SIGO-G-012/i.test((d.codigo || '') + ' ' + (d.titulo || '')));
+$('#btn-ver-sigo').addEventListener('click', () => { const d = docSigo(); if (d) verDocumento(d); });
+$('#btn-fi-qr').addEventListener('click', () => fichaActual && mostrarEtiqueta(fichaActual.id));
+
+// ===================== ARCHIVOS ADJUNTOS (fotos, PDF y otros) =====================
+const MAX_ARCHIVO = 15 * 1024 * 1024, MAX_REGISTRO = 35 * 1024 * 1024;
+const tamTxt = (b) => b < 1048576 ? Math.max(1, Math.round(b / 1024)) + ' KB' : (b / 1048576).toFixed(1) + ' MB';
+const esImagen = (file) => /^image\/(jpeg|png|webp|gif|bmp|heic|heif)/i.test(file.type) || (!file.type && /\.(jpe?g|png|webp|heic)$/i.test(file.name));
+const liberar = (a) => { if (a && a.url) URL.revokeObjectURL(a.url); };
+
+// Las imágenes se comprimen (suben rápido con poca señal); PDF y otros archivos van tal cual
+async function prepararArchivo(file, opt = {}) {
+  if (esImagen(file)) {
+    try {
+      const blob = await comprimir(file, opt.max || 1600, opt.q || 0.75);
+      return { blob, mime: 'image/jpeg', nombre: (file.name || 'foto').replace(/\.\w+$/, '') + '.jpg', url: URL.createObjectURL(blob), img: true };
+    } catch (err) { if (file.size > MAX_ARCHIVO) throw new Error(`No se pudo leer la imagen ${file.name}.`); }
+  }
+  if (file.size > MAX_ARCHIVO) throw new Error(`${file.name} pesa ${tamTxt(file.size)}; el máximo por archivo es 15 MB.`);
+  return { blob: file, mime: file.type || 'application/octet-stream', nombre: file.name || 'archivo', img: false };
+}
+const archivoHTML = (a, clave) => `<div class="archivo"><div class="ico">${a.img ? `<img src="${a.url}" alt="">` : (/pdf/.test(a.mime) ? '📄' : '📎')}</div>
+  <div class="nom">${esc(a.nombre)}<small>${tamTxt(a.blob.size)}</small></div>
+  <button type="button" data-quitar="${clave}">Quitar</button></div>`;
+const thumb = (url, clave) => `<div class="th"><img src="${url}" alt=""><button type="button" data-quitar="${clave}" aria-label="Quitar foto">✕</button></div>`;
+const esFotoEstado = (campo) => /^(estado|hallazgo)_/.test(campo);
+
+// Reduce la foto (por defecto máx. 1600 px y JPEG 75 %) para que suba rápido con poca señal
+async function comprimir(file, max = 1600, q = 0.75) {
+  let src;
+  try { src = await createImageBitmap(file, { imageOrientation: 'from-image' }); }
+  catch {
+    src = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('formato no soportado')); i.src = URL.createObjectURL(file); });
+  }
+  const w = src.width, h = src.height, k = Math.min(1, max / Math.max(w, h));
+  const c = document.createElement('canvas'); c.width = Math.round(w * k); c.height = Math.round(h * k);
+  c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+  return new Promise((res, rej) => c.toBlob(b => b ? res(b) : rej(new Error('no se pudo comprimir')), 'image/jpeg', q));
+}
+
+// ===================== FORMULARIO =====================
+function botonesSeg(cont, opciones, actual, onSel) {
+  cont.innerHTML = opciones.map(o => {
+    const [val, txt] = Array.isArray(o) ? o : [o, o];
+    return `<button type="button" class="${val === actual ? 'sel' : ''}" data-v="${esc(val)}">${esc(txt)}</button>`;
+  }).join('');
+  cont.onclick = (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    cont.querySelectorAll('button').forEach(x => x.classList.toggle('sel', x === b));
+    onSel(b.dataset.v);
+  };
+}
+document.querySelectorAll('.sel-cargo').forEach(s => {
+  s.innerHTML = '<option value="">Seleccione…</option>' + CARGOS.map(c => `<option>${esc(c)}</option>`).join('');
+});
+// Acepta valores guardados en MAYÚSCULAS o con otro formato
+function fijarCargo(sel, val) {
+  const c = CARGOS.find(x => x.toLocaleUpperCase('es-CL') === String(val || '').toLocaleUpperCase('es-CL'));
+  sel.value = c || '';
+}
+
+function abrirFormulario(pre = {}) {
+  const t = pre.ficha || null;
+  if (t) {
+    pre.tieneUni = uniPendiente(t) ? 'No' : (t.uniLink || /REALIZADO|CUENTA/i.test(t.estadoUni || '') ? 'Sí' : '');
+    pre.uniLink = t.uniLink || (/REALIZADO|CUENTA/i.test(t.estadoUni || '') ? 'local' : '');
+  }
+  if (estado) liberarTodo();
+  estado = estadoNuevo(pre);
+  estado.rf01 = rf01Hora;
+  $('#f-rf01').textContent = rf01Hora
+    ? `⚡ RF01 confirmado a las ${new Date(rf01Hora).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', hour12: false })}. Mantén todos los controles críticos aplicados durante toda la actividad.` : '';
+  const f = $('#f'); f.reset();
+  ['ubicacion', 'numero', 'tagGom'].forEach(k => { if (pre[k]) f.elements[k].value = pre[k]; });
+  $('#contrato').value = CONFIG.CONTRATO;
+  // Última mantención registrada (antecedente)
+  if (t && t.fMant) {
+    f.elements.fMantPrev.value = String(t.fMant).slice(0, 10);
+    f.elements.mantPrev.value = t.mantenedor || '';
+    fijarCargo(f.elements.cargoPrev, t.cargoMant);
+  }
+  $('#sinMantPrev').checked = false; $('#box-mant-prev').hidden = false;
+  if (t && uniPendiente(t)) ['obsUni', 'alimDesde', 'bloqueo', 'calibre'].forEach((k, n) => f.elements[k].value = t[['obsUni', 'alim', 'bloqueo', 'calibre'][n]] || '');
+  // Mantenedor que realiza la actividad (se recuerda en el teléfono)
+  f.elements.realizadoPor.value = ls.get('realizadoPor', '');
+  fijarCargo(f.elements.cargo, ls.get('cargo', ''));
+  f.elements.fAct.value = new Date().toLocaleDateString('en-CA');
+  f.elements.fAct.max = f.elements.fMantPrev.max = new Date().toLocaleDateString('en-CA');
+  $('#f-id-info').textContent = estado.esAlta
+    ? 'Al guardar se crea la ficha del tablero, su ID y su etiqueta QR para pegar en él (funciona sin señal).'
+    : 'Los datos de identificación vienen de la ficha del tablero.';
+  botonesSeg($('#seg-act'), [['INSP', ACT.INSP.nombre], ['MANT', ACT.MANT.nombre]], estado.actividad, v => {
+    estado.actividad = v; estado.resp = {};
+    Object.values(estado.fotosItem).forEach(liberar); estado.fotosItem = {};
+    renderActividad();
+  });
+  botonesSeg($('#seg-nivel'), NIVELES, estado.nivel, v => estado.nivel = v);
+  $('#tipo').value = estado.tipoKey;
+  botonesSeg($('#seg-tag'), ['Sí', 'No'], estado.tieneTag, v => { estado.tieneTag = v; renderTag(); });
+  botonesSeg($('#seg-uni'), ['Sí', 'No'], estado.tieneUni, v => { estado.tieneUni = v; renderUni(); });
+  $('#fotos').innerHTML = FOTOS.map(ft => `
+    <div class="foto" data-campo="${ft.campo}"><span></span>
+      <div class="fila-btn">
+        <label class="btn-foto">📷 Tomar foto<input type="file" accept="image/*" capture="environment" hidden></label>
+        <label class="btn-foto sec">🖼 Galería<input type="file" accept="image/*" hidden></label>
+      </div><div class="prev"></div></div>`).join('');
+  document.querySelectorAll('#f .foto .prev').forEach(p => p.innerHTML = '');
+  document.querySelectorAll('#f .falta').forEach(x => x.classList.remove('falta'));
+  renderActividad(); renderTag(); renderUni(); renderGaleria(); renderAdj('checklist'); renderAdj('doc');
+  $('#f-error').textContent = '';
+  ir('form');
+}
+
+function renderActividad() {
+  const a = estado.actividad, mant = a === 'MANT';
+  $('#f-titulo').textContent = (estado.esAlta ? 'Nueva ficha' : estado.id) + (a ? ' · ' + ACT[a].nombre : '');
+  $('#act-ayuda').textContent = !a ? 'Elige si es una inspección mensual o una mantención trimestral.'
+    : mant ? 'Mantención trimestral: checklist completo del tipo de tablero y checklist físico firmado (obligatorio). Actualiza la fecha de mantención y también cuenta como inspección del mes.'
+    : 'Inspección mensual: revisión superficial de condiciones generales del tablero. Actualiza la fecha de inspección.';
+  $('#ejec-titulo').textContent = 'Mantenedor que realiza esta ' + (mant ? 'mantención' : a ? 'inspección' : 'actividad');
+  $('#fAct-label').textContent = 'Fecha de la ' + (mant ? 'mantención' : a ? 'inspección' : 'actividad') + ' *';
+  $('#chk-fis-ayuda').textContent = mant
+    ? 'Obligatorio: foto(s) o PDF del checklist físico firmado, correspondiente a lo declarado en el checklist digital.'
+    : 'Opcional en la inspección: foto(s) o PDF del checklist físico, si se completó.';
+  renderChecklist();
+}
+
+// Convierte a MAYÚSCULAS mientras se escribe, sin mover el cursor
+document.addEventListener('input', (e) => {
+  const el = e.target;
+  if (!el.closest('#f') && !el.classList.contains('may')) return;
+  if (!(el.matches('textarea') || (el.matches('input') && !['date', 'file', 'radio', 'checkbox'].includes(el.type)))) return;
+  if (e.isComposing) return;
+  const may = el.value.toLocaleUpperCase('es-CL');
+  if (may === el.value) return;
+  const a = el.selectionStart, b = el.selectionEnd;
+  el.value = may;
+  try { el.setSelectionRange(a, b); } catch {}
+});
+document.addEventListener('compositionend', (e) => e.target.dispatchEvent(new Event('input', { bubbles: true })));
+
+$('#btn-f-cancel').addEventListener('click', () => { if (confirm('¿Salir sin guardar? Se perderán los datos ingresados.')) volver(); });
+$('#sinMantPrev').addEventListener('change', (e) => { $('#box-mant-prev').hidden = e.target.checked; });
+
+$('#tipo').innerHTML += TIPOS.map(t => `<option value="${t.key}">${esc(t.nombre)}</option>`).join('');
+$('#tipo').addEventListener('change', (e) => {
+  estado.tipoKey = e.target.value; estado.resp = {};
+  Object.values(estado.fotosItem).forEach(liberar); estado.fotosItem = {};
+  renderChecklist();
+});
+
+function checklistActual() {
+  const t = TIPOS.find(x => x.key === estado.tipoKey);
+  if (!t || !estado.actividad) return null;
+  if (estado.actividad === 'INSP') {
+    return t.key === 'CDD' ? { titulo: INSPECCION.titulo + ' (CDD)', items: INSPECCION.items.concat(INSP_CDD) } : INSPECCION;
+  }
+  return CHECKLISTS[t.checklist];
+}
+
+function renderChecklist() {
+  const cl = checklistActual();
+  $('#card-check').hidden = !cl;
+  if (!cl) return;
+  $('#check-titulo').textContent = cl.titulo;
+  $('#check-extra').hidden = !(estado.tipoKey === 'CDD' && estado.actividad === 'MANT');
+  $('#check-items').innerHTML = cl.items.map((it, i) => `
+    <div class="item" data-i="${i}"><p><span class="n">${i + 1}.</span>${esc(it)}</p>
+      <div class="sna">
+        <button type="button" class="si" data-r="Sí">Sí</button>
+        <button type="button" class="no" data-r="No">No</button>
+        <button type="button" class="na" data-r="N/A">N/A</button>
+      </div>
+      <div class="item-foto" hidden>
+        <label class="btn-foto sec">📷 Foto del hallazgo (opcional)<input type="file" accept="image/*" capture="environment" hidden data-item="${i}"></label>
+        <div class="galeria"></div>
+      </div></div>`).join('');
+  renderProgreso();
+}
+$('#check-items').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-r]'); if (!b) return;
+  const item = b.closest('.item'); const i = +item.dataset.i;
+  estado.resp[i] = b.dataset.r;
+  item.querySelectorAll('.sna button').forEach(x => x.classList.toggle('sel', x === b));
+  item.classList.remove('falta');
+  item.querySelector('.item-foto').hidden = b.dataset.r !== 'No';
+  if (b.dataset.r !== 'No' && estado.fotosItem[i]) quitarFoto('i:' + i);
+  renderProgreso();
+});
+function renderProgreso() {
+  const cl = checklistActual(); if (!cl) return;
+  const n = Object.keys(estado.resp).length, no = Object.values(estado.resp).filter(v => v === 'No').length;
+  $('#check-prog').textContent = `${n} de ${cl.items.length} respondidos` + (no ? ` · ${no} en NO` : '');
+}
+
+// TAG GOM, diagrama unilineal y fotos de identificación
+const fotosIdVisibles = () => estado.tieneUni === 'No' || estado.tieneTag === 'No';
+const fotosIdObligatorias = () => estado.tieneUni === 'No' || (estado.esAlta && estado.tieneTag === 'No');
+function renderTag() {
+  $('#box-tag').hidden = estado.tieneTag !== 'Sí';
+  renderFotosId();
+}
+function renderUni() {
+  $('#box-uni-si').hidden = estado.tieneUni !== 'Sí';
+  $('#box-uni-no').hidden = estado.tieneUni !== 'No';
+  $('#uni-si-label').textContent = estado.uniPrevio
+    ? 'Ya hay un diagrama registrado para este tablero. Adjunta uno nuevo solo si cambió (opcional).'
+    : 'Imagen o PDF del diagrama unilineal *';
+  renderFotosId();
+}
+function renderFotosId() {
+  const bloque = $('#bloque-fotos-id');
+  bloque.hidden = !fotosIdVisibles();
+  // Sin TAG GOM → las fotos van bajo TAG GOM; si solo falta el unilineal → bajo Diagrama unilineal
+  const destino = estado.tieneTag === 'No' ? $('#lugar-fotos-tag') : $('#lugar-fotos-uni');
+  if (bloque.parentElement !== destino) destino.appendChild(bloque);
+  $('#fotos-uni-arriba').hidden = !(estado.tieneTag === 'No' && estado.tieneUni === 'No');
+  const ob = fotosIdObligatorias();
+  $('#fotos-ayuda').textContent = estado.tieneTag === 'No' && estado.tieneUni === 'No'
+    ? 'Sin TAG GOM y sin diagrama unilineal: fotografía el frontis (número, identificación y condiciones) y el interior (cantidad de circuitos, salidas y protecciones).'
+    : estado.tieneUni === 'No'
+    ? 'Sin diagrama unilineal: fotografía el frontis (número, identificación y condiciones) y el interior (cantidad de circuitos, salidas y protecciones) para poder confeccionar el diagrama.'
+    : ob ? 'Sin TAG GOM: adjunta las fotos para identificar el tablero.'
+    : 'Sin TAG GOM: las fotos ya quedaron en la ficha. Adjunta nuevas solo si el tablero cambió.';
+  FOTOS.forEach(ft => {
+    const s = document.querySelector(`#fotos .foto[data-campo="${ft.campo}"] span`);
+    if (s) s.textContent = ft.label + (ob ? ' *' : ' (opcional)');
+  });
+}
+
+// Fotos de identificación y diagrama unilineal (un archivo por campo)
+$('#f').addEventListener('change', async (e) => {
+  const input = e.target, box = input.closest('.foto[data-campo]');
+  if (!box || !input.files || !input.files[0]) return;
+  const file = input.files[0]; input.value = '';
+  const campo = box.dataset.campo;
+  try {
+    const a = await prepararArchivo(file, campo === 'unilineal' ? { max: 2400, q: 0.85 } : {});
+    liberar(estado.fotos[campo]);
+    estado.fotos[campo] = a;
+    box.querySelector('.prev').innerHTML = a.img ? thumb(a.url, 'c:' + campo) : archivoHTML(a, 'c:' + campo);
+    box.classList.remove('falta');
+  } catch (err) { toast(err.message, 5000); }
+});
+
+// ---------- Fotos del estado del tablero y de hallazgos ----------
+function renderGaleria() {
+  $('#gal-estado').innerHTML = estado.fotosEstado.map((f, k) => thumb(f.url, 'e:' + k)).join('');
+  const n = estado.fotosEstado.length;
+  $('#gal-info').textContent = n ? `${n} de ${MAX_FOTOS_ESTADO} fotos.` : 'Aún no hay fotos.';
+  document.querySelectorAll('#card-fotos-estado input[data-estado]').forEach(x => x.disabled = n >= MAX_FOTOS_ESTADO);
+}
+function renderFotoItem(i) {
+  const box = document.querySelector(`#check-items .item[data-i="${i}"] .item-foto .galeria`);
+  if (box) box.innerHTML = estado.fotosItem[i] ? thumb(estado.fotosItem[i].url, 'i:' + i) : '';
+}
+function renderAdj(tipo) {
+  $('#adj-' + tipo).innerHTML = estado.adj[tipo].map((a, k) => archivoHTML(a, `a:${tipo}:${k}`)).join('');
+  if (tipo === 'checklist' && estado.adj.checklist.length) $('#card-docs').classList.remove('falta');
+}
+function quitarFoto(clave) {
+  const [t, k, k2] = clave.split(':');
+  if (t === 'e') { liberar(estado.fotosEstado.splice(+k, 1)[0]); renderGaleria(); }
+  if (t === 'i' && estado.fotosItem[k]) { liberar(estado.fotosItem[k]); delete estado.fotosItem[k]; renderFotoItem(k); }
+  if (t === 'c' && estado.fotos[k]) {
+    liberar(estado.fotos[k]); delete estado.fotos[k];
+    const p = document.querySelector(`#f .foto[data-campo="${k}"] .prev`); if (p) p.innerHTML = '';
+  }
+  if (t === 'a') { liberar(estado.adj[k].splice(+k2, 1)[0]); renderAdj(k); }
+}
+function liberarTodo() {
+  Object.values(estado.fotos).concat(estado.fotosEstado, Object.values(estado.fotosItem), estado.adj.checklist, estado.adj.doc).forEach(liberar);
+}
+$('#f').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-quitar]'); if (b) { e.preventDefault(); quitarFoto(b.dataset.quitar); }
+});
+$('#card-fotos-estado').addEventListener('change', async (e) => {
+  const input = e.target; if (!input.files || !input.files.length) return;
+  const archivos = Array.from(input.files); input.value = '';
+  const libres = MAX_FOTOS_ESTADO - estado.fotosEstado.length;
+  if (archivos.length > libres) toast(`Máximo ${MAX_FOTOS_ESTADO} fotos: se agregan solo ${Math.max(0, libres)}.`);
+  for (const file of archivos.slice(0, Math.max(0, libres))) {
+    try { const blob = await comprimir(file, 1280, 0.72); estado.fotosEstado.push({ blob, url: URL.createObjectURL(blob) }); }
+    catch (err) { toast('No se pudo leer la foto: ' + err.message); }
+  }
+  renderGaleria();
+});
+$('#check-items').addEventListener('change', async (e) => {
+  const input = e.target; if (!input.dataset.item || !input.files || !input.files[0]) return;
+  const i = input.dataset.item, file = input.files[0]; input.value = '';
+  try {
+    const blob = await comprimir(file, 1280, 0.72);
+    liberar(estado.fotosItem[i]);
+    estado.fotosItem[i] = { blob, url: URL.createObjectURL(blob) };
+    renderFotoItem(i);
+  } catch (err) { toast('No se pudo leer la foto: ' + err.message); }
+});
+// Checklist físico y documentación adicional
+$('#card-docs').addEventListener('change', async (e) => {
+  const input = e.target, tipo = input.dataset.adj; if (!tipo || !input.files || !input.files.length) return;
+  const archivos = Array.from(input.files); input.value = '';
+  const lim = tipo === 'checklist' ? 10 : 15;
+  for (const file of archivos) {
+    if (estado.adj[tipo].length >= lim) { toast(`Máximo ${lim} archivos en esta sección.`); break; }
+    try { estado.adj[tipo].push(await prepararArchivo(file, { max: 2200, q: 0.82 })); }   // más resolución: el texto debe leerse
+    catch (err) { toast(err.message, 5000); }
+  }
+  renderAdj(tipo);
+});
+
+$('#f').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const f = e.target;
+  const v = (k) => {
+    const el = f.elements[k], val = (el.value || '').trim();
+    return el.type === 'date' ? val : val.toLocaleUpperCase('es-CL');
+  };
+  const faltan = [];
+  if (!estado.actividad) faltan.push('tipo de actividad');
+  if (!estado.nivel) faltan.push('nivel');
+  if (!estado.tipoKey) faltan.push('tipo de tablero');
+  if (!v('ubicacion')) faltan.push('ubicación');
+  const sinPrev = $('#sinMantPrev').checked;
+  if (!sinPrev) [['fMantPrev', 'fecha de la última mantención'], ['mantPrev', 'mantenedor de la última mantención'], ['cargoPrev', 'cargo del mantenedor anterior']]
+    .forEach(([k, n]) => { if (!v(k)) faltan.push(n); });
+  [['fAct', 'fecha de la actividad'], ['realizadoPor', 'nombre del mantenedor'], ['cargo', 'cargo del mantenedor']]
+    .forEach(([k, n]) => { if (!v(k)) faltan.push(n); });
+  const cl = checklistActual();
+  if (cl) {
+    let sinResp = 0;
+    document.querySelectorAll('#check-items .item').forEach(it => {
+      const falta = !estado.resp[+it.dataset.i]; it.classList.toggle('falta', falta); if (falta) sinResp++;
+    });
+    if (sinResp) faltan.push(`${sinResp} ítems del checklist`);
+  }
+  if (!estado.tieneTag) faltan.push('¿cuenta con TAG GOM?');
+  if (estado.tieneTag === 'Sí' && !v('tagGom')) faltan.push('N° TAG GOM');
+  if (!estado.tieneUni) faltan.push('¿cuenta con diagrama unilineal?');
+  if (estado.tieneUni === 'Sí' && !estado.uniPrevio && !estado.fotos.unilineal) {
+    document.querySelector('.foto[data-campo="unilineal"]').classList.add('falta'); faltan.push('imagen o PDF del diagrama unilineal');
+  }
+  if (estado.tieneUni === 'No') [['obsUni', 'observación del unilineal'], ['alimDesde', 'alimentación principal'], ['bloqueo', 'punto de bloqueo'], ['calibre', 'calibre del cable de alimentación']]
+    .forEach(([k, n]) => { if (!v(k)) faltan.push(n); });
+  if (fotosIdObligatorias()) {
+    FOTOS.forEach(ft => {
+      const ok = !!estado.fotos[ft.campo];
+      document.querySelector(`#fotos .foto[data-campo="${ft.campo}"]`).classList.toggle('falta', !ok);
+      if (!ok) faltan.push(ft.corto);
+    });
+  }
+  if (estado.actividad === 'MANT' && !estado.adj.checklist.length) { $('#card-docs').classList.add('falta'); faltan.push('checklist físico'); }
+  if (faltan.length) { $('#f-error').textContent = 'Falta completar: ' + faltan.join(', ') + '.'; return; }
+  if (!estado.rf01) {   // por seguridad: nunca se guarda una actividad sin la confirmación RF01
+    if (!confirm('RF01 · Energía eléctrica: ¿confirmas que se aplicaron y verificaron todos los controles críticos preventivos y mitigadores (SIGO-G-012 v002) antes de intervenir?')) return;
+    estado.rf01 = new Date().toISOString();
+  }
+  if (!sinPrev && v('fMantPrev') > v('fAct')) {
+    $('#f-error').textContent = 'La fecha de la última mantención no puede ser posterior a la fecha de esta actividad.'; return;
+  }
+  if (!estado.fotosEstado.length && !confirm('No adjuntaste fotos del estado del tablero. ¿Guardar el registro sin fotos?')) {
+    $('#card-fotos-estado').scrollIntoView({ behavior: 'smooth', block: 'center' }); return;
+  }
+
+  // Ficha nueva con un TAG GOM que este teléfono ya conoce → evitar duplicar el tablero
+  if (estado.esAlta && estado.tieneTag === 'Sí') {
+    const ya = ls.get('tableros', { lista: [] }).lista.find(t => t.tag && t.tag.toUpperCase() === v('tagGom'));
+    if (ya && confirm(`El TAG GOM ${v('tagGom')} ya pertenece al tablero ${ya.id}. ¿Registrar esta actividad en ese tablero en vez de crear uno nuevo?`)) {
+      estado.esAlta = false; estado.id = ya.id;
+    }
+  }
+  const tipo = TIPOS.find(x => x.key === estado.tipoKey);
+  const mant = estado.actividad === 'MANT', sinUni = estado.tieneUni === 'No';
+  const idTablero = estado.esAlta ? generarIdLocal(tipo.codigo, CODIGO_NIVEL[estado.nivel]) : estado.id;
+  const registro = {
+    uuid: uuid(), creadoEn: new Date().toISOString(), appUrl: appUrl(), esAlta: estado.esAlta,
+    tipoRegistro: 'actividad', actividad: estado.actividad, tipoActividad: ACT[estado.actividad].nombre,
+    id: idTablero, nivel: estado.nivel, tipoKey: tipo.key, tipoNombre: tipo.nombre, tipoCodigo: tipo.codigo,
+    ubicacion: v('ubicacion'), numero: v('numero'), contrato: CONFIG.CONTRATO,
+    // Antecedente: última mantención registrada
+    sinMantPrev: sinPrev, fMantPrev: sinPrev ? '' : v('fMantPrev'), mantPrev: sinPrev ? '' : v('mantPrev'), cargoPrev: sinPrev ? '' : v('cargoPrev'),
+    // Quién realiza esta actividad
+    fActividad: v('fAct'), realizadoPor: v('realizadoPor'), cargo: v('cargo'),
+    // Estado del tablero después de esta actividad
+    fMant: mant ? v('fAct') : (sinPrev ? '' : v('fMantPrev')),
+    mantenedor: mant ? v('realizadoPor') : (sinPrev ? '' : v('mantPrev')),
+    cargoMant: mant ? v('cargo') : (sinPrev ? '' : v('cargoPrev')),
+    fInsp: v('fAct'),
+    checklistTitulo: cl.titulo, items: cl.items.map((item, i) => ({ item, resp: estado.resp[i] })),
+    marcaTrafo: !$('#check-extra').hidden ? v('marcaTrafo') : '', tempTrafo: !$('#check-extra').hidden ? v('tempTrafo') : '',
+    obsChecklist: v('obsChecklist'), tieneTag: estado.tieneTag, tagGom: estado.tieneTag === 'Sí' ? v('tagGom') : '',
+    tieneUni: estado.tieneUni, obsUni: sinUni ? v('obsUni') : '', alimDesde: sinUni ? v('alimDesde') : '',
+    bloqueo: sinUni ? v('bloqueo') : '', calibre: sinUni ? v('calibre') : '',
+    obsGeneral: v('obsGeneral'),
+    rf01: 'CONFIRMADO ' + new Date(estado.rf01).toLocaleString('es-CL') + ' · ' + v('realizadoPor')
+  };
+  const fotos = [];
+  const agregar = (campo, a) => fotos.push({ campo, mime: a.mime || 'image/jpeg', blob: a.blob, nombre: a.nombre || campo + '.jpg' });
+  if (fotosIdVisibles()) FOTOS.forEach(ft => { if (estado.fotos[ft.campo]) agregar(ft.campo, estado.fotos[ft.campo]); });
+  if (estado.tieneUni === 'Sí' && estado.fotos.unilineal) agregar('unilineal', estado.fotos.unilineal);
+  estado.fotosEstado.forEach((a, k) => agregar('estado_' + (k + 1), a));
+  Object.keys(estado.fotosItem).filter(i => estado.resp[i] === 'No').sort((a, b) => a - b)
+    .forEach(i => agregar('hallazgo_item' + String(+i + 1).padStart(2, '0'), estado.fotosItem[i]));
+  estado.adj.checklist.forEach((a, k) => agregar('checklist_' + (k + 1), a));
+  estado.adj.doc.forEach((a, k) => agregar('doc_' + (k + 1), a));
+  registro.nFotosEstado = fotos.filter(x => esFotoEstado(x.campo)).length;
+  registro.nChecklist = estado.adj.checklist.length; registro.nDocs = estado.adj.doc.length;
+  const total = fotos.reduce((s, x) => s + x.blob.size, 0);
+  if (total > MAX_REGISTRO) {
+    $('#f-error').textContent = `Los archivos adjuntos suman ${tamTxt(total)}; el máximo por registro es 35 MB. Quita o reduce algún documento.`; return;
+  }
+
+  try {
+    await DB.put({ uuid: registro.uuid, creado: registro.creadoEn, registro, fotos });
+  } catch (err) {
+    $('#f-error').textContent = 'No se pudo guardar en el teléfono: ' + err.message; return;
+  }
+  ls.set('realizadoPor', registro.realizadoPor); ls.set('cargo', registro.cargo);
+  liberarTodo();
+  actualizarCacheLocal(registro);
+  actividadInicial = '';
+  if (registro.esAlta) {
+    const etq = ls.get('etiquetas', []);
+    etq.unshift({ id: registro.id, tipo: tipo.codigo + (tipo.key.startsWith('TDF') ? ' ' + tipo.key.slice(3) + ' V' : ''),
+      nivel: registro.nivel, ubicacion: registro.ubicacion, fecha: registro.creadoEn });
+    ls.set('etiquetas', etq.slice(0, 200));
+    toast('Ficha creada: ' + registro.id + ' ✔', 4000);
+    mostrarEtiqueta(registro.id, { alInicio: true });
+  } else {
+    toast(registro.tipoActividad + ' guardada en el teléfono ✔');
+    ir('inicio');
+  }
+  sincronizar();
+});
+
+// ===================== CARGAR DIAGRAMA UNILINEAL CONFECCIONADO =====================
+let uniArchivo = null;
+$('#btn-cargar-uni').addEventListener('click', () => {
+  const t = fichaActual; if (!t) return;
+  liberar(uniArchivo); uniArchivo = null;
+  $('#uni-prev').innerHTML = ''; $('#uni-error').textContent = ''; $('#uniObs').value = '';
+  $('#uni-info').textContent = `${t.id} · ${t.tipo || ''} · ${t.ubicacion || ''}. El diagrama queda en la ficha del tablero`
+    + (uniPendiente(t) ? ' y se cierra la alerta de confección.' : '.');
+  $('#uniPor').value = ls.get('realizadoPor', '');
+  fijarCargo($('#uniCargo'), ls.get('cargo', ''));
+  ir('unilineal');
+});
+$('#uni-box').addEventListener('change', async (e) => {
+  const input = e.target; if (!input.files || !input.files[0]) return;
+  const file = input.files[0]; input.value = '';
+  try {
+    liberar(uniArchivo); uniArchivo = await prepararArchivo(file, { max: 2400, q: 0.85 });
+    $('#uni-prev').innerHTML = archivoHTML(uniArchivo, 'u'); $('#uni-box').classList.remove('falta');
+  } catch (err) { toast(err.message, 5000); }
+});
+$('#uni-prev').addEventListener('click', (e) => {
+  if (e.target.closest('[data-quitar]')) { liberar(uniArchivo); uniArchivo = null; $('#uni-prev').innerHTML = ''; }
+});
+$('#btn-uni-cancel').addEventListener('click', volver);
+$('#btn-uni-guardar').addEventListener('click', async () => {
+  const may = (s) => s.trim().toLocaleUpperCase('es-CL');
+  const por = may($('#uniPor').value), cargo = may($('#uniCargo').value);
+  const faltan = [];
+  if (!uniArchivo) { faltan.push('archivo del diagrama'); $('#uni-box').classList.add('falta'); }
+  if (!por) faltan.push('cargado por');
+  if (!cargo) faltan.push('cargo');
+  if (faltan.length) { $('#uni-error').textContent = 'Falta completar: ' + faltan.join(', ') + '.'; return; }
+  const t = fichaActual;
+  const registro = {
+    uuid: uuid(), creadoEn: new Date().toISOString(), appUrl: appUrl(), tipoRegistro: 'unilineal', tipoActividad: 'Carga diagrama unilineal',
+    id: t.id, nivel: t.nivel || '', tipoNombre: t.tipo || '', ubicacion: t.ubicacion || '',
+    realizadoPor: por, cargo, obsGeneral: may($('#uniObs').value)
+  };
+  try {
+    await DB.put({ uuid: registro.uuid, creado: registro.creadoEn, registro,
+      fotos: [{ campo: 'unilineal', mime: uniArchivo.mime, blob: uniArchivo.blob, nombre: uniArchivo.nombre }] });
+  } catch (err) { $('#uni-error').textContent = 'No se pudo guardar en el teléfono: ' + err.message; return; }
+  ls.set('realizadoPor', por); ls.set('cargo', cargo);
+  const cache = ls.get('tableros', { lista: [], actualizado: '' });
+  const c = cache.lista.find(x => x.id === t.id);
+  if (c) {
+    Object.assign(c, { tieneUni: 'Sí', estadoUni: 'REALIZADO', pendiente: true, ultAct: registro.tipoActividad });
+    c.hist = [{ fecha: new Date().toLocaleString('sv-SE').slice(0, 16), por, tipo: registro.tipoActividad, itemsNo: 0, detalleNo: '' }].concat(c.hist || []).slice(0, 30);
+    ls.set('tableros', cache);
+  }
+  liberar(uniArchivo); uniArchivo = null;
+  toast('Diagrama unilineal guardado ✔');
+  volver();   // regresa a la ficha (se actualiza al volver)
+  sincronizar();
+});
+// ===================== ID, FICHA LOCAL Y ETIQUETA QR =====================
+function generarIdLocal(codTipo, codNivel) {
+  const ALF = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';   // sin 0/O ni 1/I/L para leerlo sin errores
+  const rnd = new Uint32Array(4);
+  let id;
+  do {
+    crypto.getRandomValues(rnd);
+    id = codTipo + '-' + codNivel + '-' + Array.from(rnd, n => ALF[n % ALF.length]).join('');
+  } while (buscarCache(id));
+  return id;
+}
+
+// Deja la ficha al día en este teléfono aunque aún no se haya enviado
+function actualizarCacheLocal(r) {
+  const cache = ls.get('tableros', { lista: [], actualizado: '' });
+  let t = cache.lista.find(x => x.id === r.id);
+  if (!t) { t = { id: r.id, hist: [] }; cache.lista.unshift(t); }
+  const no = r.items.filter(x => x.resp === 'No').map(x => x.item);
+  const uniOk = r.tieneUni === 'Sí';
+  Object.assign(t, {
+    nivel: r.nivel, tipo: r.tipoNombre, ubicacion: r.ubicacion, numero: r.numero, tag: r.tagGom || t.tag || '',
+    fMant: r.fMant, mantenedor: r.mantenedor, cargoMant: r.cargoMant, fInsp: r.fInsp, itemsNo: no.length, detalleNo: no.join('\n'),
+    ultimo: r.fActividad || r.creadoEn.slice(0, 10), por: r.realizadoPor, ultAct: r.tipoActividad, pendiente: true,
+    contrato: CONFIG.CONTRATO, alta: t.alta || r.creadoEn.slice(0, 10),
+    tieneUni: r.tieneUni,
+    estadoUni: uniOk ? (/REALIZADO/i.test(t.estadoUni || '') ? t.estadoUni : 'CUENTA CON DIAGRAMA') : 'PENDIENTE CONFECCIÓN',
+    alim: uniOk ? (t.alim || '') : r.alimDesde, bloqueo: uniOk ? (t.bloqueo || '') : r.bloqueo,
+    calibre: uniOk ? (t.calibre || '') : r.calibre, obsUni: uniOk ? (t.obsUni || '') : r.obsUni
+  });
+  t.hist = [{ fecha: new Date(r.creadoEn).toLocaleString('sv-SE').slice(0, 16), por: r.realizadoPor, tipo: r.tipoActividad,
+    itemsNo: no.length, detalleNo: no.join('\n'), fotos: r.nFotosEstado || 0 }]
+    .concat(t.hist || []).slice(0, 30);
+  ls.set('tableros', cache);
+}
+
+let etiquetaActual = null;
+LOGO.addEventListener('load', () => { if (etiquetaActual && !$('#v-etiqueta').hidden) mostrarEtiqueta(etiquetaActual.id, { desdeHist: true }); });
+function mostrarEtiqueta(id, opt = {}) {
+  const alias = ls.get('alias', {}); if (alias[id]) id = alias[id];
+  const t = buscarCache(id) || datosDesdeId(id);
+  const tipo = tipoPorNombre(t.tipo) || TIPOS.find(x => x.key === t.tipoKey);
+  const canvas = dibujarEtiqueta(id, tipo ? tipo.nombre.split(' – ')[0] : '', t.nivel || '', t.ubicacion || '');
+  etiquetaActual = { id, canvas, t };
+  $('#etq-titulo').textContent = 'Etiqueta QR · ' + id;
+  $('#etq-info').textContent = 'Descarga la ficha PDF (incluye el QR y el detalle del tablero), imprímela en material resistente y adósala a la estructura del tablero.';
+  $('#etq-img').src = canvas.toDataURL('image/png');
+  ir('etiqueta', { id, desdeHist: opt.desdeHist, alInicio: opt.alInicio });
+}
+
+// QR (con margen blanco) en un canvas cuadrado de ~lado px
+function canvasQR(id, lado) {
+  const qr = qrcode(0, 'Q'); qr.addData(appUrl() + '?id=' + encodeURIComponent(id)); qr.make();
+  const n = qr.getModuleCount(), cel = Math.max(1, Math.floor(lado / (n + 8))), tam = cel * (n + 8);
+  const c = document.createElement('canvas'); c.width = c.height = tam;
+  const g = c.getContext('2d'); g.fillStyle = '#FFFFFF'; g.fillRect(0, 0, tam, tam); g.fillStyle = '#000000';
+  for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (qr.isDark(r, k)) g.fillRect((k + 4) * cel, (r + 4) * cel, cel, cel);
+  return c;
+}
+
+// Ficha PDF tamaño A5: QR + detalle del tablero (se genera en el teléfono, sin señal)
+function crearPdfFicha(id, t) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a5' });
+  const W = 148, M = 10;
+  if (logoListo()) doc.addImage(LOGO, 'PNG', M, 5.5, 11.5 * LOGO.naturalWidth / LOGO.naturalHeight, 11.5);
+  else { doc.setTextColor(183, 28, 28); doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.text('GEOVITA', M, 14); }
+  doc.setTextColor(31, 35, 40); doc.setFont('helvetica', 'bold'); doc.setFontSize(9.5);
+  doc.text('FICHA DE TABLERO ELÉCTRICO', W - M, 10.5, { align: 'right' });
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(91, 100, 112);
+  doc.text('MINA ESMERALDA SUB-5 · EL TENIENTE · CONTRATO N° ' + CONFIG.CONTRATO, W - M, 15, { align: 'right' });
+  doc.setFillColor(183, 28, 28); doc.rect(0, 20, W, 2, 'F');
+  doc.addImage(canvasQR(id, 800).toDataURL('image/png'), 'PNG', (W - 52) / 2, 24, 52, 52);
+  doc.setTextColor(31, 35, 40); doc.setFont('courier', 'bold'); doc.setFontSize(22); doc.text(id, W / 2, 83, { align: 'center' });
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(91, 100, 112);
+  doc.text('Escanee el código para ver el historial y registrar inspecciones y mantenciones', W / 2, 88.5, { align: 'center' });
+  const vm = venc(t.fMant, ACT.MANT), vi = venc(t.fInsp, ACT.INSP);
+  const det = (t.detalleNo || '').split('\n').filter(Boolean);
+  const filas = [
+    ['Tipo', t.tipo], ['Nivel', t.nivel], ['Ubicación', t.ubicacion], ['N° tablero', t.numero],
+    ['TAG GOM', t.tag || 'SIN TAG GOM'], ['N° contrato', CONFIG.CONTRATO], ['Fecha de alta', t.alta],
+    ['Última mantención', [t.fMant, t.mantenedor, t.cargoMant].filter(Boolean).join(' · ')],
+    ['Próxima mantención', vm.prox ? vm.prox + ' (trimestral)' : 'Sin registro'],
+    ['Última inspección', [t.fInsp, t.por].filter(Boolean).join(' · ')],
+    ['Próxima inspección', vi.prox ? vi.prox + ' (mensual)' : 'Sin registro'],
+    ['Diagrama unilineal', uniPendiente(t) ? 'PENDIENTE DE CONFECCIÓN' : (t.estadoUni || '—')],
+    ['Ítems en NO', t.itemsNo ? `${t.itemsNo}: ${det.slice(0, 3).join(' / ')}${det.length > 3 ? ' / …' : ''}` : 'Ninguno']
+  ];
+  let y = 93; doc.setFontSize(9);
+  doc.setDrawColor(201, 206, 212); doc.setTextColor(31, 35, 40);
+  filas.forEach(([k, v]) => {
+    doc.setFont('helvetica', 'normal');
+    const lineas = doc.splitTextToSize(String(v || '—'), W - 2 * M - 42).slice(0, 3);
+    const h = Math.max(7, lineas.length * 4 + 3);
+    doc.setFillColor(242, 243, 245); doc.rect(M, y, 40, h, 'F'); doc.rect(M, y, W - 2 * M, h); doc.line(M + 40, y, M + 40, y + h);
+    doc.setFont('helvetica', 'bold'); doc.text(k, M + 2, y + 4.8);
+    doc.setFont('helvetica', 'normal'); doc.text(lineas, M + 42, y + 4.8);
+    y += h;
+  });
+  doc.setFontSize(7); doc.setTextColor(91, 100, 112);
+  doc.text('Generado el ' + new Date().toLocaleString('es-CL') + '. La información vigente es la del sistema (escanear QR).', W / 2, 204, { align: 'center' });
+  doc.setDrawColor(31, 35, 40); doc.setLineWidth(0.6); doc.rect(3, 3, W - 6, 210 - 6);
+  return doc;
+}
+
+function dibujarEtiqueta(id, tipoCorto, nivel, ubicacion) {
+  const W = 800, H = 980, c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  g.fillStyle = '#FFFFFF'; g.fillRect(0, 0, W, H);
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  if (logoListo()) { const lh = 66, lw = lh * LOGO.naturalWidth / LOGO.naturalHeight; g.drawImage(LOGO, (W - lw) / 2, 12, lw, lh); }
+  else { g.fillStyle = '#B71C1C'; g.font = 'bold 54px system-ui, sans-serif'; g.fillText('GEOVITA', W / 2, 48); }
+  g.fillStyle = '#B71C1C'; g.fillRect(0, 90, W, 44);
+  g.fillStyle = '#FFFFFF'; g.font = '600 23px system-ui, sans-serif'; g.fillText('ESMERALDA SUB-5 · EL TENIENTE · CONTRATO ' + CONFIG.CONTRATO, W / 2, 113);
+  // QR
+  const qrc = canvasQR(id, 600), tam = qrc.width, y0 = 145;
+  g.drawImage(qrc, (W - tam) / 2, y0);
+  // Textos
+  const yT = y0 + tam + 20;
+  g.fillStyle = '#1F2328';
+  g.font = 'bold 76px ui-monospace, Menlo, Consolas, monospace'; g.fillText(id, W / 2, yT + 45);
+  g.font = '600 34px system-ui, sans-serif';
+  g.fillText([tipoCorto, nivel ? 'NIVEL ' + nivel.toUpperCase() : ''].filter(Boolean).join(' · '), W / 2, yT + 120);
+  let ub = (ubicacion || '').toUpperCase();
+  g.font = '30px system-ui, sans-serif';
+  while (ub && g.measureText(ub).width > W - 60) ub = ub.slice(0, -2) + '…';
+  if (ub) g.fillText(ub, W / 2, yT + 168);
+  g.strokeStyle = '#1F2328'; g.lineWidth = 4; g.strokeRect(2, 2, W - 4, H - 4);
+  return c;
+}
+
+$('#btn-etq-descargar').addEventListener('click', () => {
+  if (!etiquetaActual) return;
+  const a = document.createElement('a');
+  a.href = etiquetaActual.canvas.toDataURL('image/png'); a.download = 'QR_' + etiquetaActual.id + '.png';
+  document.body.appendChild(a); a.click(); a.remove();
+});
+function pdfEtiqueta() {
+  if (!etiquetaActual) return null;
+  if (!window.jspdf) { toast('El generador de PDF aún está cargando, intenta de nuevo.'); return null; }
+  return crearPdfFicha(etiquetaActual.id, Object.assign({ tipo: '', nivel: '' }, etiquetaActual.t));
+}
+$('#btn-pdf-desc').addEventListener('click', () => {
+  const doc = pdfEtiqueta(); if (doc) doc.save('Ficha_' + etiquetaActual.id + '.pdf');
+});
+$('#btn-pdf-comp').addEventListener('click', async () => {
+  const doc = pdfEtiqueta(); if (!doc) return;
+  const file = new File([doc.output('blob')], 'Ficha_' + etiquetaActual.id + '.pdf', { type: 'application/pdf' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: 'Ficha tablero ' + etiquetaActual.id }); } catch {}
+  } else { doc.save(file.name); }
+});
+
+// ===================== SINCRONIZACIÓN =====================
+let sincronizando = false;
+const blobAB64 = (blob) => new Promise((res, rej) => {
+  const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = () => rej(r.error); r.readAsDataURL(blob);
+});
+async function fetchT(url, opt = {}, ms = 90000) {
+  const ac = new AbortController(); const t = setTimeout(() => ac.abort(), ms);
+  try { return await fetch(url, Object.assign({}, opt, { signal: ac.signal, redirect: 'follow', credentials: 'omit', cache: 'no-store' })); }
+  finally { clearTimeout(t); }
+}
+
+async function sincronizar(manual = false) {
+  if (sincronizando) return;
+  if (!configurado()) { $('#sync-msg').textContent = 'Falta configurar SCRIPT_URL en index.html.'; return; }
+  sincronizando = true; $('#btn-sync').disabled = true;
+  let enviados = 0, error = '';
+  try {
+    const pend = (await DB.all()).sort((a, b) => a.creado.localeCompare(b.creado));
+    if (pend.length) $('#sync-msg').textContent = 'Enviando…';
+    for (const p of pend) {
+      try {
+        const alias = ls.get('alias', {});
+        if (alias[p.registro.id]) p.registro.id = alias[p.registro.id];
+        const fotos = [];
+        for (const ft of p.fotos) fotos.push({ campo: ft.campo, mime: ft.mime, nombre: ft.nombre || '', data: await blobAB64(ft.blob) });
+        const peso = fotos.reduce((s, x) => s + x.data.length, 0);
+        const r = await fetchT(CONFIG.SCRIPT_URL, {
+          method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ clave: CONFIG.CLAVE, registro: p.registro, fotos })
+        }, 180000 + Math.round(peso / 25));   // +1 s cada ~25 KB (señal débil)
+        const j = await r.json();
+        if (!j.ok) throw new Error(j.error || 'respuesta inválida');
+        await DB.del(p.uuid);
+        if (j.id && p.registro.id && j.id !== p.registro.id) corregirId(p.registro.id, j.id);
+        const env = ls.get('enviados', []);
+        env.unshift({ uuid: p.uuid, id: j.id, nuevo: j.nuevo, qrUrl: j.qrUrl, tipo: p.registro.tipoNombre, act: p.registro.tipoActividad, fecha: new Date().toISOString() });
+        ls.set('enviados', env.slice(0, 40));
+        enviados++;
+
+      } catch (err) {
+        error = err.name === 'AbortError' ? 'la señal es muy débil (tiempo agotado)'
+          : (err instanceof TypeError ? 'sin conexión a internet' : err.message);
+        break; // se reintenta luego, en orden
+      }
+    }
+    if (!error) { await actualizarTableros(); cargarDocs(); }
+  } catch (err) { error = err.message; }
+  sincronizando = false; $('#btn-sync').disabled = false;
+  const quedan = (await DB.all().catch(() => [])).length;
+  $('#sync-msg').textContent = error
+    ? `Sin envío: ${error}. Se reintentará automáticamente.`
+    : (quedan ? `${quedan} pendientes.` : (enviados ? `${enviados} enviados correctamente.` : 'Todo enviado.'));
+  if (manual && error) toast('No se pudo enviar: ' + error);
+  renderVista(vistaActual());
+}
+$('#btn-sync').addEventListener('click', () => sincronizar(true));
+
+// El servidor cambió el ID (TAG GOM ya registrado o ID repetido): se corrige en todo el teléfono
+function corregirId(viejo, nuevo) {
+  const alias = ls.get('alias', {}); alias[viejo] = nuevo; ls.set('alias', alias);
+  const etq = ls.get('etiquetas', []);
+  etq.forEach(x => { if (x.id === viejo) { x.id = nuevo; x.cambiado = true; } });
+  ls.set('etiquetas', etq);
+  toast(`El tablero ${viejo} quedó registrado como ${nuevo}. Reimprime su etiqueta QR.`, 8000);
+}
+
+async function actualizarTableros() {
+  if (!configurado()) return;
+  const r = await fetchT(CONFIG.SCRIPT_URL + '?accion=tableros&clave=' + encodeURIComponent(CONFIG.CLAVE), {}, 30000);
+  const j = await r.json();
+  if (!j.ok) return;
+  // Conserva las fichas creadas en el teléfono que aún tienen registros sin enviar
+  const pendIds = new Set((await DB.all().catch(() => [])).map(p => p.registro.id));
+  const locales = ls.get('tableros', { lista: [] }).lista.filter(t => t.pendiente && pendIds.has(t.id) && !j.tableros.some(s => s.id === t.id));
+  ls.set('tableros', { lista: locales.concat(j.tableros), actualizado: j.actualizado });
+}
+
+// ===================== ESCÁNER QR (funciona sin señal) =====================
+let stream = null, detector = null;
+$('#btn-scan-cancel').addEventListener('click', volver);
+
+async function abrirScanner() {
+  ir('scan');
+  $('#scan-msg').textContent = 'Iniciando cámara…';
+  if ('BarcodeDetector' in window) { try { detector = new BarcodeDetector({ formats: ['qr_code'] }); } catch { detector = null; } }
+  if (!detector && !window.jsQR) { $('#scan-msg').textContent = 'El lector no está disponible. Usa la cámara del teléfono o busca el tablero por ID.'; return; }
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+  } catch (err) { $('#scan-msg').textContent = 'No se pudo abrir la cámara: ' + err.message; return; }
+  const video = $('#video'); video.srcObject = stream; await video.play();
+  $('#scan-msg').textContent = 'Buscando código…';
+  const canvas = $('#canvas'), ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const paso = async () => {
+    if (!stream) return;
+    if (video.readyState >= 2) {
+      let txt = null;
+      if (detector) {
+        try { const r = await detector.detect(video); if (r[0]) txt = r[0].rawValue; } catch {}
+      } else {
+        const k = Math.min(1, 640 / video.videoWidth);
+        canvas.width = video.videoWidth * k; canvas.height = video.videoHeight * k;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const c = window.jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+        if (c) txt = c.data;
+      }
+      if (txt) { leerQR(txt); return; }
+    }
+    requestAnimationFrame(paso);
+  };
+  requestAnimationFrame(paso);
+}
+function cerrarScanner() {
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+}
+function leerQR(txt) {
+  cerrarScanner();
+  let id = '';
+  try { id = new URL(txt).searchParams.get('id') || ''; } catch { id = txt; }
+  if (navigator.vibrate) navigator.vibrate(80);
+  if (id) abrirFicha(id); else { toast('QR no reconocido'); ir('inicio'); }
+}
+
+// ===================== DOCUMENTACIÓN (grupos, procedimientos, planos) =====================
+// Los documentos se guardan en Drive a través del servidor. Cada documento tiene versiones:
+// al subir una nueva, la anterior queda como "REEMPLAZADA" y se puede consultar en "Versiones".
+// Lo que se abre queda guardado en el teléfono para verlo sin señal.
+const DOCS = {
+  GRUPOS: { titulo: 'Grupos de trabajo', info: 'Difusiones y evaluaciones de los procedimientos, separadas por nivel y grupo.', niveles: ['Producción', 'Acarreo'],
+    chips: ['Grupo 1', 'Grupo 2', 'Grupo 3', 'Grupo 4', 'TICA'], tipos: ['Difusión', 'Evaluación'] },
+  PROC: { titulo: 'Procedimientos', info: 'Documentación de las actividades que se aplican a los trabajadores.',
+    chips: [], tipos: [], tipoFijo: 'Procedimiento' },
+  PLANOS: { titulo: 'Planos', info: 'Zonas de transición, mapas de calor, puntos de encuentro y otros.',
+    chips: ['Todos', 'Zonas de transición', 'Mapas de calor', 'Puntos de encuentro', 'Otros'], tipos: [] }
+};
+const MAX_DOC = 25 * 1024 * 1024;
+let docsSec = 'GRUPOS', docsChip = '', docsTipo = '', subDoc = null, subArchivo = null;
+let docsNivel = ls.get('docsNivel', 'Producción');
+// TICA es transversal (aplica a Producción y Acarreo); documentos antiguos sin nivel se muestran en ambos
+const docEnNivel = (d) => d.grupo === 'TICA' || !d.nivel || d.nivel === 'Transversal' || d.nivel === docsNivel;
+const guardados = new Set();   // fileId de los archivos guardados en el teléfono
+const esAdmin = () => !!ls.get('claveAdmin', '');
+
+// Archivos guardados en el teléfono (IndexedDB aparte de los registros pendientes)
+const ArchDB = {
+  _db: null,
+  open() {
+    if (this._db) return Promise.resolve(this._db);
+    return new Promise((res, rej) => {
+      const rq = indexedDB.open('tableros-docs', 1);
+      rq.onupgradeneeded = () => rq.result.createObjectStore('archivos', { keyPath: 'fileId' });
+      rq.onsuccess = () => { this._db = rq.result; res(this._db); };
+      rq.onerror = () => rej(rq.error);
+    });
+  },
+  async tx(modo, fn) {
+    const db = await this.open();
+    return new Promise((res, rej) => {
+      const t = db.transaction('archivos', modo); const r = fn(t.objectStore('archivos'));
+      t.oncomplete = () => res(r && r.result); t.onerror = () => rej(t.error);
+    });
+  },
+  get(k) { return this.tx('readonly', st => st.get(k)); },
+  put(o) { return this.tx('readwrite', st => st.put(o)); },
+  del(k) { return this.tx('readwrite', st => st.delete(k)); },
+  keys() { return this.tx('readonly', st => st.getAllKeys()); }
+};
+ArchDB.keys().then(ks => ks.forEach(k => guardados.add(k))).catch(() => {});
+
+document.addEventListener('click', (e) => { const b = e.target.closest('[data-docs]'); if (b) abrirDocs(b.dataset.docs); });
+
+function abrirDocs(sec, desdeHist = false) {
+  if (sec !== docsSec || !docsChip) {
+    docsSec = sec;
+    docsChip = DOCS[sec].chips[0] || '';
+    docsTipo = DOCS[sec].tipos[0] || '';
+    $('#docs-buscar').value = '';
+  }
+  renderDocs();
+  ir('docs', { id: sec, desdeHist });
+  cargarDocs();
+}
+
+function renderDocs() {
+  const S = DOCS[docsSec];
+  $('#docs-titulo').textContent = S.titulo;
+  const cache = ls.get('docs', { lista: [], actualizado: '' });
+  $('#docs-info').textContent = S.info + (cache.actualizado ? ` Lista actualizada ${fmtFecha(cache.actualizado)}.` : '');
+  $('#docs-niveles').innerHTML = (S.niveles || []).map(n => `<button type="button" class="${n === docsNivel ? 'sel' : ''}" data-dnivel="${esc(n)}">${n === 'Producción' ? '⛏️' : '🚛'} ${esc(n)}</button>`).join('');
+  $('#docs-nota').textContent = docsSec === 'GRUPOS' && docsChip === 'TICA' ? 'TICA es transversal: sus documentos aplican a Producción y Acarreo.' : '';
+  $('#docs-chips').innerHTML = S.chips.map(c => `<button type="button" class="${c === docsChip ? 'sel' : ''}" data-chip="${esc(c)}">${esc(c)}</button>`).join('');
+  $('#docs-tipos').innerHTML = S.tipos.map(t => `<button type="button" class="${t === docsTipo ? 'sel' : ''}" data-dtipo="${esc(t)}">${esc(t === 'Difusión' ? 'Difusiones' : t === 'Evaluación' ? 'Evaluaciones' : t)}</button>`).join('');
+  $('#btn-doc-subir').hidden = !esAdmin();
+  document.querySelectorAll('.lnk-admin').forEach(l => { l.textContent = esAdmin() ? 'Salir del modo administrador' : 'Modo administrador'; });
+  const q = $('#docs-buscar').value.trim().toLowerCase();
+  const todos = (cache.lista || []).filter(d => d.seccion === docsSec);
+  const vig = todos.filter(d => d.estado === 'VIGENTE'
+    && (docsSec !== 'GRUPOS' || (d.grupo === docsChip && d.tipo === docsTipo && docEnNivel(d)))
+    && (docsSec !== 'PLANOS' || docsChip === 'Todos' || d.tipo === docsChip)
+    && (!q || [d.titulo, d.codigo, d.tipo, d.grupo].join(' ').toLowerCase().includes(q)))
+    .sort((a, b) => String(a.titulo).localeCompare(String(b.titulo)));
+  const ico = (d) => /pdf/.test(d.mime) ? '📄' : /^image\//.test(d.mime) ? '🖼️' : /sheet|excel/.test(d.mime) ? '📊' : /word|document/.test(d.mime) ? '📝' : '📎';
+  $('#docs-lista').innerHTML = vig.map(d => {
+    const ant = todos.filter(x => x.docId === d.docId && x.estado !== 'VIGENTE').sort((a, b) => String(b.fSubida).localeCompare(String(a.fSubida)));
+    return `<li>
+      <div class="info"><b>${ico(d)} ${esc(d.titulo)}</b>
+        <small>${esc([d.codigo, 'Versión ' + (d.version || '—'), 'vigente desde ' + (d.fecha || '—')].filter(Boolean).join(' · '))}${docsSec === 'PLANOS' ? ' · ' + esc(d.tipo) : ''}${docsSec === 'GRUPOS' ? ' · ' + esc(d.grupo === 'TICA' || d.nivel === 'Transversal' ? 'Transversal' : (d.nivel || 'Ambos niveles')) : ''}</small>
+        ${guardados.has(d.fileId) ? '<small style="display:block;color:var(--ok)">✔ Guardado en el teléfono</small>' : ''}</div>
+      <div class="acc"><button type="button" data-ver="${esc(d.fileId)}">Ver</button>
+        ${ant.length ? `<button type="button" data-vers="${esc(d.docId)}">Versiones (${ant.length})</button>` : ''}
+        ${esAdmin() ? `<button type="button" data-nv="${esc(d.docId)}">Nueva versión</button><button type="button" data-edoc="${esc(d.docId)}">✏️ Editar</button><button type="button" data-ret="${esc(d.docId)}">Retirar</button>` : ''}</div>
+      <div class="vers" id="vers-${esc(d.docId)}" hidden>${ant.map(a => `<div><span>Versión ${esc(a.version || '—')} · ${esc(a.fecha || '')} · ${esc(a.estado)}</span>
+        <button type="button" data-ver="${esc(a.fileId)}">Ver</button></div>`).join('')}</div>
+    </li>`;
+  }).join('') || `<li><div class="info"><small>${cache.actualizado ? 'No hay documentos en esta sección.' : 'Aún no se descarga la lista de documentos (se necesita señal la primera vez).'}${esAdmin() ? ' Usa "Subir documento" para agregar.' : ''}</small></div></li>`;
+}
+$('#docs-niveles').addEventListener('click', (e) => { const b = e.target.closest('[data-dnivel]'); if (b) { docsNivel = b.dataset.dnivel; ls.set('docsNivel', docsNivel); renderDocs(); } });
+$('#docs-chips').addEventListener('click', (e) => { const b = e.target.closest('[data-chip]'); if (b) { docsChip = b.dataset.chip; renderDocs(); } });
+$('#docs-tipos').addEventListener('click', (e) => { const b = e.target.closest('[data-dtipo]'); if (b) { docsTipo = b.dataset.dtipo; renderDocs(); } });
+$('#docs-buscar').addEventListener('input', renderDocs);
+$('#docs-lista').addEventListener('click', async (e) => {
+  const lista = ls.get('docs', { lista: [] }).lista || [];
+  const v = e.target.closest('[data-ver]'); if (v) { const d = lista.find(x => x.fileId === v.dataset.ver); if (d) verDocumento(d); return; }
+  const vs = e.target.closest('[data-vers]'); if (vs) { const box = document.getElementById('vers-' + vs.dataset.vers); if (box) box.hidden = !box.hidden; return; }
+  const nv = e.target.closest('[data-nv]'); if (nv) { abrirSubir(lista.find(x => x.docId === nv.dataset.nv && x.estado === 'VIGENTE')); return; }
+  const ed = e.target.closest('[data-edoc]'); if (ed) { const d = lista.find(x => x.docId === ed.dataset.edoc && x.estado === 'VIGENTE'); if (d) editarDocumento(d); return; }
+  const rt = e.target.closest('[data-ret]');
+  if (rt) {
+    const d = lista.find(x => x.docId === rt.dataset.ret && x.estado === 'VIGENTE');
+    if (!d) return;
+    const motivo = pedirMotivo(`¿Retirar "${d.titulo}"? Dejará de mostrarse a los trabajadores (queda en la planilla y en Drive; se puede reactivar o eliminar desde el Panel de administración).`);
+    if (!motivo) return;
+    try { await accionAdmin({ accion: 'retirarDoc', docId: d.docId, motivo }); toast('Documento retirado'); }
+    catch (err) { toast('No se pudo retirar: ' + err.message, 5000); }
+  }
+});
+
+async function cargarDocs() {
+  if (!configurado() || !navigator.onLine) return;
+  try {
+    const r = await fetchT(CONFIG.SCRIPT_URL + '?accion=docs&clave=' + encodeURIComponent(CONFIG.CLAVE), {}, 30000);
+    const j = await r.json();
+    if (!j.ok) return;
+    guardarListaDocs(j.docs, j.actualizado);
+  } catch {}
+}
+function guardarListaDocs(docs, actualizado) {
+  ls.set('docs', { lista: docs || [], actualizado: actualizado || new Date().toISOString() });
+  // Se borran del teléfono los archivos que ya no están vigentes (versiones antiguas o retiradas)
+  const vig = new Set((docs || []).filter(d => d.estado === 'VIGENTE').map(d => d.fileId));
+  guardados.forEach(k => { if (!vig.has(k)) { ArchDB.del(k).catch(() => {}); guardados.delete(k); } });
+  if (!$('#v-docs').hidden) renderDocs();
+  if (!$('#v-rf01').hidden) $('#btn-ver-sigo').hidden = !docSigo();
+}
+
+// ---------- Modo administrador (subir / actualizar / retirar documentos) ----------
+$('#btn-doc-subir').addEventListener('click', () => abrirSubir(null));
+
+// ===================== ADMINISTRACIÓN =====================
+// El modo administrador es por teléfono: pide la clave CLAVE_ADMIN (validada en el servidor) y el nombre de quien administra.
+async function activarAdmin() {
+  if (esAdmin()) {
+    if (confirm('¿Salir del modo administrador en este teléfono?')) { ls.set('claveAdmin', ''); renderAdminUI(); toast('Modo administrador desactivado'); }
+    return;
+  }
+  const clave = prompt('Clave de administrador:');
+  if (!clave) return;
+  if (!navigator.onLine) { toast('Se necesita señal para validar la clave.'); return; }
+  try {
+    const r = await fetchT(CONFIG.SCRIPT_URL + '?accion=admin&clave=' + encodeURIComponent(CONFIG.CLAVE) + '&claveAdmin=' + encodeURIComponent(clave), {}, 20000);
+    const j = await r.json();
+    if (!(j.ok && j.admin)) { toast('Clave de administrador incorrecta.', 4000); return; }
+    const nombre = (prompt('Tu nombre (queda en el registro de cambios):', ls.get('adminNombre', '') || ls.get('realizadoPor', '')) || '').trim();
+    if (!nombre) { toast('Se necesita el nombre para registrar los cambios.'); return; }
+    ls.set('claveAdmin', clave); ls.set('adminNombre', nombre.toLocaleUpperCase('es-CL'));
+    toast('Modo administrador activo ✔'); renderAdminUI();
+  } catch (err) { toast('No se pudo validar: ' + err.message, 4000); }
+}
+function renderAdminUI() {
+  const a = esAdmin();
+  $('#chip-admin').hidden = !a;
+  document.querySelectorAll('.lnk-admin').forEach(l => { l.textContent = a ? 'Salir del modo administrador' : 'Modo administrador'; });
+  const v = vistaActual();
+  if (v === 'admin' && !a) { ir('inicio'); return; }
+  if (v === 'docs') renderDocs();
+  else if (v === 'ficha' && fichaActual) renderFicha(fichaActual.id, buscarCache(fichaActual.id));
+  else renderVista(v);
+}
+document.querySelectorAll('.lnk-admin').forEach(l => l.addEventListener('click', (e) => { e.preventDefault(); activarAdmin(); }));
+$('#btn-adm-salir').addEventListener('click', activarAdmin);
+
+// Envía una acción de administrador; actualiza el tablero en el teléfono si el servidor lo devuelve
+async function accionAdmin(cuerpo) {
+  if (!esAdmin()) throw new Error('modo administrador no activo');
+  const j = await postDocs(Object.assign({ por: ls.get('adminNombre', '') }, cuerpo));
+  if (j.tablero) {
+    const cache = ls.get('tableros', { lista: [], actualizado: '' });
+    cache.lista = [j.tablero].concat(cache.lista.filter(x => x.id !== j.tablero.id));
+    ls.set('tableros', cache);
+  }
+  return j;
+}
+const pedirMotivo = (txt) => { const m = prompt(txt + '\n\nMotivo (obligatorio):'); return m && m.trim() ? m.trim().toLocaleUpperCase('es-CL') : null; };
+
+// Formulario genérico de corrección: campos + motivo
+let afConfig = null;
+function abrirFormAdmin(cfg) {
+  afConfig = cfg;
+  $('#af-titulo').textContent = cfg.titulo; $('#af-info').textContent = cfg.info || '';
+  $('#af-motivo').value = ''; $('#af-error').textContent = '';
+  $('#af-campos').innerHTML = cfg.campos.map(c => {
+    const id = 'afc-' + c.k, val = esc(c.v == null ? '' : c.v);   // prefijo propio: no choca con #af-titulo
+    const ctrl = c.tipo === 'select'
+      ? `<select id="${id}">${c.opciones.map(o => `<option${String(o) === String(c.v) ? ' selected' : ''}>${esc(o)}</option>`).join('')}</select>`
+      : `<input id="${id}" type="${c.tipo === 'date' ? 'date' : 'text'}" value="${val}"${c.tipo === 'date' ? '' : ' class="may"'}>`;
+    return `<label for="${id}">${esc(c.label)}</label>${ctrl}`;
+  }).join('');
+  ir('admin-form');
+}
+$('#btn-af-cancel').addEventListener('click', volver);
+$('#btn-af-guardar').addEventListener('click', async () => {
+  if (!afConfig) return;
+  const cambios = {};
+  afConfig.campos.forEach(c => {
+    const el = $('#afc-' + c.k); let v = (el.value || '').trim();
+    const texto = c.tipo !== 'date' && c.tipo !== 'select';
+    if (texto) v = v.toLocaleUpperCase('es-CL');
+    const antes = String(c.v == null ? '' : c.v).trim();
+    if (v !== (texto ? antes.toLocaleUpperCase('es-CL') : antes)) cambios[c.k] = v;
+  });
+  const motivo = $('#af-motivo').value.trim().toLocaleUpperCase('es-CL');
+  if (!Object.keys(cambios).length) { $('#af-error').textContent = 'No modificaste ningún dato.'; return; }
+  if (!motivo) { $('#af-error').textContent = 'Indica el motivo del cambio.'; return; }
+  const btn = $('#btn-af-guardar'); btn.disabled = true; btn.textContent = 'Guardando…';
+  try { await afConfig.guardar(cambios, motivo); toast('Cambios guardados ✔'); volver(); }
+  catch (err) { $('#af-error').textContent = 'No se pudo guardar: ' + err.message; }
+  finally { btn.disabled = false; btn.textContent = 'Guardar cambios'; }
+});
+
+// --- Ficha del tablero ---
+$('#btn-adm-editar').addEventListener('click', () => {
+  const t = fichaActual; if (!t) return;
+  abrirFormAdmin({
+    titulo: '✏️ Editar tablero ' + t.id,
+    info: 'Corrige los datos mal ingresados. El ID y el código QR no cambian.',
+    campos: [
+      { k: 'nivel', label: 'Nivel', tipo: 'select', opciones: NIVELES, v: t.nivel },
+      { k: 'tipo', label: 'Tipo de tablero', tipo: 'select', opciones: TIPOS.map(x => x.nombre), v: t.tipo },
+      { k: 'ubicacion', label: 'Ubicación', v: t.ubicacion }, { k: 'numero', label: 'N° de tablero', v: t.numero },
+      { k: 'tag', label: 'N° TAG GOM (vacío = sin TAG)', v: t.tag },
+      { k: 'fMant', label: 'Fecha última mantención', tipo: 'date', v: String(t.fMant || '').slice(0, 10) },
+      { k: 'mantenedor', label: 'Mantenedor última mantención', v: t.mantenedor },
+      { k: 'cargoMant', label: 'Cargo del mantenedor', tipo: 'select', opciones: [''].concat(CARGOS.map(c => c.toLocaleUpperCase('es-CL'))), v: String(t.cargoMant || '').toLocaleUpperCase('es-CL') },
+      { k: 'fInsp', label: 'Fecha última inspección', tipo: 'date', v: String(t.fInsp || '').slice(0, 10) }
+    ],
+    guardar: (cambios, motivo) => accionAdmin({ accion: 'editarTablero', id: t.id, cambios, motivo })
+  });
+});
+$('#btn-adm-baja').addEventListener('click', async () => {
+  const t = fichaActual; if (!t) return;
+  const motivo = pedirMotivo(`¿Dar de baja el tablero ${t.id}? Dejará de aparecer en listas y alertas (queda en la planilla y se puede reactivar).`);
+  if (!motivo) return;
+  try { await accionAdmin({ accion: 'bajaTablero', id: t.id, motivo }); toast('Tablero dado de baja'); renderFicha(t.id, buscarCache(t.id)); }
+  catch (err) { toast('No se pudo: ' + err.message, 5000); }
+});
+$('#btn-adm-reactivar').addEventListener('click', async () => {
+  const t = fichaActual; if (!t) return;
+  const motivo = pedirMotivo(`¿Reactivar el tablero ${t.id}?`); if (!motivo) return;
+  try { await accionAdmin({ accion: 'reactivarTablero', id: t.id, motivo }); toast('Tablero reactivado ✔'); renderFicha(t.id, buscarCache(t.id)); }
+  catch (err) { toast('No se pudo: ' + err.message, 5000); }
+});
+// --- Registros del historial ---
+document.addEventListener('click', async (e) => {
+  const an = e.target.closest('[data-anular]'), co = e.target.closest('[data-corregir]');
+  if ((!an && !co) || !fichaActual) return;
+  const t = fichaActual, uuid = (an || co).dataset[an ? 'anular' : 'corregir'];
+  const h = (t.hist || []).find(x => x.uuid === uuid); if (!h) return;
+  const desc = `${h.tipo || 'Registro'} del ${h.fAct || h.fecha} (${h.por || '—'})`;
+  if (an) {
+    const motivo = pedirMotivo(`¿Anular ${desc}? Deja de contar para el tablero y se recalculan sus fechas (queda en la planilla marcado ANULADO).`);
+    if (!motivo) return;
+    try { await accionAdmin({ accion: 'anularRegistro', uuid, motivo }); toast('Registro anulado'); renderFicha(t.id, buscarCache(t.id)); }
+    catch (err) { toast('No se pudo anular: ' + err.message, 5000); }
+    return;
+  }
+  abrirFormAdmin({
+    titulo: '✏️ Corregir registro', info: desc + '. Para cambiar respuestas del checklist, anula el registro y regístralo de nuevo.',
+    campos: [
+      { k: 'fAct', label: 'Fecha de la actividad', tipo: 'date', v: String(h.fAct || '').slice(0, 10) },
+      { k: 'por', label: 'Realizado por', v: h.por },
+      { k: 'cargo', label: 'Cargo', tipo: 'select', opciones: [''].concat(CARGOS.map(c => c.toLocaleUpperCase('es-CL'))), v: String(h.cargo || '').toLocaleUpperCase('es-CL') },
+      { k: 'obs', label: 'Observación general', v: h.obs }
+    ],
+    guardar: (cambios, motivo) => accionAdmin({ accion: 'editarRegistro', uuid, cambios, motivo })
+  });
+});
+// --- Documentos ---
+function editarDocumento(d) {
+  const campos = [
+    { k: 'titulo', label: 'Título', v: d.titulo }, { k: 'codigo', label: 'Código', v: d.codigo },
+    { k: 'version', label: 'Versión', v: d.version }, { k: 'fecha', label: 'Fecha de vigencia', tipo: 'date', v: String(d.fecha || '').slice(0, 10) },
+    { k: 'obs', label: 'Observación', v: d.obs }
+  ];
+  if (d.seccion === 'GRUPOS') {
+    campos.unshift({ k: 'tipo', label: 'Tipo', tipo: 'select', opciones: DOCS.GRUPOS.tipos, v: d.tipo });
+    campos.unshift({ k: 'nivel', label: 'Nivel (TICA = Transversal)', tipo: 'select', opciones: ['Producción', 'Acarreo', 'Transversal'], v: d.nivel || (d.grupo === 'TICA' ? 'Transversal' : 'Producción') });
+    campos.unshift({ k: 'grupo', label: 'Grupo', tipo: 'select', opciones: DOCS.GRUPOS.chips, v: d.grupo });
+  } else if (d.seccion === 'PLANOS') campos.unshift({ k: 'tipo', label: 'Categoría', tipo: 'select', opciones: DOCS.PLANOS.chips.slice(1), v: d.tipo });
+  abrirFormAdmin({
+    titulo: '✏️ Editar documento', info: 'Corrige los datos del documento sin cambiar el archivo. Para cambiar el archivo usa "Nueva versión".',
+    campos, guardar: (cambios, motivo) => accionAdmin({ accion: 'editarDoc', docId: d.docId, cambios, motivo })
+  });
+}
+// --- Panel ---
+async function renderAdmin() {
+  if (!esAdmin()) return;
+  $('#adm-quien').textContent = 'Administrador en este teléfono: ' + (ls.get('adminNombre', '') || '—');
+  const bajas = ls.get('tableros', { lista: [] }).lista.filter(t => t.baja);
+  $('#adm-bajas').innerHTML = bajas.map(t => `<li><div class="info"><b>${esc(t.id)}</b><small>${esc(t.tipo)} · ${esc(t.nivel)} · ${esc(t.ubicacion)}${t.motivoBaja ? ' · ' + esc(t.motivoBaja) : ''}</small></div>
+    <button type="button" data-ficha="${esc(t.id)}">Ver</button></li>`).join('') || '<li><div class="info"><small>No hay tableros dados de baja.</small></div></li>';
+  const docs = ls.get('docs', { lista: [] }).lista || [];
+  const ret = docs.filter(d => d.estado === 'RETIRADO' && !docs.some(x => x.docId === d.docId && x.estado === 'VIGENTE'));
+  const unicos = [...new Map(ret.map(d => [d.docId, d])).values()];
+  $('#adm-docs').innerHTML = unicos.map(d => `<li class="con-adm"><div class="info"><b>${esc(d.titulo)}</b><small>${esc(DOCS[d.seccion] ? DOCS[d.seccion].titulo : d.seccion)}${d.grupo ? ' · ' + esc(d.grupo) : ''} · Versión ${esc(d.version || '—')}</small></div>
+    <div class="acc-adm"><button type="button" data-react-doc="${esc(d.docId)}">♻️ Reactivar</button><button type="button" data-elim-doc="${esc(d.docId)}">🗑 Eliminar definitivamente</button></div></li>`).join('')
+    || '<li><div class="info"><small>No hay documentos retirados.</small></div></li>';
+  $('#adm-audit').innerHTML = '<li><div class="info"><small>Cargando…</small></div></li>';
+  try {
+    if (!navigator.onLine) throw new Error('sin señal');
+    const r = await fetchT(CONFIG.SCRIPT_URL + '?accion=auditoria&clave=' + encodeURIComponent(CONFIG.CLAVE) + '&claveAdmin=' + encodeURIComponent(ls.get('claveAdmin', '')), {}, 20000);
+    const j = await r.json(); if (!j.ok) throw new Error(j.error || 'error');
+    $('#adm-audit').innerHTML = j.cambios.slice(0, 40).map(c => `<li><div class="info"><b>${esc(c.accion)} · ${esc(c.id)}</b>
+      <small>${esc(c.fecha)} · ${esc(c.por)}${c.motivo ? ' · ' + esc(c.motivo) : ''}</small>${c.detalle ? `<small style="display:block;white-space:pre-line">${esc(c.detalle)}</small>` : ''}</div></li>`).join('')
+      || '<li><div class="info"><small>Aún no hay cambios registrados.</small></div></li>';
+  } catch (err) { $('#adm-audit').innerHTML = `<li><div class="info"><small>No se pudo cargar el registro de cambios (${esc(err.message)}).</small></div></li>`; }
+}
+$('#adm-docs').addEventListener('click', async (e) => {
+  const docs = ls.get('docs', { lista: [] }).lista || [];
+  const re = e.target.closest('[data-react-doc]'), el = e.target.closest('[data-elim-doc]');
+  if (!re && !el) return;
+  const docId = (re || el).dataset[re ? 'reactDoc' : 'elimDoc'];
+  const d = docs.find(x => x.docId === docId) || {};
+  const motivo = pedirMotivo(re ? `¿Reactivar "${d.titulo}"? Vuelve a mostrarse a los trabajadores.`
+    : `¿ELIMINAR DEFINITIVAMENTE "${d.titulo}" y todas sus versiones? Los archivos van a la papelera de Drive (30 días) y se borran de la hoja.`);
+  if (!motivo) return;
+  try { await accionAdmin({ accion: re ? 'reactivarDoc' : 'eliminarDoc', docId, motivo }); toast(re ? 'Documento reactivado ✔' : 'Documento eliminado'); renderAdmin(); }
+  catch (err) { toast('No se pudo: ' + err.message, 5000); }
+});
+
+function abrirSubir(prev) {
+  subDoc = prev || null; liberar(subArchivo); subArchivo = null;
+  const S = DOCS[docsSec];
+  $('#sub-titulo').textContent = prev ? 'Nueva versión' : 'Subir documento · ' + S.titulo;
+  $('#sub-info').textContent = prev
+    ? `Reemplaza la versión ${prev.version || '—'} de "${prev.titulo}". La versión anterior queda guardada como REEMPLAZADA.`
+    : 'El documento queda disponible para todos los teléfonos que usan la app.';
+  $('#sub-box-grupo').hidden = docsSec !== 'GRUPOS';
+  $('#sub-grupo').innerHTML = DOCS.GRUPOS.chips.map(c => `<option>${esc(c)}</option>`).join('');
+  $('#sub-grupo').value = prev ? prev.grupo : docsChip;
+  $('#sub-nivel').value = prev && (prev.nivel === 'Producción' || prev.nivel === 'Acarreo') ? prev.nivel : docsNivel;
+  $('#sub-nivel').disabled = !!prev;
+  renderSubNivel();
+  const tipos = docsSec === 'GRUPOS' ? DOCS.GRUPOS.tipos : docsSec === 'PLANOS' ? DOCS.PLANOS.chips.slice(1) : [];
+  $('#sub-box-tipo').hidden = !tipos.length;
+  $('#sub-tipo').innerHTML = tipos.map(t => `<option>${esc(t)}</option>`).join('');
+  $('#sub-tipo').value = prev ? prev.tipo : (docsSec === 'GRUPOS' ? docsTipo : (docsChip !== 'Todos' ? docsChip : tipos[0] || ''));
+  $('#sub-grupo').disabled = $('#sub-tipo').disabled = !!prev;
+  $('#sub-tit').value = prev ? prev.titulo : '';
+  $('#sub-cod').value = prev ? prev.codigo || '' : '';
+  $('#sub-ver').value = prev ? siguienteVersion(prev.version) : '001';
+  $('#sub-fecha').value = new Date().toLocaleDateString('en-CA');
+  $('#sub-por').value = ls.get('subidoPor', '') || ls.get('realizadoPor', '');
+  $('#sub-obs').value = ''; $('#sub-prev').innerHTML = ''; $('#sub-error').textContent = '';
+  ir('subir');
+}
+// "002" → "003", "2" → "3", "Rev. A" → "" (se escribe a mano)
+function siguienteVersion(v) {
+  const m = String(v || '').match(/^(.*?)(\d+)$/);
+  if (!m) return '';
+  const n = String(+m[2] + 1).padStart(m[2].length, '0');
+  return m[1] + n;
+}
+// El nivel solo se pide para Grupo 1 a 4 (TICA es transversal)
+function renderSubNivel() { $('#sub-box-nivel').hidden = docsSec !== 'GRUPOS' || $('#sub-grupo').value === 'TICA'; }
+$('#sub-grupo').addEventListener('change', renderSubNivel);
+$('#sub-box-arch').addEventListener('change', async (e) => {
+  const input = e.target; if (!input.files || !input.files[0]) return;
+  const file = input.files[0]; input.value = '';
+  if (file.size > MAX_DOC && !esImagen(file)) { toast(`${file.name} pesa ${tamTxt(file.size)}; el máximo es 25 MB.`, 5000); return; }
+  liberar(subArchivo);
+  try {
+    subArchivo = esImagen(file) ? await prepararArchivo(file, { max: 3000, q: 0.88 }) : { blob: file, mime: file.type || 'application/octet-stream', nombre: file.name, img: false };
+    $('#sub-prev').innerHTML = archivoHTML(subArchivo, 's'); $('#sub-box-arch').classList.remove('falta');
+    if (!$('#sub-tit').value.trim()) $('#sub-tit').value = file.name.replace(/\.\w+$/, '').replace(/[_-]+/g, ' ').toLocaleUpperCase('es-CL');
+  } catch (err) { toast(err.message, 5000); }
+});
+$('#sub-prev').addEventListener('click', (e) => { if (e.target.closest('[data-quitar]')) { liberar(subArchivo); subArchivo = null; $('#sub-prev').innerHTML = ''; } });
+$('#btn-sub-cancel').addEventListener('click', volver);
+
+async function postDocs(cuerpo, ms = 120000) {
+  if (!navigator.onLine) throw new Error('sin conexión a internet');
+  const r = await fetchT(CONFIG.SCRIPT_URL, {
+    method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(Object.assign({ clave: CONFIG.CLAVE, claveAdmin: ls.get('claveAdmin', '') }, cuerpo))
+  }, ms);
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || 'respuesta inválida');
+  if (j.docs) guardarListaDocs(j.docs, j.actualizado);
+  return j;
+}
+
+$('#btn-sub-guardar').addEventListener('click', async () => {
+  const may = (s) => s.trim().toLocaleUpperCase('es-CL');
+  const faltan = [];
+  if (!may($('#sub-tit').value)) faltan.push('título');
+  if (!may($('#sub-ver').value)) faltan.push('versión');
+  if (!$('#sub-fecha').value) faltan.push('fecha de vigencia');
+  if (!may($('#sub-por').value)) faltan.push('subido por');
+  if (!subArchivo) { faltan.push('archivo'); $('#sub-box-arch').classList.add('falta'); }
+  if (faltan.length) { $('#sub-error').textContent = 'Falta completar: ' + faltan.join(', ') + '.'; return; }
+  const btn = $('#btn-sub-guardar'); btn.disabled = true; btn.textContent = 'Subiendo… (no cierres la app)';
+  try {
+    const doc = {
+      docId: subDoc ? subDoc.docId : '', seccion: docsSec,
+      grupo: docsSec === 'GRUPOS' ? $('#sub-grupo').value : '',
+      nivel: docsSec !== 'GRUPOS' ? '' : ($('#sub-grupo').value === 'TICA' ? 'Transversal' : $('#sub-nivel').value),
+      tipo: docsSec === 'PROC' ? 'Procedimiento' : $('#sub-tipo').value,
+      titulo: may($('#sub-tit').value), codigo: may($('#sub-cod').value), version: may($('#sub-ver').value),
+      fecha: $('#sub-fecha').value, subidoPor: may($('#sub-por').value), obs: may($('#sub-obs').value)
+    };
+    ls.set('subidoPor', doc.subidoPor);
+    const data = await blobAB64(subArchivo.blob);
+    const j = await postDocs({ accion: 'subirDoc', por: ls.get('adminNombre', ''), doc, archivo: { nombre: subArchivo.nombre, mime: subArchivo.mime, data } }, 180000 + Math.round(data.length / 25));
+    if (j.fileId) { await ArchDB.put({ fileId: j.fileId, blob: subArchivo.blob, mime: subArchivo.mime, nombre: subArchivo.nombre }).catch(() => {}); guardados.add(j.fileId); }
+    liberar(subArchivo); subArchivo = null;
+    toast(subDoc ? 'Nueva versión publicada ✔' : 'Documento publicado ✔');
+    volver();
+  } catch (err) {
+    $('#sub-error').textContent = 'No se pudo subir: ' + (err.name === 'AbortError' ? 'la señal es muy débil (tiempo agotado)' : err.message);
+  } finally { btn.disabled = false; btn.textContent = 'Subir'; }
+});
+
+// ===================== VISOR DE DOCUMENTOS (PDF con pdf.js, funciona sin señal) =====================
+const VIS = { doc: null, blob: null, url: '', zoom: 1, token: 0 };
+async function obtenerArchivo(d) {
+  const g = await ArchDB.get(d.fileId).catch(() => null);
+  if (g && g.blob) return g.blob;
+  if (!navigator.onLine || !configurado()) throw new Error('Sin señal y este documento no está guardado en el teléfono.');
+  const r = await fetchT(CONFIG.SCRIPT_URL + '?accion=archivo&clave=' + encodeURIComponent(CONFIG.CLAVE) + '&id=' + encodeURIComponent(d.fileId), {}, 180000);
+  const j = await r.json();
+  if (!j.ok) throw new Error(j.error || 'no se pudo descargar');
+  const blob = await (await fetch('data:' + (j.mime || d.mime) + ';base64,' + j.data)).blob();
+  if (d.estado === 'VIGENTE') { await ArchDB.put({ fileId: d.fileId, blob, mime: j.mime || d.mime, nombre: j.nombre || d.nombre }).catch(() => {}); guardados.add(d.fileId); }
+  return blob;
+}
+
+async function verDocumento(d) {
+  VIS.doc = d; VIS.zoom = 1; VIS.blob = null; const tk = ++VIS.token;
+  $('#vis-titulo').textContent = d.titulo;
+  $('#vis-sub').textContent = [d.codigo, 'Versión ' + (d.version || '—'), d.estado !== 'VIGENTE' ? d.estado : ''].filter(Boolean).join(' · ');
+  $('#vis-cuerpo').innerHTML = '<div class="vis-msg">Cargando…</div>';
+  if ($('#visor').hidden) { $('#visor').hidden = false; history.pushState({ vis: 1 }, '', location.href); }
+  try {
+    const blob = await obtenerArchivo(d);
+    if (tk !== VIS.token) return;
+    VIS.blob = blob; if (VIS.url) URL.revokeObjectURL(VIS.url); VIS.url = URL.createObjectURL(blob);
+    if (!$('#v-docs').hidden) renderDocs();
+    await dibujarVisor(tk);
+  } catch (err) {
+    if (tk === VIS.token) $('#vis-cuerpo').innerHTML = `<div class="vis-msg">${esc(err.message)}</div>`;
+  }
+}
+const tipoDe = (d, blob) => (blob && blob.type) || d.mime || '';
+async function dibujarVisor(tk) {
+  const d = VIS.doc, mime = tipoDe(d, VIS.blob), cuerpo = $('#vis-cuerpo');
+  const ancho = Math.max(200, cuerpo.clientWidth - 16) * VIS.zoom;
+  if (/^image\//.test(mime)) {
+    cuerpo.innerHTML = `<img src="${VIS.url}" alt="" style="width:${Math.round(ancho)}px;max-width:none">`; return;
+  }
+  if (/pdf/.test(mime)) {
+    cuerpo.innerHTML = '<div class="vis-msg">Abriendo PDF…</div>';
+    try {
+      await cargarPdfJs();
+      const pdf = await window.pdfjsLib.getDocument({ data: new Uint8Array(await VIS.blob.arrayBuffer()) }).promise;
+      if (tk !== VIS.token) return;
+      cuerpo.innerHTML = '';
+      const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+      for (let n = 1; n <= pdf.numPages; n++) {
+        if (tk !== VIS.token) return;
+        const pag = await pdf.getPage(n);
+        const base = pag.getViewport({ scale: 1 });
+        const vp = pag.getViewport({ scale: (ancho / base.width) * dpr });
+        const c = document.createElement('canvas'); c.width = Math.floor(vp.width); c.height = Math.floor(vp.height);
+        c.style.width = Math.round(ancho) + 'px';
+        cuerpo.appendChild(c);
+        await pag.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+      }
+    } catch (err) {
+      if (tk === VIS.token) cuerpo.innerHTML = `<div class="vis-msg">No se pudo mostrar el PDF (${esc(err.message)}).<br><button type="button" class="big" onclick="descargarVisor()">Descargar archivo</button></div>`;
+    }
+    return;
+  }
+  cuerpo.innerHTML = `<div class="vis-msg">Este tipo de archivo (${esc(d.nombre || mime)}) no se puede mostrar dentro de la app.<br>
+    <button type="button" class="big" onclick="descargarVisor()">Descargar / abrir con otra aplicación</button></div>`;
+}
+let pdfJsListo = null;
+function cargarPdfJs() {
+  if (window.pdfjsLib) return Promise.resolve();
+  if (!pdfJsListo) pdfJsListo = new Promise((res, rej) => {
+    const sc = document.createElement('script'); sc.src = 'lib/pdf.min.js';
+    sc.onload = () => { window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'lib/pdf.worker.min.js'; res(); };
+    sc.onerror = () => { pdfJsListo = null; rej(new Error('visor PDF no disponible')); };
+    document.head.appendChild(sc);
+  });
+  return pdfJsListo;
+}
+function descargarVisor() {
+  if (!VIS.url) return;
+  const a = document.createElement('a'); a.href = VIS.url; a.download = (VIS.doc && VIS.doc.nombre) || 'documento';
+  document.body.appendChild(a); a.click(); a.remove();
+}
+function cerrarVisor(desdeHist = false) {
+  VIS.token++;
+  const abierto = !$('#visor').hidden;
+  $('#visor').hidden = true; $('#vis-cuerpo').innerHTML = '';
+  if (VIS.url) { URL.revokeObjectURL(VIS.url); VIS.url = ''; }
+  if (abierto && !desdeHist && history.state && history.state.vis) { trasPop.push(() => {}); history.back(); }
+}
+$('#vis-cerrar').addEventListener('click', () => cerrarVisor());
+$('#vis-desc').addEventListener('click', descargarVisor);
+const ZOOMS = [1, 1.5, 2, 3];
+$('#vis-mas').addEventListener('click', () => { const i = ZOOMS.indexOf(VIS.zoom); if (i < ZOOMS.length - 1 && VIS.blob) { VIS.zoom = ZOOMS[i + 1]; dibujarVisor(++VIS.token); } });
+$('#vis-menos').addEventListener('click', () => { const i = ZOOMS.indexOf(VIS.zoom); if (i > 0 && VIS.blob) { VIS.zoom = ZOOMS[i - 1]; dibujarVisor(++VIS.token); } });
+
+// ===================== CÁMARA DE LA APP =====================
+// Todos los botones "Tomar foto" usan esta cámara (getUserMedia). Así se abre la cámara aunque el
+// navegador ignore capture="environment" (computadores y algunos Android abren el explorador de archivos).
+// Si la cámara no se puede abrir, se usa el selector normal del teléfono como respaldo.
+const CAM = { stream: null, input: null, fotos: [], multi: false, frontal: false };
+const camaraSoportada = () => !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+
+document.addEventListener('click', (e) => {
+  const lab = e.target.closest('label.btn-foto'); if (!lab) return;
+  const input = lab.querySelector('input[type=file][capture]');
+  if (!input || input.disabled || !camaraSoportada()) return;
+  e.preventDefault();
+  abrirCamara(input);
+}, true);
+
+async function iniciarStream() {
+  if (CAM.stream) CAM.stream.getTracks().forEach(t => t.stop());
+  CAM.stream = await navigator.mediaDevices.getUserMedia({
+    audio: false, video: { facingMode: CAM.frontal ? 'user' : { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1440 } }
+  });
+  const v = $('#cam-video'); v.srcObject = CAM.stream;
+  await v.play().catch(() => {});
+}
+
+async function abrirCamara(input) {
+  CAM.input = input; CAM.fotos = []; CAM.frontal = false;
+  // Fotos del estado y páginas del checklist físico: se pueden tomar varias seguidas
+  CAM.multi = input.hasAttribute('data-estado') || input.dataset.adj === 'checklist';
+  renderCam();
+  $('#camara').hidden = false;
+  history.pushState({ cam: 1 }, '', location.href);   // "atrás" cierra la cámara
+  try { await iniciarStream(); }
+  catch (err) {
+    cerrarCamara();
+    toast('No se pudo abrir la cámara (' + (err.name === 'NotAllowedError' ? 'permiso denegado' : err.message) + '). Se abre el selector de fotos.', 5000);
+    input.click();   // respaldo: selector del sistema
+  }
+}
+function renderCam() {
+  const n = CAM.fotos.length;
+  $('#cam-cont').textContent = CAM.multi && n ? `${n} foto${n > 1 ? 's' : ''}` : '';
+  $('#cam-listo').hidden = !CAM.multi;
+  $('#cam-listo').textContent = n ? `Listo (${n})` : 'Listo';
+}
+function cerrarCamara(desdeHist = false) {
+  if (CAM.stream) { CAM.stream.getTracks().forEach(t => t.stop()); CAM.stream = null; }
+  $('#cam-video').srcObject = null;
+  const abierta = !$('#camara').hidden;
+  $('#camara').hidden = true;
+  if (abierta && !desdeHist && history.state && history.state.cam) { trasPop.push(() => {}); history.back(); }
+}
+// Entrega las fotos al mismo campo, como si se hubieran elegido en el teléfono
+function entregarFotos() {
+  const input = CAM.input, fotos = CAM.fotos;
+  cerrarCamara();
+  if (!input || !fotos.length) return;
+  try {
+    const dt = new DataTransfer(); fotos.forEach(f => dt.items.add(f));
+    input.files = dt.files;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  } catch (err) { toast('No se pudo adjuntar la foto: ' + err.message); }
+}
+$('#cam-disparar').addEventListener('click', () => {
+  const v = $('#cam-video'); if (!v.videoWidth) return;
+  const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight;
+  c.getContext('2d').drawImage(v, 0, 0);
+  const fl = $('#cam-flash'); fl.classList.add('on'); setTimeout(() => fl.classList.remove('on'), 60);
+  if (navigator.vibrate) navigator.vibrate(30);
+  c.toBlob(b => {
+    if (!b) { toast('No se pudo tomar la foto'); return; }
+    CAM.fotos.push(new File([b], 'foto_' + Date.now() + '.jpg', { type: 'image/jpeg', lastModified: Date.now() }));
+    if (CAM.multi) {
+      const libres = CAM.input.hasAttribute('data-estado') ? MAX_FOTOS_ESTADO - (estado ? estado.fotosEstado.length : 0) : 10;
+      renderCam();
+      if (CAM.fotos.length >= libres) entregarFotos();
+    } else entregarFotos();
+  }, 'image/jpeg', 0.92);
+});
+$('#cam-listo').addEventListener('click', entregarFotos);
+$('#cam-cancelar').addEventListener('click', () => { CAM.fotos = []; cerrarCamara(); });
+$('#cam-girar').addEventListener('click', async () => {
+  CAM.frontal = !CAM.frontal;
+  try { await iniciarStream(); } catch { CAM.frontal = !CAM.frontal; toast('No hay otra cámara disponible'); }
+});
+window.addEventListener('pagehide', () => cerrarCamara(true));
+
+// ===================== ARRANQUE =====================
+$('#version-app').textContent = 'Versión ' + VERSION_APP;
+renderAdminUI();
+$('#btn-iniciar').addEventListener('click', () => ir('actividad'));
+document.querySelectorAll('#v-actividad [data-act]').forEach(b => b.addEventListener('click', () => {
+  actividadInicial = b.dataset.act;
+  $('#preg-act').textContent = ACT[actividadInicial].nombre + ' · RF01 confirmado';
+  exigirRF01(actividadInicial, () => ir('pregunta'));
+}));
+$('#btn-tiene-qr').addEventListener('click', abrirScanner);
+$('#btn-sin-qr').addEventListener('click', () => abrirFormulario({ esAlta: true, actividad: actividadInicial }));
+$('#btn-qr-danado').addEventListener('click', () => { if (actividadInicial) { tabAct = actividadInicial; ls.set('tabAct', tabAct); } ir('tableros'); setTimeout(() => $('#buscar').focus(), 300); });
+renderRed();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+history.replaceState({ n: 0 }, '', location.href);
+const idInicial = new URLSearchParams(location.search).get('id');
+ir('inicio', { desdeHist: true });
+if (idInicial) abrirFicha(idInicial);
+sincronizar();
+setInterval(() => sincronizar(), 60000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) sincronizar(); });
+</script>
+</body>
+</html>
