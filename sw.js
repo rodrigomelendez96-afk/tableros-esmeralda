@@ -1,15 +1,16 @@
 // Service worker: permite abrir la app sin señal (también al escanear un QR).
 // Si cambias index.html, sube el número de versión para que los teléfonos actualicen.
-const VERSION = 'tableros-esm-v23';
+const VERSION = 'tableros-esm-v23-1';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png',
   './favicon.png', './logo-globo.png', './logo-geovita.png',
   './lib/jsQR.js', './lib/qrcode.js', './lib/jspdf.umd.min.js',
-  './lib/pdf.min.js', './lib/pdf.worker.min.js', './planos-ref/index.json'];
+  './lib/pdf.min.js', './lib/pdf.worker.min.js'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil((async () => {
     const c = await caches.open(VERSION);
     await c.addAll(SHELL);
+    await c.add('./planos-ref/index.json').catch(() => {});   // opcional: si aún no se sube la carpeta, la app igual se instala
     await self.skipWaiting();
   })());
 });
@@ -58,4 +59,3 @@ self.addEventListener('fetch', (e) => {
     } catch (err) { return Response.error(); }
   })());
 });
-
