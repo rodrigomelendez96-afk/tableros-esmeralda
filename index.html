@@ -1211,7 +1211,7 @@ const CONFIG = {
 };
 
 // Versión visible al pie de la pantalla de inicio (sirve para confirmar que el teléfono tiene la última)
-const VERSION_APP = 'v28 · 09-11-2026';
+const VERSION_APP = 'v28.1 · 09-11-2026';
 const NIVELES = ['UCL', 'Producción', 'Acarreo', 'SNV'];
 const SEN = 'Cuadro de señalética (riesgo eléctrico, potencia, nivel de tensión, punto de bloqueo, maniobra RCP, logo empresa, personal autorizado, diagrama unilineal, carga de fuego, programa de mantenimiento)';
 const BASE_TD = ['Orden y aseo en el sector', 'Iluminación', 'Número de TAG', 'Soporte o anclaje del tablero en buen estado',
@@ -5506,6 +5506,7 @@ async function enviarAprobacionUni() {
   const btn = $('#btn-ue-emitir'); btn.disabled = true; btn.textContent = 'Enviando…';
   try {
     const mod = modeloLimpio(); delete mod._sug;
+    mod.bloqueos = bloqueosUni(mod);   // el servidor exige la lista de puntos de bloqueo (PB-1 aguas arriba, PB-2 general…)
     Object.assign(mod, { rev, verificado: { por: fz.nombre, fecha: fz.fecha }, sugeridosSinConfirmar: UE.sug.size,
       codigoFirma: await codigoFirma([mod.id, rev, JSON.stringify(bloqueosUni(mod)), fz.usuario, fz.iso]) });
     const j = await accionAdmin({ accion: 'enviarUni', modelo: mod, token: sesion().token });
