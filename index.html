@@ -470,6 +470,11 @@
       <div id="adm-uni"></div>
     </div>
     <div class="card">
+      <h3>🗄 Registrar tablero (ficha sin mantención)</h3>
+      <p class="muted">Crea la ficha del tablero con su tipo, ubicación y TAG GOM. Queda en las listas con sus alertas (falta mantención, inspección y diagrama unilineal) hasta que el mantenedor lo busque y registre la actividad en su ficha.</p>
+      <button class="big primary" id="btn-adm-alta">＋ Registrar tablero</button>
+    </div>
+    <div class="card">
       <h3>👷 Personal autorizado</h3>
       <p class="muted">Solo el personal de esta lista puede iniciar mantenciones, inspecciones y cargar diagramas. La app genera el usuario y la contraseña de cada persona.</p>
       <button class="big primary" id="btn-pers-nueva">＋ Agregar persona</button>
@@ -892,6 +897,28 @@
     <button class="big" id="btn-af-cancel">Cancelar</button>
   </section>
 
+  <!-- ============ ALTA DE TABLERO DESDE ADMINISTRACIÓN ============ -->
+  <section id="v-alta-tab" hidden>
+    <div class="card adm">
+      <h2>🗄 Registrar tablero</h2>
+      <p class="muted" style="margin:4px 0 0">Crea la ficha del tablero sin mantención. El personal la encontrará en Mantenciones / Inspecciones (o con "Tablero ya registrado") y cargará ahí la actividad.</p>
+    </div>
+    <div class="card">
+      <label for="at-tipo">Tipo de tablero *</label><select id="at-tipo"></select>
+      <label>Ubicación (nivel) *</label><div class="seg" id="at-nivel"></div>
+      <label for="at-ubic">Lugar dentro del nivel *</label><input id="at-ubic" class="may" placeholder="Ej.: XC-24 ZANJA 9 / CCDD N°3 / CALLE 12">
+      <div class="grid2"><div><label for="at-num">N° del tablero</label><input id="at-num" class="may" placeholder="Ej.: 94"></div>
+        <div><label for="at-tag">TAG GOM</label><input id="at-tag" class="may" placeholder="Dejar vacío si aún no tiene"></div></div>
+      <label>¿Cuenta con diagrama unilineal?</label><div class="seg" id="at-uni"></div>
+      <div class="grid2"><div><label for="at-emp">Empresa</label><input id="at-emp" value="GEOVITA" readonly></div>
+        <div><label for="at-con">N° de contrato</label><input id="at-con" readonly></div></div>
+      <p class="muted" id="at-id" style="margin:10px 0 0"></p>
+      <p class="error" id="at-error"></p>
+    </div>
+    <button class="big primary" id="btn-at-guardar">Registrar tablero</button>
+    <button class="big" id="btn-at-cancel">Cancelar</button>
+  </section>
+
   <!-- ============ TABLEROS: MANTENCIONES / INSPECCIONES ============ -->
   <section id="v-tableros" hidden>
     <div class="tabs" id="tabs-act" role="tablist">
@@ -1028,11 +1055,11 @@
     <div class="card">
       <p class="muted" id="preg-act" style="margin-bottom:4px"></p>
       <h2>¿El tablero tiene código QR?</h2>
-      <p class="muted">Si tiene etiqueta QR, escanéala para cargar su ficha e historial. Si no tiene, se creará su ficha y su etiqueta QR.</p>
+      <p class="muted">Si tiene etiqueta QR, escanéala para cargar su ficha e historial. Si administración ya registró el tablero, búscalo y registra la actividad en su ficha. Solo si no existe, crea su ficha y su etiqueta QR.</p>
     </div>
     <button class="big primary" id="btn-tiene-qr">Sí, escanear QR</button>
     <button class="big" id="btn-sin-qr">No, crear ficha del tablero</button>
-    <button class="big" id="btn-qr-danado">QR dañado: buscar por ID o TAG</button>
+    <button class="big" id="btn-qr-danado">🔎 Tablero ya registrado (sin QR o QR dañado): buscar por ID, TAG GOM o ubicación</button>
     <button class="big" data-ir="inicio">Cancelar</button>
   </section>
 
@@ -1402,8 +1429,10 @@ const CONFIG = {
 };
 
 // Versión visible al pie de la pantalla de inicio (sirve para confirmar que el teléfono tiene la última)
-const VERSION_APP = 'v41 · 10-11-2026';
-const NIVELES = ['UCL', 'Producción', 'Acarreo', 'SNV'];
+const VERSION_APP = 'v43 · 10-11-2026';
+const NIVELES = ['SNV', 'Producción', 'Acarreo', 'Hundimiento', 'UCL'];
+const NIVEL_ETQ = { SNV: 'SNV · Sub nivel ventilación', UCL: 'UCL' };
+const EMPRESA = 'GEOVITA';
 const SEN = 'Cuadro de señalética (riesgo eléctrico, potencia, nivel de tensión, punto de bloqueo, maniobra RCP, logo empresa, personal autorizado, diagrama unilineal, carga de fuego, programa de mantenimiento)';
 const BASE_TD = ['Orden y aseo en el sector', 'Iluminación', 'Número de TAG', 'Soporte o anclaje del tablero en buen estado',
   'Estructura del tablero en buenas condiciones', 'Tablero cuenta con cinta reflectante al exterior',
@@ -1453,7 +1482,7 @@ const TIPOS = [
   { key: 'CDD',    codigo: 'CDD',   nombre: 'CDD – Centro de Distribución',        checklist: 'CDD' }
 ];
 
-const CODIGO_NIVEL = { 'UCL': 'UCL', 'Producción': 'PRO', 'Acarreo': 'ACA', 'SNV': 'SNV' };
+const CODIGO_NIVEL = { 'UCL': 'UCL', 'Producción': 'PRO', 'Acarreo': 'ACA', 'SNV': 'SNV', 'Hundimiento': 'HUN' };
 
 // Periodicidad: inspección mensual (30 días) y mantención trimestral (90 días).
 // "aviso" = días antes del vencimiento en que el tablero pasa a "por vencer".
@@ -2787,12 +2816,13 @@ function restaurarVista() {
       case 'uni-ed': if (!c.id || !esAdmin()) return false; abrirEditorUni(c.id); return true;
       case 'ficha': if (!c.id) return false; abrirFicha(c.id); return true;
       case 'docs': if (typeof abrirDocs === 'function' && c.id) { abrirDocs(c.id); return true; } return false;
+      case 'alta-tab': if (!esAdmin()) return false; abrirAltaTab(); return true;
       case 'admin': case 'uni-nuevo': case 'aprobar': if (!esAdmin() && c.vista !== 'aprobar') return false; ir(c.vista); return true;
       default: ir(c.vista); return true;
     }
   } catch (e) { return false; }
 }
-const VISTAS = ['inicio', 'chkd', 'chkdf', 'fichap', 'repochk', 'firma', 'aprobar', 'planos', 'plano-ed', 'uni-nuevo', 'uni-ed', 'enlaces', 'enlace', 'login', 'clave', 'persona', 'cred', 'chk', 'hist', 'admin', 'admin-form', 'tableros', 'envios', 'etiquetas', 'actividad', 'rf01', 'pregunta', 'etiqueta', 'ficha', 'unilineal', 'form', 'scan', 'docs', 'subir'];
+const VISTAS = ['alta-tab', 'inicio', 'chkd', 'chkdf', 'fichap', 'repochk', 'firma', 'aprobar', 'planos', 'plano-ed', 'uni-nuevo', 'uni-ed', 'enlaces', 'enlace', 'login', 'clave', 'persona', 'cred', 'chk', 'hist', 'admin', 'admin-form', 'tableros', 'envios', 'etiquetas', 'actividad', 'rf01', 'pregunta', 'etiqueta', 'ficha', 'unilineal', 'form', 'scan', 'docs', 'subir'];
 // Botón / gesto "atrás" del teléfono: cada pantalla abierta queda en el historial del navegador,
 // así "atrás" vuelve a la pantalla anterior en vez de salir de la app.
 const pila = [];                 // pantallas abiertas sobre "inicio": { v, id, alInicio }
@@ -2939,7 +2969,7 @@ function alertasDe(t, tab = tabAct) {
     if (m.est === 'vencida') out.push({ k: 'v', cls: 'no', peso: 3, txt: 'Mantención vencida' });
     else if (m.est === 'porvencer') out.push({ k: 'p', cls: 'warn', peso: 2, txt: 'Mantención por vencer' });
     else if (m.est === 'sin') out.push({ k: 's', cls: 'gris', peso: 1, txt: 'Sin mantención registrada' });
-    if (uniPendiente(t)) out.push({ k: 'u', cls: 'warn', peso: 2, txt: 'Unilineal en proceso' });
+    if (uniPendiente(t)) out.push({ k: 'u', cls: 'warn', peso: 2, txt: uniBorrador(t.id) ? 'Unilineal en confección' : 'Falta diagrama unilineal' });
     if (tagEnProceso(t)) out.push({ k: 't', cls: 'warn', peso: 2, txt: 'TAG GOM en proceso' });
   } else {
     const i = venc(t.fInsp, ACT.INSP);
@@ -2968,7 +2998,8 @@ $('#tabs-act').addEventListener('click', (e) => {
 const SECTORES = {
   TODOS: { nombre: 'Todos', sub: 'Todos los niveles', niveles: null },
   PRO: { nombre: 'Producción', sub: 'Producción + UCL', niveles: ['Producción', 'UCL'] },
-  ACA: { nombre: 'Acarreo', sub: 'Acarreo + SNV', niveles: ['Acarreo', 'SNV'] }
+  ACA: { nombre: 'Acarreo', sub: 'Acarreo + SNV', niveles: ['Acarreo', 'SNV'] },
+  HUN: { nombre: 'Hundimiento', sub: 'Nivel de hundimiento', niveles: ['Hundimiento'] }
 };
 let sectorAct = ls.get('sectorAct', 'TODOS');
 if (!SECTORES[sectorAct]) sectorAct = 'TODOS';
@@ -3002,7 +3033,7 @@ function renderAlertas() {
   const m = tabAct === 'MANT';
   const caja = (k, txt, cls) => n[k] ? `<div class="r-${cls}"><b>${n[k]}</b>${txt}</div>` : '';
   $('#al-resumen').innerHTML = m
-    ? caja('v', 'Mantenciones vencidas', 'no') + caja('p', 'Mantenciones por vencer', 'warn') + caja('u', 'Unilineales en proceso', 'warn') + caja('t', 'TAG GOM en proceso', 'warn') + caja('s', 'Sin mantención registrada', 'gris')
+    ? caja('v', 'Mantenciones vencidas', 'no') + caja('p', 'Mantenciones por vencer', 'warn') + caja('u', 'Falta diagrama unilineal', 'warn') + caja('t', 'TAG GOM en proceso', 'warn') + caja('s', 'Sin mantención registrada', 'gris')
     : caja('v', 'Inspecciones vencidas', 'no') + caja('p', 'Inspecciones por vencer', 'warn') + caja('s', 'Sin inspección registrada', 'gris');
   filas.sort((a, b) => b.peso - a.peso);
   $('#lista-alertas').innerHTML = filas.slice(0, 40).map(({ t, al }) => `
@@ -3095,7 +3126,7 @@ function renderBusqueda() {
       <button type="button" data-ficha="${esc(t.id)}">Ver</button></li>`;
   };
   // Agrupado por nivel (Producción, UCL, Acarreo, SNV)
-  const orden = ['Producción', 'UCL', 'Acarreo', 'SNV', ''];
+  const orden = ['Producción', 'UCL', 'Acarreo', 'SNV', 'Hundimiento', ''];
   const grupos = orden.map(n => ({ n, ts: lista.filter(t => (orden.includes(t.nivel) ? t.nivel : '') === n)
     .sort((a, b) => String(a.ubicacion).localeCompare(String(b.ubicacion))) })).filter(g => g.ts.length);
   let mostrados = 0;
@@ -3142,12 +3173,15 @@ function renderFicha(id, t) {
   $('#fi-id').textContent = id;
   const filas = t ? [
     ['Tipo', t.tipo], ['Nivel', t.nivel], ['Ubicación', t.ubicacion], ['N° tablero', t.numero], ['TAG GOM', t.tag || 'Sin TAG'],
-    ['N° contrato', t.contrato || CONFIG.CONTRATO], ['Fecha de alta', t.alta],
+    ['Empresa', EMPRESA], ['N° contrato', t.contrato || CONFIG.CONTRATO], ['Fecha de alta', t.alta],
     ['Último registro', [t.ultAct, t.ultimo, t.por].filter(Boolean).join(' · ') + (t.pendiente ? ' (pendiente de envío)' : '')]
   ] : [['Estado', 'Sin datos de este tablero en el teléfono. Puedes registrar la actividad igual; quedará asociada a su ID.']];
   $('#fi-dl').innerHTML = filas.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v || '—')}</dd>`).join('');
-  $('#fi-alertas').innerHTML = (t && uniPendiente(t) ? '<span class="badge warn">Unilineal en proceso</span>' : '')
-    + (tagEnProceso(t) ? `<span class="badge warn">TAG GOM en proceso${t.fotosId ? ' · fotos cargadas' : ''}</span>` : '');
+  // Alertas de la ficha: mantención trimestral, inspección mensual, diagrama unilineal y TAG GOM
+  const alF = t ? alertasDe(t, 'MANT').concat(alertasDe(t, 'INSP')).filter(a => a.k !== 't') : [];
+  $('#fi-alertas').innerHTML = alF.map(a => `<span class="badge ${a.cls}">${esc(a.txt)}</span>`).join('')
+    + (tagEnProceso(t) ? `<span class="badge warn">TAG GOM en proceso${t.fotosId ? ' · fotos cargadas' : ''}</span>` : '')
+    + (t && /ALTA ADMINISTRATIVA/i.test(t.ultAct || '') ? '<span class="badge gris">Registrado por administración · falta la primera mantención</span>' : '');
   $('#btn-adm-tag').hidden = !(esAdmin() && tagEnProceso(t));
   $('#fi-baja').hidden = !(t && t.baja);
   if (t && t.baja) $('#fi-baja').innerHTML = `<b>⛔ Tablero dado de baja.</b> ${esc(t.motivoBaja || '')} No aparece en las listas ni en las alertas.`;
@@ -3466,7 +3500,7 @@ function abrirFormulario(pre = {}) {
     Object.values(estado.fotosItem).forEach(liberar); estado.fotosItem = {};
     renderActividad();
   });
-  botonesSeg($('#seg-nivel'), NIVELES, estado.nivel, v => estado.nivel = v);
+  botonesSeg($('#seg-nivel'), NIVELES.map(n => [n, NIVEL_ETQ[n] || n]), estado.nivel, v => estado.nivel = v);
   $('#tipo').value = estado.tipoKey;
   botonesSeg($('#seg-tag'), ['Sí', 'No'], estado.tieneTag, v => { estado.tieneTag = v; renderTag(); });
   botonesSeg($('#seg-uni'), ['Sí', 'No'], estado.tieneUni, v => { estado.tieneUni = v; renderUni(); });
@@ -4707,9 +4741,10 @@ function construirUni(m, cx = {}) {
         zona(xi - Math.max(5, w / 2), yF, Math.max(10, w), 36, pref + ':' + lista.indexOf(o));
         L.texto(xi, yF + 22.6, recortar(o.id || '—', w, 6.2, true), { pt: 6.2, b: 1, al: 'center' });
         L.texto(xi, yF + 25.5, recortar([o.polos ? o.polos + 'x' : '', o.in].join('') + (o.dif ? ' ' + difCorto(o) : ''), w, 5.2), { pt: 5.2, al: 'center' });
-        envolver(o.desc || '', w, 4.8, false, 2).forEach((l, j) => L.texto(xi, yF + 28.2 + j * 2.4, l, { pt: 4.8, al: 'center', c: UC.GR }));
-        if (o.destino) L.texto(xi, yF + 33.4, recortar('› ' + o.destino, w, 4.8, true), { pt: 4.8, b: 1, al: 'center', c: UC.R });
-        else if (o.cable || o.kw) L.texto(xi, yF + 33.4, recortar([o.kw, o.cable].filter(Boolean).join(' · '), w, 4.4), { pt: 4.4, al: 'center', c: UC.GR });
+        const ld = envolver(o.desc || '', w, 4.8, false, (o.destino || o.cable || o.kw) ? 3 : 4), yD = yF + Math.max(33.4, 28.8 + ld.length * 2.4);   // descripción completa hasta 3-4 líneas
+        ld.forEach((l, j) => L.texto(xi, yF + 28.2 + j * 2.4, l, { pt: 4.8, al: 'center', c: UC.GR }));
+        if (o.destino) L.texto(xi, yD, recortar('› ' + o.destino, w, 4.8, true), { pt: 4.8, b: 1, al: 'center', c: UC.R });
+        else if (o.cable || o.kw) L.texto(xi, yD, recortar([o.kw, o.cable].filter(Boolean).join(' · '), w, 4.4), { pt: 4.4, al: 'center', c: UC.GR });
       });
       if (!n) L.texto(xCentro + 3, yF + 5, 'Sin salidas registradas', { pt: 6, c: UC.GR });
       fin = yF + (n ? 37 : 10);
@@ -4728,8 +4763,9 @@ function construirUni(m, cx = {}) {
     if (nPB) { simPB(L, 230, ymq + 1.5, 9, 'PB-' + nPB); L.linea(224.4, ymq, xT + 3.2, ymq, { c: UC.R, w: 0.4 }); L.poli([[xT + 2.6, ymq], [xT + 4.8, ymq - 0.9], [xT + 4.8, ymq + 0.9]], { c: UC.R, w: 0.2, fill: UC.R }); }
     const yt0 = yb + 15.5;
     L.linea(xT, yb + 14.5, xT, yt0 + 1.5, { w: 0.35 }); L.circ(xT, yt0 + 5.5, 4, { w: 0.4 }); L.circ(xT, yt0 + 11, 4, { w: 0.4 });
-    L.texto(xT - 6, yt0 + 6, recortar('T1 ' + (tr.kva || ''), 40, 6.4, true), { pt: 6.4, b: 1, al: 'right' });
-    L.texto(xT - 6, yt0 + 9, recortar([tr.relacion, tr.grupo].filter(Boolean).join(' · '), 44, 5.2), { pt: 5.2, al: 'right' });
+    // datos del T1 a la derecha del transformador: así no chocan con las últimas salidas de la barra
+    L.texto(xT + 5.5, yt0 + 6, recortar('T1 ' + (tr.kva || ''), 238 - xT - 5.5, 6.4, true), { pt: 6.4, b: 1 });
+    envolver([tr.relacion, tr.grupo].filter(Boolean).join(' · '), 238 - xT - 5.5, 5, false, 3).forEach((l, j) => L.texto(xT + 5.5, yt0 + 9 + j * 2.4, l, { pt: 5 }));
     zona(xT - 46, yb, 56, 31, 'trafo');
     const yS = Math.max(finCaja + 7, yt0 + 22), xS = 122;
     L.linea(xT, yt0 + 15, xT, yS - 3, { w: 0.4 }); L.linea(xT, yS - 3, xS, yS - 3, { w: 0.4 }); L.linea(xS, yS - 3, xS, yS + 4, { w: 0.4 });
@@ -4780,50 +4816,48 @@ function construirUni(m, cx = {}) {
   hist.push(['Rev. ' + (m.rev ?? 0), m.fechaEmision ? m.fechaEmision.split('-').reverse().join('-') : (cx.borrador ? 'Borrador' : ''), m.descRev || (m.rev ? 'Actualización' : 'Emisión original'), ((m.firmas || {}).elaboro || {}).nombre || '']);
   const altoRev = 5.6 + 4.4 + hist.length * 4.8 + 3.5 + (m.origenDatos ? 3 : 0);
   const Z = { x: 256, w: 154, y: 14, lim: 224 - altoRev };
-  const nuevaHoja = () => {
-    L.pag(); marco();
-    L.texto(16, 19, recortar('DIAGRAMA UNILINEAL – ' + (t.nombre || m.id) + ' (continuación)', 380, 12, true), { pt: 12, b: 1 });
-    Object.assign(Z, { x: 16, w: 394, y: 26, lim: 224 });
-  };
-  const tabla = (titulo, cols, filasT, opt = {}) => {
-    const ws = cols.map(c => c[1] * Z.w);
-    const altoFila = (f) => 2.2 + Math.max(...f.map((v, i) => envolver(v, ws[i] - 2, 5.8, !!(opt.negrita && i === 0), opt.maxLin || 3).length)) * 2.6;
-    if (Z.y + 12 + (filasT.length ? altoFila(filasT[0]) : 4) > Z.lim) nuevaHoja();
-    let y0 = Z.y;
-    const enc = () => {
-      y0 = Z.y;
-      L.rect(Z.x, Z.y, Z.w, 5.6, { fill: opt.rojo ? UC.R : UC.OSC, sinBorde: 1 });
-      L.texto(Z.x + 1.6, Z.y + 4, titulo, { pt: 7, b: 1, c: '#FFFFFF' });
-      Z.y += 5.6;
-      if (cols.some(c => c[0])) {
-        L.rect(Z.x, Z.y, Z.w, 4.4, { fill: UC.SUAVE, sinBorde: 1 });
-        let xx = Z.x; cols.forEach((c, i) => { L.texto(xx + 1, Z.y + 3.2, recortar(c[0], ws[i] - 2, 5.6, true), { pt: 5.6, b: 1 }); xx += ws[i]; });
-        Z.y += 4.4;
-      }
-    };
-    enc();
+  // Todo va en UNA hoja: las tablas se miden y, si no caben, se reduce la letra en forma pareja (mínimo legible)
+  let KT = 1;
+  const tabla = (titulo, cols, filasT, opt = {}, medir = false) => {
+    const k = opt.k || KT, pt = 5.8 * k, lh = 2.6 * k, ke = Math.max(k, 0.8), ws = cols.map(c => c[1] * Z.w), ml = opt.maxLin || 3;
+    const altoFila = (f) => 2.2 * k + Math.max(...f.map((v, i) => envolver(v, ws[i] - 2, pt, !!(opt.negrita && i === 0), ml).length)) * lh;
+    const conCab = cols.some(c => c[0]), hEnc = 5.6 * ke + (conCab ? 4.4 * ke : 0);
+    if (medir) return hEnc + filasT.reduce((a, f) => a + altoFila(f), 0) + 3.5 * k;
+    const y0 = Z.y;
+    L.rect(Z.x, Z.y, Z.w, 5.6 * ke, { fill: opt.rojo ? UC.R : UC.OSC, sinBorde: 1 });
+    L.texto(Z.x + 1.6, Z.y + 4 * ke, titulo, { pt: 7 * ke, b: 1, c: '#FFFFFF' });
+    Z.y += 5.6 * ke;
+    if (conCab) {
+      L.rect(Z.x, Z.y, Z.w, 4.4 * ke, { fill: UC.SUAVE, sinBorde: 1 });
+      let xx = Z.x; cols.forEach((c, i) => { L.texto(xx + 1, Z.y + 3.2 * ke, recortar(c[0], ws[i] - 2, 5.6 * ke, true), { pt: 5.6 * ke, b: 1 }); xx += ws[i]; });
+      Z.y += 4.4 * ke;
+    }
+    let corte = false;
     filasT.forEach(f => {
+      if (corte) return;
       const h = altoFila(f);
-      if (Z.y + h > Z.lim) { L.rect(Z.x, y0, Z.w, Z.y - y0, { w: 0.3 }); nuevaHoja(); enc(); }
+      if (Z.y + h > Z.lim) { corte = true; L.texto(Z.x + 1, Z.y + 3 * k, '… (más detalle en la ficha del tablero en GEO ELEC)', { pt: pt, c: UC.GR }); Z.y += lh + 1; return; }
       let xx = Z.x;
       f.forEach((v, i) => {
-        envolver(v, ws[i] - 2, 5.8, !!(opt.negrita && i === 0), opt.maxLin || 3).forEach((l, j) =>
-          L.texto(xx + 1, Z.y + 3 + j * 2.6, l, { pt: 5.8, b: !!(opt.negrita && i === 0), c: opt.rojo && i === 0 ? UC.R : UC.N }));
+        envolver(v, ws[i] - 2, pt, !!(opt.negrita && i === 0), ml).forEach((l, j) =>
+          L.texto(xx + 1, Z.y + 3 * k + j * lh, l, { pt, b: !!(opt.negrita && i === 0), c: opt.rojo && i === 0 ? UC.R : UC.N }));
         xx += ws[i];
       });
       Z.y += h; L.linea(Z.x, Z.y, Z.x + Z.w, Z.y, { w: 0.15, c: UC.CL });
     });
     L.rect(Z.x, y0, Z.w, Z.y - y0, { w: 0.3 });
-    Z.y += 3.5;
+    Z.y += 3.5 * k;
   };
-  tabla('IDENTIFICACIÓN DEL TABLERO', [['', 0.3], ['', 0.7]], [
+  const TABLAS = [];
+  const tablaAuto = (...a) => TABLAS.push(a);
+  tablaAuto('IDENTIFICACIÓN DEL TABLERO', [['', 0.3], ['', 0.7]], [
     ['Tablero', [t.nombre, t.tension].filter(Boolean).join(' · ')], ['Tipo', t.tipo || ''], ['ID GEO ELEC / TAG GOM', [m.id, t.tag || 'Sin TAG'].join(' · ')],
     ['Nivel / Ubicación', [t.nivel, t.ubic].filter(Boolean).join(' · ')],
     ['Alimentado desde', [a.nombre, a.equipo].filter(Boolean).join(' · ') + (a.idTablero ? ' (' + a.idTablero + ')' : '')],
     ['Ruta de energía', (cx.cadena && cx.cadena.length ? cx.cadena.concat([t.nombre || m.id]) : [a.nombre || '?', t.nombre || m.id]).join(' › ')],
     ['Plano eléctrico', cx.refTxt || '—']
   ], { negrita: 1 });
-  tabla('PUNTOS DE BLOQUEO (aislar en este orden)', [['PB', 0.11], ['Dispositivo', 0.33], ['Ubicación', 0.3], ['Tipo de bloqueo', 0.26]],
+  tablaAuto('PUNTOS DE BLOQUEO (aislar en este orden)', [['PB', 0.11], ['Dispositivo', 0.33], ['Ubicación', 0.3], ['Tipo de bloqueo', 0.26]],
     BL.map(b => [b.id, (b.equipo || '(sin definir)') + (b.detalle ? ' — ' + b.detalle : ''), b.ubicacion || '(sin definir)', b.tipo]), { rojo: 1, negrita: 1 });
   const lpb = BL.map(b => `${b.id} ${b.equipo || ''} (${b.ubicacion || 'por definir'})`).join('; ');
   const pasos = [
@@ -4835,7 +4869,7 @@ function construirUni(m, cx = {}) {
     ['6 CONFINAR', 'Segregar el área de trabajo; quien ingrese debe bloquear con su candado personal.'],
     ['AL TERMINAR', 'Informar, retirar los bloqueos (cada candado solo lo retira su dueño; el departamental es el último), energizar y verificar parámetros.']
   ];
-  tabla('6 PASOS PARA BLOQUEAR (PT-' + CONFIG.CONTRATO + '-ELE-003)', [['Paso', 0.19], ['Acción', 0.81]], pasos, { maxLin: 4, negrita: 1 });
+  tablaAuto('6 PASOS PARA BLOQUEAR (PT-' + CONFIG.CONTRATO + '-ELE-003)', [['Paso', 0.19], ['Acción', 0.81]], pasos, { maxLin: 4, negrita: 1 });
   const comp = [];
   if (a.equipo || marcaModelo(a)) comp.push([a.equipo || 'Alim.', 'Interruptor alimentación (en ' + (a.nombre || 'origen') + ')', marcaModelo(a), ajustes(a)]);
   comp.push([gnl.equipo || 'Q0', 'Interruptor general' + (gnl.tipo ? ' ' + gnl.tipo : '') + (gnl.polos ? ' · ' + gnl.polos + ' polos' : '') + (gnl.bobina ? ' · ' + gnl.bobina : ''), marcaModelo(gnl), ajustes(gnl)]);
@@ -4854,13 +4888,16 @@ function construirUni(m, cx = {}) {
   }
   if (siUni((m.tp || {}).tiene)) comp.push(['TP', 'Puesta a tierra', '', (m.tp || {}).desc || '']);
   if (siUni(of.tiene)) comp.push([of.equipo || 'PB-3', 'Otra fuente: ' + (of.desc || ''), '', of.ubicacion || '']);
-  tabla('COMPONENTES', [['Ítem', 0.12], ['Descripción', 0.42], ['Marca / modelo', 0.2], ['Ajuste', 0.26]], comp, { negrita: 1, maxLin: 2 });
-  if (cx.abajo && cx.abajo.length) tabla('AL BLOQUEAR ESTE TABLERO QUEDAN SIN ENERGÍA', [['', 1]], [[cx.abajo.join(' · ')]], { maxLin: 4 });
-  if (m.obs) tabla('OBSERVACIONES', [['', 1]], [[m.obs]], { maxLin: 5 });
+  tablaAuto('COMPONENTES', [['Ítem', 0.12], ['Descripción', 0.42], ['Marca / modelo', 0.2], ['Ajuste', 0.26]], comp, { negrita: 1, maxLin: 2 });
+  if (cx.abajo && cx.abajo.length) tablaAuto('AL BLOQUEAR ESTE TABLERO QUEDAN SIN ENERGÍA', [['', 1]], [[cx.abajo.join(' · ')]], { maxLin: 4 });
+  if (m.obs) tablaAuto('OBSERVACIONES', [['', 1]], [[m.obs]], { maxLin: 5 });
+  { const disp = Z.lim - Z.y;
+    for (KT = 1; KT > 0.56; KT = Math.round((KT - 0.04) * 100) / 100) { if (TABLAS.reduce((a, t) => a + tabla(t[0], t[1], t[2], t[3] || {}, true), 0) <= disp) break; }
+    TABLAS.forEach(t => tabla(t[0], t[1], t[2], t[3] || {})); KT = 1; }
   // Revisiones y fuente de datos: zona fija sobre el cajetín de la hoja 1
   const pAct = L.p; L.p = 0;
   Object.assign(Z, { x: 256, w: 154, y: 224 - altoRev + 1, lim: 999 });
-  tabla('REVISIONES', [['Rev.', 0.13], ['Fecha', 0.17], ['Descripción', 0.45], ['Elaboró', 0.25]], hist, { maxLin: 1 });
+  tabla('REVISIONES', [['Rev.', 0.13], ['Fecha', 0.17], ['Descripción', 0.45], ['Elaboró', 0.25]], hist, { maxLin: 1, k: 1 });
   if (m.origenDatos) L.texto(Z.x, Z.y - 1, recortar('Fuente de datos: ' + m.origenDatos, Z.w, 4.8), { pt: 4.8, c: UC.GR });
   L.p = pAct;
   nPag.total = L.pags.length;
@@ -7499,6 +7536,42 @@ document.addEventListener('click', async (e) => {
 });
 
 // Envía una acción de administrador; actualiza el tablero en el teléfono si el servidor lo devuelve
+// ---- Alta de tablero desde administración (sin mantención) ----
+const AT = { nivel: '', uni: 'No' };
+function abrirAltaTab() {
+  if (!esAdmin()) { toast('Solo el administrador registra tableros desde aquí.'); return; }
+  $('#at-tipo').innerHTML = '<option value="">Seleccione…</option>' + TIPOS.map(x => `<option value="${x.key}">${esc(x.nombre)}</option>`).join('');
+  ['#at-ubic', '#at-num', '#at-tag'].forEach(k => { $(k).value = ''; });
+  $('#at-con').value = CONFIG.CONTRATO; $('#at-emp').value = EMPRESA; $('#at-error').textContent = '';
+  AT.nivel = ''; AT.uni = 'No'; segAlta(); ir('alta-tab');
+}
+function segAlta() {
+  $('#at-nivel').innerHTML = NIVELES.map(n => `<button type="button" data-atn="${esc(n)}" class="${AT.nivel === n ? 'sel' : ''}">${esc(NIVEL_ETQ[n] || n)}</button>`).join('');
+  $('#at-uni').innerHTML = ['Sí', 'No'].map(n => `<button type="button" data-atu="${n}" class="${AT.uni === n ? 'sel' : ''}">${n === 'No' ? 'No (queda la alerta "Falta diagrama unilineal")' : 'Sí, cuenta con diagrama'}</button>`).join('');
+  const tp = TIPOS.find(x => x.key === $('#at-tipo').value);
+  $('#at-id').textContent = tp && AT.nivel ? `El ID se genera al registrar: ${tp.codigo}-${CODIGO_NIVEL[AT.nivel]}-XXXX (con su etiqueta QR).` : '';
+}
+$('#at-nivel').addEventListener('click', (e) => { const b = e.target.closest('[data-atn]'); if (b) { AT.nivel = b.dataset.atn; segAlta(); } });
+$('#at-uni').addEventListener('click', (e) => { const b = e.target.closest('[data-atu]'); if (b) { AT.uni = b.dataset.atu; segAlta(); } });
+$('#at-tipo').addEventListener('change', segAlta);
+$('#btn-at-cancel').addEventListener('click', () => volver());
+$('#btn-adm-alta').addEventListener('click', abrirAltaTab);
+$('#btn-at-guardar').addEventListener('click', async () => {
+  const tp = TIPOS.find(x => x.key === $('#at-tipo').value), up = (k) => $(k).value.trim().toLocaleUpperCase('es-CL');
+  const d = { tipoKey: tp ? tp.key : '', tipoCodigo: tp ? tp.codigo : '', tipoNombre: tp ? tp.nombre : '', nivel: AT.nivel, ubicacion: up('#at-ubic'), numero: up('#at-num'), tag: up('#at-tag'), tieneUni: AT.uni, empresa: EMPRESA };
+  const faltan = [!d.tipoKey && 'tipo de tablero', !d.nivel && 'ubicación (nivel)', !d.ubicacion && 'lugar dentro del nivel'].filter(Boolean);
+  if (faltan.length) { $('#at-error').textContent = 'Falta: ' + faltan.join(', ') + '.'; return; }
+  const ya = d.tag && tablerosActivos().find(t => String(t.tag || '').toUpperCase() === d.tag);
+  if (ya) { $('#at-error').textContent = `El TAG GOM ${d.tag} ya está registrado en el tablero ${ya.id}.`; return; }
+  if (!navigator.onLine) { $('#at-error').textContent = 'Se necesita señal para registrar el tablero (el ID se valida en el servidor).'; return; }
+  const btn = $('#btn-at-guardar'); btn.disabled = true; btn.textContent = 'Registrando…';
+  try {
+    const j = await accionAdmin({ accion: 'altaTablero', tablero: d });
+    toast(`Tablero ${j.id} registrado ✔ · imprime su etiqueta QR desde la ficha`, 5000);
+    renderSectores && renderSectores(); abrirFicha(j.id);
+  } catch (err) { $('#at-error').textContent = 'No se pudo registrar: ' + err.message; }
+  finally { btn.disabled = false; btn.textContent = 'Registrar tablero'; }
+});
 async function accionAdmin(cuerpo) {
   if (!esAdmin()) throw new Error('modo administrador no activo');
   const j = await postDocs(Object.assign({ por: ls.get('adminNombre', '') }, cuerpo));
