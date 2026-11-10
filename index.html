@@ -1335,7 +1335,7 @@ const CONFIG = {
 };
 
 // Versión visible al pie de la pantalla de inicio (sirve para confirmar que el teléfono tiene la última)
-const VERSION_APP = 'v33 · 10-11-2026';
+const VERSION_APP = 'v34 · 10-11-2026';
 const NIVELES = ['UCL', 'Producción', 'Acarreo', 'SNV'];
 const SEN = 'Cuadro de señalética (riesgo eléctrico, potencia, nivel de tensión, punto de bloqueo, maniobra RCP, logo empresa, personal autorizado, diagrama unilineal, carga de fuego, programa de mantenimiento)';
 const BASE_TD = ['Orden y aseo en el sector', 'Iluminación', 'Número de TAG', 'Soporte o anclaje del tablero en buen estado',
@@ -1681,7 +1681,9 @@ function refrescarEstadoChkd() {
         if (loc && (loc.revision !== m.revision || (loc.motivo || '') !== (m.motivo || '') || loc.reviso !== m.reviso)) {
           Object.assign(loc, { revision: m.revision || 'PENDIENTE', reviso: m.reviso || '', revCargo: m.revCargo || '', fRev: m.fRev || '', revCod: m.revCod || '', motivo: m.motivo || '' }); cambio = true;
         }
+        if (loc && m.revUsr && loc.revUsr !== m.revUsr) { loc.revUsr = m.revUsr; cambio = true; }
       });
+      if (j.firmasRev && Object.keys(j.firmasRev).length) { const fr = ls.get('firmasRev', {}); Object.entries(j.firmasRev).forEach(([u, img]) => { if (img) fr[u] = img; }); ls.set('firmasRev', fr); }
       ls.set('chkd:' + s.usuario, t);
       ls.set('chkdConsulta', { hora: new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }), val: (j.mios || []).filter(m => m.revision === 'REVISADO' && String(m.fecha).slice(0, 10) === diaISO()).length, n: (j.mios || []).filter(m => String(m.fecha).slice(0, 10) === diaISO()).length });
       if (j.revisor) { CDR.pend = j.pendientes || []; ls.set('chkdPorFirmar', CDR.pend.length); } else ls.set('chkdPorFirmar', 0);
@@ -1763,7 +1765,7 @@ function abrirChkdForm(k) {
 const celOp = (key, v, ops, cls = '') => ops.map(o => `<td class="cd-op${v === o ? ' on' : ''}${cls}" data-cd-k="${key}" data-cd-v="${esc(o)}" role="button" tabindex="0" aria-label="${esc(o)}">${v === o ? '✕' : ''}</td>`).join('');
 function renderChkdForm() {
   if (!CDF) return;
-  try { sessionStorage.setItem('chkdBorrador', JSON.stringify(CDF)); } catch (e) {}
+  try { sessionStorage.setItem('chkdBorrador', JSON.stringify(CDF)); localStorage.setItem('chkdBorrador', JSON.stringify(CDF)); } catch (e) {}
   const C = CHKD[CDF.k], r = CDF.r, abrev = (() => { const p = (r.nombre || '').split(' ').filter(Boolean); return p.length ? (p[0][0] + '. ' + (p.length > 2 ? p[p.length - 2] : p[1] || '')).trim() : ''; })();
   const cabecera = `<table class="cd-cab"><tr><td class="cd-logo" rowspan="3"><img src="logo-geovita.png" alt="GEOVITA"></td>
       <td class="cd-tit" rowspan="3">${C.titulo.map((t, i) => `<div class="${i === C.titulo.length - 1 && /Geovita/.test(t) ? '' : 'b'}">${esc(t)}</div>`).join('')}</td>
@@ -1831,7 +1833,7 @@ $('#cdf-hoja').addEventListener('click', (e) => {
 $('#cdf-hoja').addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('[data-cd-k]')) { e.preventDefault(); e.target.click(); } });
 $('#cdf-hoja').addEventListener('input', (e) => {
   if (!CDF) return; const el = e.target, r = CDF.r;
-  setTimeout(() => { try { if (CDF) sessionStorage.setItem('chkdBorrador', JSON.stringify(CDF)); } catch (er) {} }, 0);
+  setTimeout(() => { try { if (CDF) { sessionStorage.setItem('chkdBorrador', JSON.stringify(CDF)); localStorage.setItem('chkdBorrador', JSON.stringify(CDF)); } } catch (er) {} }, 0);
   if (el.dataset.cdCampo) { r[el.dataset.cdCampo] = el.type === 'checkbox' ? el.checked : (el.classList.contains('may') ? el.value.toLocaleUpperCase('es-CL') : el.value); }
   else if (el.dataset.cdCab) r.cab[el.dataset.cdCab] = el.value;
   else if (el.dataset.cdObs) r.obs[el.dataset.cdObs] = el.value;
@@ -1873,7 +1875,7 @@ $('#btn-cdf-guardar').addEventListener('click', async () => {
   r.revision = 'PENDIENTE';
   ls.set('chkdUlt:' + r.usuario, { area: r.area, supervisorUsr: r.supervisorUsr, cab: C.multi ? r.cab : (ls.get('chkdUlt:' + r.usuario, {}).cab || {}) });
   const cola = ls.get('chkdCola', []); cola.push({ id: r.id, usuario: r.usuario, fecha: r.fecha, codigo: r.codigo }); ls.set('chkdCola', cola);
-  CDF = null; try { sessionStorage.removeItem('chkdBorrador'); } catch (e) {}
+  CDF = null; try { sessionStorage.removeItem('chkdBorrador'); localStorage.removeItem('chkdBorrador'); } catch (e) {}
   toast(chkDiarioFirmado() ? 'Los 4 checklists firmados ✔ · ahora debe firmarlos tu supervisor asignado' : `${C.corto}: firmado ✔`, 4000);
   ir('chkd'); renderChkd(); renderTileChkd();
   if (navigator.onLine) enviarChkDiarios().then(() => refrescarEstadoChkd());
@@ -2080,7 +2082,10 @@ function pdfChkDiario0(r, opt = {}) {
 }
 // La semana del formato OOCC-001: los otros días salen de lo guardado en este teléfono
 function pdfChkDiario(r, opt = {}) {
-  if (!opt.reviso && r.revision === 'REVISADO') opt = Object.assign({}, opt, { reviso: { nombre: r.reviso, cargo: r.revCargo || '', fecha: r.fRev || '', codigo: r.revCod || '', img: '' } });
+  if (!opt.reviso && r.revision === 'REVISADO') {
+    const f = String(r.fRev || ''), fecha = /^\d{4}-\d{2}-\d{2}/.test(f) ? f.slice(0, 10).split('-').reverse().join('-') + f.slice(10) : f;
+    opt = Object.assign({}, opt, { reviso: { nombre: r.reviso, cargo: r.revCargo || '', fecha, codigo: r.revCod || '', img: (ls.get('firmasRev', {}) || {})[r.revUsr] || '' } });
+  }
   if (CHKD[r.codigo] && CHKD[r.codigo].semana && !opt.semana) { const t = chkdLocal(r.usuario), sem = {}; Object.keys(t).forEach(f => { if (lunesDe(f) === lunesDe(r.fecha) && t[f][r.codigo]) sem[f] = t[f][r.codigo]; }); opt = Object.assign({}, opt, { semana: sem }); }
   return pdfChkDiario0(r, opt);
 }
@@ -2439,27 +2444,29 @@ async function firmarDocumentoRegistro(registro, titulo) {
 
 // ===================== NAVEGACIÓN =====================
 // Pantalla actual (para volver a ella si la app se recarga o se actualiza)
-let VISTA_GUARDADA = null; try { VISTA_GUARDADA = sessionStorage.getItem('vistaActual'); } catch (e) {}
+let VISTA_GUARDADA = null; try { VISTA_GUARDADA = sessionStorage.getItem('vistaActual') || localStorage.getItem('vistaActual'); } catch (e) {}
 const VISTAS_RESTAURABLES = ['chkd', 'chkdf', 'fichap', 'planos', 'plano-ed', 'uni-nuevo', 'uni-ed', 'ficha', 'admin', 'docs', 'aprobar', 'envios', 'tableros', 'etiquetas', 'enlaces'];
 function recordarVista(vista, opt = {}) {
   try {
-    if (!VISTAS_RESTAURABLES.includes(vista)) { if (vista === 'inicio') sessionStorage.removeItem('vistaActual'); return; }
+    if (VISTA_GUARDADA) return;   // al abrir, no se pisa la pantalla guardada antes de restaurarla
+    if (!VISTAS_RESTAURABLES.includes(vista)) { if (vista === 'inicio') { sessionStorage.removeItem('vistaActual'); localStorage.removeItem('vistaActual'); } return; }
     const ctx = { vista, id: opt.id || '', t: Date.now() };
     if (vista === 'ficha' && typeof fichaActual !== 'undefined' && fichaActual) ctx.id = fichaActual.id;
     if (vista === 'fichap' && typeof FPV !== 'undefined' && FPV) ctx.id = FPV.usuario || '';
     if (vista === 'docs' && typeof docsSec !== 'undefined') ctx.id = docsSec;
     if (vista === 'uni-ed' && typeof UE !== 'undefined' && UE && UE.m) ctx.id = UE.m.id || opt.id || '';
-    sessionStorage.setItem('vistaActual', JSON.stringify(ctx));
+    sessionStorage.setItem('vistaActual', JSON.stringify(ctx)); localStorage.setItem('vistaActual', JSON.stringify(ctx));
   } catch (e) {}
 }
 function restaurarVista() {
   let c = null; try { c = JSON.parse(VISTA_GUARDADA || 'null'); } catch (e) {}
   VISTA_GUARDADA = null;
-  if (!c || !c.vista || Date.now() - c.t > 12 * 3600e3) return false;
+  if (c && c.vista === 'inicio') return false;
+  if (!c || !c.vista || Date.now() - c.t > 12 * 3600e3) { try { localStorage.removeItem('vistaActual'); } catch (e) {} return false; }
   try {
     switch (c.vista) {
       case 'chkd': if (!sesionActiva()) return false; exigirChkDiario(null); return true;
-      case 'chkdf': { if (!sesionActiva()) return false; let d = null; try { d = JSON.parse(sessionStorage.getItem('chkdBorrador') || 'null'); } catch (e) {}
+      case 'chkdf': { if (!sesionActiva()) return false; let d = null; try { d = JSON.parse(sessionStorage.getItem('chkdBorrador') || localStorage.getItem('chkdBorrador') || 'null'); } catch (e) {}
         if (d && d.k && d.r && d.r.fecha === diaISO() && d.r.usuario === sesion().usuario) { exigirChkDiario(null); CDF = d; $('#cdf-titulo').textContent = CHKD[d.k].icono + ' ' + CHKD[d.k].corto;
           $('#cdf-sub').textContent = `${CHKD[d.k].codigo} · ${NOMBRE_DIA[diaSemana(d.r.fecha)]} ${fDMA(d.r.fecha)}`; ir('chkdf'); renderChkdForm(); toast('Se recuperó el checklist que estabas llenando.'); return true; }
         exigirChkDiario(null); return true; }
@@ -2497,7 +2504,7 @@ function ir(vista, opt = {}) {
   } else if (!opt.desdeHist) {
     const ent = { v: vista, id: opt.id || '', alInicio: !!opt.alInicio };
     const top = pila[pila.length - 1];
-    const url = opt.url || location.href;
+    const url = opt.url || (vista !== 'ficha' && /[?&]id=/.test(location.search) && !modoQR() ? appUrl() : location.href);
     if (top && top.v === vista && top.id === ent.id) { pila[pila.length - 1] = ent; history.replaceState({ n: pila.length }, '', url); }
     else if (top && REEMPLAZABLES.includes(top.v)) { pila[pila.length - 1] = ent; history.replaceState({ n: pila.length }, '', url); }
     else { pila.push(ent); history.pushState({ n: pila.length }, '', url); }
@@ -7912,10 +7919,10 @@ renderRed();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 history.replaceState({ n: 0 }, '', location.href);
-if (!ID_QR) setTimeout(() => { if ($('#v-inicio').hidden === false) restaurarVista(); }, 350);
 const idInicial = new URLSearchParams(location.search).get('id');
 ir('inicio', { desdeHist: true });
-if (idInicial) abrirFicha(idInicial);
+if (idInicial) { VISTA_GUARDADA = null; abrirFicha(idInicial); }
+else if (!restaurarVista()) VISTA_GUARDADA = null;
 sincronizar();
 setInterval(() => sincronizar(), 60000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) sincronizar(); });
