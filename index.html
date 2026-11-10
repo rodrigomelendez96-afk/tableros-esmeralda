@@ -430,7 +430,7 @@
       <h2>📐 Unilineales de referencia</h2>
       <p class="muted" style="margin:4px 0 0">Planos ELEC de Producción y Acarreo (archivos DWG del departamento). Úsalos como apoyo; el diagrama vigente de cada tablero es el emitido en su ficha.</p>
       <div class="tabs tabs-in" id="pl-niveles"></div>
-      <input id="pl-buscar" type="search" placeholder="Buscar plano, CCDD o tablero (ej.: TDF 94)" style="margin-top:12px">
+      <input id="pl-buscar" type="search" placeholder="Buscar plano, CCDD, tablero o TAG GOM (ej.: TDF 94)" style="margin-top:12px">
       <ul class="lista" id="pl-lista"></ul>
       <p class="muted" id="pl-info" style="margin:10px 0 0"></p>
     </div>
@@ -1106,7 +1106,7 @@ const CONFIG = {
 };
 
 // Versión visible al pie de la pantalla de inicio (sirve para confirmar que el teléfono tiene la última)
-const VERSION_APP = 'v23 · 09-11-2026';
+const VERSION_APP = 'v24 · 09-11-2026';
 const NIVELES = ['UCL', 'Producción', 'Acarreo', 'SNV'];
 const SEN = 'Cuadro de señalética (riesgo eléctrico, potencia, nivel de tensión, punto de bloqueo, maniobra RCP, logo empresa, personal autorizado, diagrama unilineal, carga de fuego, programa de mantenimiento)';
 const BASE_TD = ['Orden y aseo en el sector', 'Iluminación', 'Número de TAG', 'Soporte o anclaje del tablero en buen estado',
@@ -2938,7 +2938,8 @@ Lienzo.prototype = {
   poli(pts, e = {}) { return this.op(Object.assign({ t: 'p', pts }, e)); },
   texto(x, y, s, e = {}) { return this.op(Object.assign({ t: 't', x, y, s: textoSeguro(s), pt: 7 }, e)); },
   img(x, y, w, h) { return this.op({ t: 'i', x, y, w, h }); },
-  firma(x, y, w, h, src) { return src ? this.op({ t: 'f', x, y, w, h, src }) : this; }
+  firma(x, y, w, h, src) { return src ? this.op({ t: 'f', x, y, w, h, src }) : this; },
+  raster(x, y, w, h, src) { return this.op({ t: 'g', x, y, w, h, src }); }
 };
 
 // ---------- Renderizadores ----------
@@ -2960,7 +2961,8 @@ function uniASvg(ops, opt = {}) {
       s += `<text x="${a(o.x)}" y="${a(o.y)}" font-family="Helvetica, Arial, sans-serif" font-size="${a(o.pt * PT_MM)}" font-weight="${o.b ? 700 : 400}" fill="${o.c || UC.N}" text-anchor="${anc}"${o.rot ? ` transform="rotate(${-o.rot} ${a(o.x)} ${a(o.y)})"` : ''}>${esc(o.s)}</text>`;
     }
     else if (o.t === 'i') s += `<image href="logo-geovita.png" x="${a(o.x)}" y="${a(o.y)}" width="${a(o.w)}" height="${a(o.h)}" preserveAspectRatio="xMidYMid meet"/>`;
-    else if (o.t === 'f') s += `<image href="${o.src}" x="${a(o.x)}" y="${a(o.y)}" width="${a(o.w)}" height="${a(o.h)}" preserveAspectRatio="xMidYMid meet"/>`;
+    else if (o.t === 'g') s += `<image href="${o.src}" x="${a(o.x)}" y="${a(o.y)}" width="${a(o.w)}" height="${a(o.h)}" preserveAspectRatio="xMidYMid meet"/>`;
+    else if (o.t === 'f') s += `<image href="${o.src}" x=""${a(o.x)}" y="${a(o.y)}" width="${a(o.w)}" height="${a(o.h)}" preserveAspectRatio="xMidYMid meet"/>`;
   }
   return s + '</svg>';
 }
@@ -2996,6 +2998,7 @@ function uniAPdf(L) {
         doc.setFont('helvetica', o.b ? 'bold' : 'normal'); doc.setFontSize(o.pt); doc.setTextColor(...rgb(o.c || UC.N));
         doc.text(o.s, o.x, o.y, { align: o.al || 'left', angle: o.rot || 0 });
       }
+      else if (o.t === 'g') { try { doc.addImage(o.src, 'PNG', o.x, o.y, o.w, o.h, undefined, 'FAST'); } catch {} }
       else if (o.t === 'f') {
         try { const pr = doc.getImageProperties(o.src), r = pr.width / pr.height, w = Math.min(o.w, o.h * r), h = w / r;
           doc.addImage(o.src, 'PNG', o.x + (o.w - w) / 2, o.y + (o.h - h) / 2, w, h); } catch {}
@@ -3091,7 +3094,10 @@ function lineasInfo(L, x, y, lineas, maxW, pt = 6.3) {
 // ---------- Datos derivados del modelo ----------
 const siUni = (v) => String(v || '').toUpperCase() === 'SI';
 const marcaModelo = (o) => [o.marca, o.modelo].filter(Boolean).join(' ');
-const ajustes = (o) => [o.calibre ? 'Calibre ' + o.calibre : '', o.in ? 'In ' + o.in : '', o.isd ? 'Isd ' + o.isd : ''].filter(Boolean).join(' · ');
+const ajustes = (o) => (String(o.regulable || '').toUpperCase() === 'NO'
+  ? [o.calibre ? 'In ' + o.calibre + ' (fija, no regulable)' : (o.in ? 'In ' + o.in + ' (fija)' : '')]
+  : [o.calibre ? 'Calibre ' + o.calibre : '', o.in ? 'In ' + o.in : '', o.isd ? 'Isd ' + o.isd : '', o.disparo || ''])
+  .concat([o.curva ? 'Curva ' + o.curva : '', o.icu ? 'Icu ' + o.icu : '']).filter(Boolean).join(' · ');
 function origenUni(m) { const a = m.alim || {}; return [a.nombre, a.tension].filter(Boolean).join(' · ') || 'Origen sin definir'; }
 function bloqueosUni(m) {
   const a = m.alim || {}, gnl = m.general || {}, of = m.otraFuente || {}, b = [];
@@ -3205,6 +3211,26 @@ function construirUni(m, cx = {}) {
     lineasInfo(L, X + 8, yy + 9, [[[tr.tipo || 'Transformador', tr.kva].filter(Boolean).join(' '), 1], [[tr.relacion, tr.grupo].filter(Boolean).join(' · ')]], (otra ? X2 - 8 : 236) - X - 8);
     yy += 21;
   }
+  // Transformador de control (luces piloto, bobina de disparo, parada de emergencia…)
+  const tc = m.trafoCtl || {};
+  if (siUni(tc.tiene)) {
+    const xc = X - 28;
+    L.linea(X, yy, X, yy + 25, { w: 0.4 });
+    L.linea(X, yy + 3, xc, yy + 3, { w: 0.3, dash: 1 });
+    L.circ(X, yy + 3, 0.6, { w: 0.3, fill: UC.N });
+    L.linea(xc, yy + 3, xc, yy + 5, { w: 0.3 });
+    L.rect(xc - 1.2, yy + 5, 2.4, 5, { w: 0.3 }); L.linea(xc, yy + 5, xc, yy + 10, { w: 0.2 });
+    L.linea(xc, yy + 10, xc, yy + 11.5, { w: 0.3 });
+    L.circ(xc, yy + 14, 2.5, { w: 0.3 }); L.circ(xc, yy + 18, 2.5, { w: 0.3 });
+    L.linea(xc, yy + 20.5, xc, yy + 23, { w: 0.3 });
+    L.poli([[xc, yy + 24.2], [xc - 0.8, yy + 22.6], [xc + 0.8, yy + 22.6]], { w: 0.2, fill: UC.N });
+    const anchoT = xc - 26;
+    const lin = [['TC · Transformador de control', 1], [[tc.relacion, tc.va].filter(Boolean).join(' · ')], [tc.prot ? 'Protección: ' + tc.prot : '']]
+      .concat(envolver('Alimenta: ' + (tc.alimenta || 'circuito de control'), anchoT, 5.2, false, 2).map(l => [l]));
+    let yt = yy + 6;
+    lin.filter(l => l[0]).forEach(([t2, b]) => { L.texto(xc - 3, yt, recortar(t2, anchoT, b ? 5.6 : 5.2, !!b), { pt: b ? 5.6 : 5.2, b, al: 'right' }); yt += 2.8; });
+    yy += 25;
+  }
   // Barra y salidas
   const yb = yy + 4;
   L.linea(X, yy, X, yb, { w: 0.4 });
@@ -3317,10 +3343,11 @@ function construirUni(m, cx = {}) {
   tabla('6 PASOS PARA BLOQUEAR (PT-' + CONFIG.CONTRATO + '-ELE-003)', [['Paso', 0.19], ['Acción', 0.81]], pasos, { maxLin: 4, negrita: 1 });
   const comp = [];
   if (a.equipo || marcaModelo(a)) comp.push([a.equipo || 'Alim.', 'Interruptor alimentación (en ' + (a.nombre || 'origen') + ')', marcaModelo(a), ajustes(a)]);
-  comp.push([gnl.equipo || 'Q0', 'Interruptor general' + (gnl.bobina ? ' · ' + gnl.bobina : ''), marcaModelo(gnl), ajustes(gnl)]);
-  if (siUni(dif.tiene)) comp.push([dif.cod || 'RD', dif.tipo || 'Protección diferencial', dif.marca || '', [dif.I, dif.T].filter(Boolean).join(' · ')]);
+  comp.push([gnl.equipo || 'Q0', 'Interruptor general' + (gnl.tipo ? ' ' + gnl.tipo : '') + (gnl.polos ? ' · ' + gnl.polos + ' polos' : '') + (gnl.bobina ? ' · ' + gnl.bobina : ''), marcaModelo(gnl), ajustes(gnl)]);
+  if (siUni(dif.tiene)) comp.push([dif.cod || 'RD', dif.tipo || 'Protección diferencial', [dif.marca, dif.modelo].filter(Boolean).join(' '), [dif.I, dif.T, String(dif.regulable || '').toUpperCase() === 'NO' ? 'fijo' : ''].filter(Boolean).join(' · ')]);
   if (siUni(tr.tiene)) comp.push(['T1', tr.tipo || 'Transformador', '', [tr.kva, tr.relacion, tr.grupo].filter(Boolean).join(' · ')]);
-  sal.forEach(o => comp.push([o.id || '—', [o.desc, o.destino ? '› ' + o.destino : ''].filter(Boolean).join(' '), o.marca || '', [o.polos ? o.polos + ' polos' : '', o.in, o.dif].filter(Boolean).join(' · ')]));
+  if (siUni((m.trafoCtl || {}).tiene)) { const tc2 = m.trafoCtl; comp.push(['TC', 'Transformador de control' + (tc2.alimenta ? ' (' + tc2.alimenta + ')' : ''), tc2.marca || '', [tc2.relacion, tc2.va, tc2.prot].filter(Boolean).join(' · ')]); }
+  sal.forEach(o => comp.push([o.id || '—', [o.tipo, o.desc, o.destino ? '› ' + o.destino : ''].filter(Boolean).join(' · '), [o.marca, o.modelo].filter(Boolean).join(' '), [o.polos ? o.polos + ' polos' : '', o.in, o.curva ? 'curva ' + o.curva : '', o.dif].filter(Boolean).join(' · ')]));
   if (siUni((m.tp || {}).tiene)) comp.push(['TP', 'Puesta a tierra', '', (m.tp || {}).desc || '']);
   if (siUni(of.tiene)) comp.push([of.equipo || 'PB-3', 'Otra fuente: ' + (of.desc || ''), '', of.ubicacion || '']);
   tabla('COMPONENTES', [['Ítem', 0.12], ['Descripción', 0.42], ['Marca / modelo', 0.2], ['Ajuste', 0.26]], comp, { negrita: 1, maxLin: 2 });
@@ -3369,7 +3396,7 @@ function cargarRef() {
 }
 const claveNum = (s) => {
   const u = String(s || '').toUpperCase().replace(/T\.E\.J/g, 'TEJ').replace(/T\.P\.B/g, 'TPB');
-  const m = u.match(/\b(TDF|TDA|TGF|TEJ|TPB|TPV|CEJ|TDI|TDAG)\b[^0-9]{0,6}(\d{1,4})/);
+  const m = u.match(/\b(TDF|TDA|TGF|TEJ|TPB|TPV|CEJ|TDI|TDAG|TSM|CDD|CCDD)\b[^0-9]{0,6}(\d{1,4})/);
   return m ? m[1] + m[2].replace(/^0+/, '') : '';
 };
 function claveTablero(t) {
@@ -3389,8 +3416,97 @@ const nombreTab = (t) => {
   const cod = (tipoPorNombre(t.tipo) || {}).codigo || String(t.id).split('-')[0];
   return t.numero ? `${cod} N°${String(t.numero).replace(/^N°\s*/i, '')}` : (t.ubicacion ? `${cod} ${t.ubicacion}` : t.id);
 };
-function verPlano(hoja) {
-  verDocumento({ titulo: (hoja.plano ? hoja.plano + ' · ' : '') + hoja.titulo, codigo: hoja.archivo, urlEstatica: hoja.img, mime: 'image/png', nombre: hoja.id + '.png', fileId: 'plano-' + hoja.id });
+// Referencia de TAG GOM y ubicación según el plano mina (capas del DWG de Producción)
+const gomDe = (clave) => (REF && REF.gom || []).find(g => g.clave === clave) || null;
+// Tableros que aparecen en una hoja, cruzados con GEO ELEC (ID, TAG GOM actual, ubicación) y con el plano mina
+function filasRefHoja(hoja) {
+  const vistos = new Set(), filas = [];
+  const tabs = REF.tableros.filter(x => x.hoja === hoja.id).concat((hoja.tableros || []).filter(n => /\d/.test(n)).map(n => ({ nombre: n, clave: claveNum(n) })));
+  tabs.forEach(x => {
+    const k = x.clave || claveNum(x.nombre); const key = k || x.nombre; if (vistos.has(key)) return; vistos.add(key);
+    const t = k ? tablerosActivos().find(tt => claveTablero(tt) === k) : null, g = k ? gomDe(k) : null;
+    const e = t ? uniEmitido(t.id) : null;
+    filas.push([x.nombre || (g && g.nombre) || k, t ? [t.id, t.ubicacion].filter(Boolean).join(' · ') : 'No registrado', t ? (t.tag || 'Sin TAG') : '—',
+      g ? [g.tag, g.ubic, g.sector].filter(Boolean).join(' · ') : '—',
+      e ? 'Rev. ' + e.rev + ' · desde ' + (e.modelo.alim.nombre || '—') : (x.aa ? 'desde ' + x.aa.nombre + ' (plano)' : '—')]);
+  });
+  return filas;
+}
+// La hoja de referencia se entrega siempre con formato GEOVITA (marco, logo, cajetín y tabla de tableros)
+function construirPlanoRef(hoja, img, filas) {
+  const L = new Lienzo(), hoy = new Date().toLocaleDateString('es-CL').replace(/\//g, '-');
+  const marco = () => { L.rect(6, 6, 408, 285, { w: 0.7, capa: 'MARCO' }); L.rect(9, 9, 402, 279, { w: 0.25, capa: 'MARCO' }); };
+  marco();
+  L.texto(16, 18.5, recortar('PLANO DE REFERENCIA – ' + hoja.titulo, 330, 13, true), { pt: 13, b: 1 });
+  L.texto(16, 23.5, recortar([hoja.nivel, hoja.plano && hoja.plano !== 'PDF' ? 'Plano ' + hoja.plano : '', 'Origen: ' + hoja.archivo].filter(Boolean).join(' · '), 330, 7.2), { pt: 7.2, c: UC.GR });
+  L.texto(404, 18.5, 'DOCUMENTO DE REFERENCIA', { pt: 7, b: 1, c: UC.R, al: 'right' });
+  const ax = 14, ay = 27, aw = 392, ah = 196, r = hoja.w / hoja.h;
+  let w = aw, h = aw / r; if (h > ah) { h = ah; w = ah * r; }
+  L.rect(ax, ay, aw, ah, { w: 0.2, c: UC.CL });
+  L.raster(ax + (aw - w) / 2, ay + (ah - h) / 2, w, h, img);
+  // Tabla de tableros (TAG GOM, ubicación, alimentación)
+  const tx = 14, tw = 238, ws = [0.12, 0.23, 0.15, 0.31, 0.19].map(k => k * tw);
+  const cabe = ['N° en plano', 'ID GEO ELEC · ubicación', 'TAG GOM vigente', 'Ref. plano: TAG · ubicación (no actualizada)', 'Diagrama / alimentación'];
+  const tabla = (y0, lista, titulo, lim) => {
+    L.rect(tx, y0, tw, 5.4, { fill: UC.OSC, sinBorde: 1 }); L.texto(tx + 1.6, y0 + 3.8, titulo, { pt: 6.6, b: 1, c: '#FFFFFF' });
+    L.rect(tx, y0 + 5.4, tw, 4, { fill: UC.SUAVE, sinBorde: 1 });
+    let xx = tx; cabe.forEach((c, i) => { L.texto(xx + 1, y0 + 8.4, c, { pt: 5.2, b: 1 }); xx += ws[i]; });
+    let y = y0 + 9.4, n = 0;
+    for (const f of lista) {
+      if (y + 3.6 > lim) break;
+      xx = tx; f.forEach((v, i) => { L.texto(xx + 1, y + 2.7, recortar(v, ws[i] - 2, 5.2, i === 0), { pt: 5.2, b: i === 0 }); xx += ws[i]; });
+      y += 3.6; n++; L.linea(tx, y, tx + tw, y, { w: 0.12, c: UC.CL });
+    }
+    if (!lista.length) { L.texto(tx + 1, y + 2.8, 'Sin tableros identificados en este plano.', { pt: 5.2, c: UC.GR }); y += 3.6; }
+    L.rect(tx, y0, tw, y - y0, { w: 0.3 });
+    return n;
+  };
+  const n1 = tabla(227, filas, 'TABLEROS DE ESTE PLANO · DATOS VIGENTES (GEO ELEC) Y REFERENCIA DEL PLANO', 280);
+  if (n1 < filas.length) L.texto(tx, 283.5, `+ ${filas.length - n1} tablero(s) más en la hoja 2`, { pt: 5.2, b: 1, c: UC.GR });
+  const cajetin = (hojaN, total) => {
+    const x = 256, y = 227, cw = 154;
+    L.rect(x, y, cw, 56, { w: 0.5, capa: 'CAJETIN' });
+    L.img(x + 3, y + 3, 38, 15);
+    L.linea(x + 44, y, x + 44, y + 21, { w: 0.25 });
+    L.texto(x + 47, y + 5.2, 'SISTEMA ELÉCTRICO GEOVITA', { pt: 9, b: 1 });
+    L.texto(x + 47, y + 9.2, 'OBRAS PREMIN MINA CENTRAL SUR · CONTRATO ' + CONFIG.CONTRATO, { pt: 5.6, c: UC.GR });
+    envolver('PLANO DE REFERENCIA ' + hoja.titulo, cw - 50, 7, true, 2).forEach((l, i) => L.texto(x + 47, y + 14 + i * 3.2, l, { pt: 7, b: 1 }));
+    L.linea(x, y + 21, x + cw, y + 21, { w: 0.25 });
+    const celdas = [['Código', 'RE-' + CONFIG.CONTRATO + '-ELEC-REF-' + hoja.id, 66], ['Nivel', hoja.nivel, 30], ['Fecha', hoy, 22], ['Hoja · Escala', hojaN + '/' + total + ' · S/E', 36]];
+    let xx = x;
+    celdas.forEach(([k, v, w2], i) => { L.texto(xx + 1.5, y + 24.2, k, { pt: 5, c: UC.GR }); L.texto(xx + 1.5, y + 28.4, recortar(v, w2 - 2.5, 6.4, true), { pt: 6.4, b: 1 }); xx += w2; if (i < 3) L.linea(xx, y + 21, xx, y + 30, { w: 0.25 }); });
+    L.linea(x, y + 30, x + cw, y + 30, { w: 0.25 });
+    L.texto(x + 1.5, y + 33.4, 'ORIGEN DEL PLANO', { pt: 4.8, c: UC.GR });
+    L.texto(x + 1.5, y + 37, recortar(hoja.archivo + (hoja.plano && hoja.plano !== 'PDF' ? ' · ' + hoja.plano : ''), cw - 3, 6, true), { pt: 6, b: 1 });
+    envolver('Documento de referencia generado por GEO ELEC a partir de los planos del Departamento Eléctrico. Verificar en terreno. No reemplaza el diagrama unilineal emitido y aprobado de cada tablero.', cw - 3, 5, false, 3)
+      .forEach((l, i) => L.texto(x + 1.5, y + 41.5 + i * 2.6, l, { pt: 5, c: UC.GR }));
+    envolver('N° de tablero, TAG GOM y ubicación tomados del plano: información NO actualizada, solo referencial. Los datos vigentes son los registrados en GEO ELEC.', cw - 3, 4.8, true, 2)
+      .forEach((l, i) => L.texto(x + 1.5, y + 50.6 + i * 2.5, l, { pt: 4.8, b: 1, c: UC.R }));
+  };
+  let total = 1;
+  if (n1 < filas.length) {
+    L.pag(); marco(); total = 2;
+    L.texto(16, 18.5, recortar('PLANO DE REFERENCIA – ' + hoja.titulo + ' (tableros, continuación)', 380, 12, true), { pt: 12, b: 1 });
+    const rest = filas.slice(n1); let y0 = 26;
+    for (let i = 0; i < rest.length; i += 50) { tabla(y0, rest.slice(i, i + 50), 'TABLEROS DE ESTE PLANO (continuación)', 222); }
+  }
+  for (let i = 0; i < L.pags.length; i++) { L.p = i; cajetin(i + 1, total); }
+  return L;
+}
+async function verPlano(hoja) {
+  const base = { titulo: (hoja.plano && hoja.plano !== 'PDF' ? hoja.plano + ' · ' : '') + hoja.titulo, codigo: 'Formato GEOVITA · ' + hoja.archivo };
+  try {
+    if (!window.jspdf) throw new Error('pdf');
+    toast('Preparando plano…', 2500);
+    const r = await fetch(hoja.img); if (!r.ok) throw new Error('sin señal');
+    const blob = await r.blob();
+    const img = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); });
+    await cargarRef();
+    const doc = uniAPdf(construirPlanoRef(hoja, img, filasRefHoja(hoja)));
+    verDocumento(Object.assign(base, { blobLocal: doc.output('blob'), mime: 'application/pdf', nombre: 'REF_' + hoja.id + '_' + (hoja.plano || '') + '.pdf' }));
+  } catch (err) {
+    verDocumento(Object.assign(base, { urlEstatica: hoja.img, mime: 'image/png', nombre: hoja.id + '.png', fileId: 'plano-' + hoja.id }));
+  }
 }
 let plNivel = 'Todos';
 async function renderPlanos() {
@@ -3400,7 +3516,7 @@ async function renderPlanos() {
   botonesSeg($('#pl-niveles'), ['Todos', 'Producción', 'Acarreo', 'Tipos'], plNivel, v => { plNivel = v; renderPlanos(); });
   const q = $('#pl-buscar').value.trim().toUpperCase(), qk = claveNum(q.replace(/^(TDF|TDA|TGF|TEJ)\s*/, '$1 N°'));
   const hojas = R.hojas.filter(h => (plNivel === 'Todos' || h.nivel === plNivel) &&
-    (!q || [h.plano, h.titulo].concat(h.tableros).join(' ').toUpperCase().includes(q) || (qk && R.tableros.some(x => x.hoja === h.id && x.clave === qk))));
+    (!q || [h.plano, h.titulo].concat(h.tableros).concat(R.tableros.filter(x => x.hoja === h.id).map(x => x.tagRef || '')).join(' ').toUpperCase().includes(q) || (qk && R.tableros.some(x => x.hoja === h.id && x.clave === qk))));
   $('#pl-lista').innerHTML = ['Producción', 'Acarreo', 'Tipos'].map(n => {
     const hs = hojas.filter(h => h.nivel === n); if (!hs.length) return '';
     return `<li class="sub">${n === 'Tipos' ? 'Tableros tipo (fabricante)' : n} · ${hs.length} plano(s)</li>` + hs.map(h => `<li class="plano"><div class="info"><b>${esc(h.plano)} · ${esc(h.titulo || 'Sin título')}</b>
@@ -3523,7 +3639,9 @@ function renderUniFicha(t) {
   if (!e && !uniPendiente(t)) html = aguasArribaSegunOtros(t) + html;
   if (t.uniExtra && t.uniExtra.length)
     html += `<p style="margin:10px 0 0"><b>Fotografías adicionales:</b> ${t.uniExtra.map((u, i) => `<a href="${esc(u)}" target="_blank" rel="noopener">Foto ${i + 1}</a>`).join(' · ')}</p>`;
-  const refs = refsDeTablero(t);
+  const refs = refsDeTablero(t), gref = REF ? gomDe(claveTablero(t)) : null;
+  if (gref) html += `<p style="margin:10px 0 0"><b>Referencia del plano mina:</b> ${esc(gref.nombre)}${gref.tag ? ' · TAG ' + esc(gref.tag) : ''}${gref.ubic ? ' · ' + esc(gref.ubic) : ''} · ${esc(gref.sector)}
+    <br><span class="muted">Información del plano, no actualizada: solo referencial. Los datos vigentes son los registrados en GEO ELEC.</span></p>`;
   if (refs.length) html += `<p style="margin:10px 0 0"><b>Plano de referencia:</b> ${[...new Map(refs.map(r => [r.hoja.id, r.hoja])).values()]
     .map(h => `<button type="button" class="link-btn" data-plano="${esc(h.id)}">${esc(h.plano)} · ${esc(h.titulo)}</button>`).join(' · ')}</p>`;
   if (adm) html += `<div class="acc-adm" style="margin-top:12px"><button type="button" data-uni-editar="${esc(t.id)}">📐 ${bo ? 'Continuar borrador Rev. ' + bo.rev : e ? 'Nueva revisión del diagrama' : 'Confeccionar diagrama en GEO ELEC'}</button></div>`;
@@ -3536,6 +3654,47 @@ function renderUniFicha(t) {
 }
 
 // ---------- Editor ----------
+// Catálogo de marcas y modelos frecuentes (sugerencias: se puede escribir cualquier otro)
+const CATALOGO = {
+  'Schneider Electric': { mccb: ['Compact NSX100F', 'Compact NSX160F', 'Compact NSX250F', 'Compact NSX400F', 'Compact NSX630F', 'Compact NSX100N', 'Compact NSX250N', 'Compact NSX400N', 'Compact NSX630N', 'Compact NSX400H', 'Compact NSX630H', 'Compact NS800N', 'Compact NS1000N', 'EasyPact EZC100N', 'EasyPact EZC250N', 'EasyPact EZC400N'],
+    mcb: ['Acti9 iC60N', 'Acti9 iC60H', 'Acti9 C120N', 'Easy9'], dif: ['Vigirex RH10M', 'Vigirex RH21M', 'Vigirex RH99M', 'Vigi NSX', 'Acti9 iID'], disparo: ['TM-D (termomagnético)', 'TM-G', 'Micrologic 2.2', 'Micrologic 5.2 A', 'Micrologic 6.2 E'] },
+  'Legrand': { mccb: ['DPX³ 160', 'DPX³ 250', 'DPX³ 400', 'DPX³ 630', 'DPX 1600'], mcb: ['DX³ 6000', 'DX³ 10000'], dif: ['DX³ ID', 'Bloque diferencial DPX³'], disparo: ['Termomagnético fijo', 'Termomagnético regulable', 'Electrónico S1', 'Electrónico S2'] },
+  'ABB': { mccb: ['Tmax XT1', 'Tmax XT2', 'Tmax XT3', 'Tmax XT4', 'Tmax XT5', 'Tmax T4', 'Tmax T5', 'Formula A1', 'Formula A2', 'Formula A3'], mcb: ['S200', 'S800'], dif: ['F200', 'RD3'], disparo: ['TMD', 'TMA', 'Ekip Dip LS/I', 'Ekip Dip LSI'] },
+  'Siemens': { mccb: ['3VA1', '3VA2', '3VL', '3RV2 (guardamotor)'], mcb: ['5SL', '5SY'], dif: ['5SV', '5SM'], disparo: ['TM210', 'TM240', 'ETU320', 'ETU350'] },
+  'Mitsubishi': { mccb: ['NF125-SV', 'NF250-SV', 'NF400-SW', 'NF630-SW', 'NF800-SEW'], mcb: ['BH-D6', 'BH-D10'], dif: ['NV125-SV', 'NV250-SV', 'NV400-SW'], disparo: ['Termomagnético fijo', 'Termomagnético regulable', 'Electrónico'] },
+  'Merlin Gerin': { mccb: ['Compact NS100N', 'Compact NS250N', 'Compact NS400N'], mcb: ['Multi9 C60N'], dif: ['Vigirex RH'], disparo: ['TM-D', 'STR22SE'] },
+  'Eaton': { mccb: ['NZMN1', 'NZMN2', 'NZMN3', 'NZMH3'], mcb: ['FAZ', 'xPole PL6'], dif: ['PFIM'], disparo: ['Termomagnético fijo', 'Electrónico'] },
+  'LS Electric': { mccb: ['Metasol ABN', 'Metasol ABS', 'Susol TD', 'Susol TS'], mcb: ['BKN'], dif: ['EBN', 'RKN'], disparo: ['Termomagnético fijo', 'Termomagnético regulable', 'Electrónico'] },
+  'Chint': { mccb: ['NM1', 'NM8'], mcb: ['NXB-63', 'NB1-63'], dif: ['NXBLE', 'NL1'], disparo: ['Termomagnético fijo', 'Termomagnético regulable'] },
+  'General Electric': { mccb: ['Record Plus FD', 'Record Plus FE', 'Record Plus FG'], mcb: ['EP100'], dif: ['DM60'], disparo: ['Termomagnético', 'Electrónico'] },
+  'Hyundai': { mccb: [], mcb: [], dif: [], disparo: [] }
+};
+const TIPOS_PROT = ['MCCB (caja moldeada)', 'MCB (miniatura)', 'Interruptor-seccionador', 'Fusibles', 'Guardamotor'];
+const CALIBRES = ['6 A', '10 A', '16 A', '20 A', '25 A', '32 A', '40 A', '50 A', '63 A', '80 A', '100 A', '125 A', '160 A', '200 A', '250 A', '320 A', '400 A', '500 A', '630 A', '800 A', '1000 A', '1250 A', '1600 A'];
+const ICU = ['6 kA', '10 kA', '15 kA', '25 kA', '36 kA', '50 kA', '70 kA', '100 kA'];
+const marcaCat = (m) => { const k = Object.keys(CATALOGO).find(x => x.toUpperCase() === String(m || '').toUpperCase() || x.toUpperCase().startsWith(String(m || '').toUpperCase() + ' ') || String(m || '').toUpperCase().startsWith(x.toUpperCase().split(' ')[0])); return k ? CATALOGO[k] : null; };
+const claseCat = (tipo) => /MCB/.test(tipo || '') ? 'mcb' : 'mccb';
+function datalistsProt(base, o) {
+  const c = marcaCat(o.marca) || {}, mods = (c[claseCat(o.tipo)] || []).concat(claseCat(o.tipo) === 'mcb' ? [] : (c.mcb || [])), disp = c.disparo || [];
+  const id = base.replace(/\W/g, '-');
+  return `<datalist id="dl-mod-${id}">${mods.map(x => `<option value="${esc(x)}">`).join('')}</datalist><datalist id="dl-disp-${id}">${disp.map(x => `<option value="${esc(x)}">`).join('')}</datalist>`;
+}
+// Bloque de campos de una protección (alimentación, general): tipo, marca, modelo, regulable o fija, ajustes
+function camposProt(base, o) {
+  const id = base.replace(/\W/g, '-'), fija = String(o.regulable || '').toUpperCase() === 'NO', fus = /Fusibles|seccionador/i.test(o.tipo || '');
+  return datalistsProt(base, o)
+    + fUni(base + '.tipo', 'Tipo de protección', { opciones: TIPOS_PROT })
+    + fUni(base + '.marca', 'Marca', { lista: 'dl-marcas', ph: 'Schneider Electric' })
+    + fUni(base + '.modelo', 'Modelo', { lista: 'dl-mod-' + id, ph: 'Compact NSX400F' })
+    + fUni(base + '.polos', 'Polos', { opciones: ['1', '2', '3', '4'] })
+    + (fus ? fUni(base + '.calibre', 'Corriente nominal', { lista: 'dl-calibres', ph: '400 A' })
+      : segU(base + '.regulable', '¿La protección es regulable?', [['SI', 'Sí, regulable'], ['NO', 'No, fija']])
+      + (fija ? fUni(base + '.calibre', 'Corriente nominal (fija)', { lista: 'dl-calibres', ph: '250 A' })
+        : fUni(base + '.disparo', 'Unidad de disparo', { lista: 'dl-disp-' + id, ph: 'Micrologic 2.2 / TM-D' }) + fUni(base + '.calibre', 'Calibre (marco)', { lista: 'dl-calibres', ph: '400 A' })
+        + fUni(base + '.in', 'In (regulación)', { ph: '250 A' }) + fUni(base + '.isd', 'Isd (corto retardo)', { ph: '1250 A' }))
+      + (/MCB/.test(o.tipo || '') ? fUni(base + '.curva', 'Curva', { opciones: ['B', 'C', 'D', 'K', 'Z'] }) : ''))
+    + fUni(base + '.icu', 'Poder de corte (Icu)', { lista: 'dl-icu', ph: '36 kA' });
+}
 const TENSIONES = ['220 V', '380 V', '380-220 V', '400 V', '400-231 V', '600 V', '1000 V'];
 const TIPOS_BLOQUEO = ['Candado departamental + candados personales + tarjetas', 'Pinza multiplicadora + candados personales + tarjetas',
   'Caja de bloqueo grupal', 'Accesorio de bloqueo de interruptor + candados + tarjetas', 'Seccionador abierto + candados + tarjetas',
@@ -3555,6 +3714,7 @@ function modeloNuevo(t) {
     general: { equipo: 'Q0', marca: '', modelo: '', calibre: '', in: '', isd: '', bobina: '', tipoBloqueo: TIPOS_BLOQUEO[0] },
     dif: { tiene: '', tipo: 'Relé diferencial', cod: '50G', I: '', T: '' },
     trafo: { tiene: '', tipo: 'Autotransformador', kva: '', relacion: '', grupo: '' },
+    trafoCtl: { tiene: '', relacion: '', va: '', prot: '', alimenta: '' },
     barra: { tension: '' }, salidas: [], tp: { tiene: 'SI', desc: '' },
     otraFuente: { tiene: '', desc: '', equipo: '', ubicacion: '', tipoBloqueo: TIPOS_BLOQUEO[0] },
     pbExtra: [], verificacion: '', obs: '', ref: null, origenDatos: t.alim || t.bloqueo ? 'Datos registrados en terreno (tablero sin unilineal)' : '',
@@ -3629,7 +3789,8 @@ function renderRefVista() {
   box.innerHTML = `<canvas id="ue-ref-canvas" class="ref-canvas"></canvas>
     <div class="acc-adm"><button type="button" class="btn-pdf" data-plano="${esc(h.id)}">🔍 Ver plano completo</button>
     ${tab && tab.datos && Object.keys(tab.datos).length ? '<button type="button" id="btn-ue-usar-ref">⬇ Usar datos del plano</button>' : ''}</div>
-    ${tab ? `<p class="muted" style="margin:6px 0 0">Texto encontrado en el plano: ${esc((tab.textos || []).slice(0, 14).join(' · ') || '—')}</p>` : ''}`;
+    ${tab ? `<p class="muted" style="margin:6px 0 0">Texto encontrado en el plano: ${esc((tab.textos || []).slice(0, 14).join(' · ') || '—')}</p>` : ''}
+    ${tab && (tab.tagRef || tab.ubicRef) ? `<p class="muted" style="margin:6px 0 0"><b>Referencia plano mina (no actualizada):</b> ${tab.tagRef ? 'TAG ' + esc(tab.tagRef) : 'sin TAG'}${tab.ubicRef ? ' · ' + esc(tab.ubicRef) : ''} · ${esc(tab.sectorRef || '')}</p>` : ''}`;
   const img = new Image();
   img.onload = () => {
     const c = $('#ue-ref-canvas'); if (!c) return;
@@ -3655,8 +3816,10 @@ function htmlEditorUni() {
   const m = UE.m, ids = tablerosActivos().filter(x => x.id !== m.id);
   const sal = (m.salidas || []).map((s, i) => `<div class="ue-sal">
       <div class="ue-sal-h"><b>Salida ${i + 1}</b><span><button type="button" data-sal-up="${i}" aria-label="Subir">↑</button><button type="button" data-sal-del="${i}" aria-label="Quitar">✕</button></span></div>
-      <div class="ue-g">${fUni(`salidas.${i}.id`, 'Identificación', { ph: 'Q1' })}${fUni(`salidas.${i}.in`, 'Corriente (In)', { ph: '32 A' })}
-      ${fUni(`salidas.${i}.polos`, 'Polos', { opciones: ['1', '2', '3', '4'] })}${fUni(`salidas.${i}.dif`, 'Diferencial', { ph: '30 mA' })}
+      <div class="ue-g">${fUni(`salidas.${i}.id`, 'Identificación', { ph: 'Q1' })}${fUni(`salidas.${i}.tipo`, 'Tipo', { opciones: ['MCB (miniatura)', 'MCCB (caja moldeada)', 'Diferencial (RCCB)', 'Guardamotor', 'Fusibles'] })}
+      ${fUni(`salidas.${i}.in`, 'Corriente (In)', { lista: 'dl-calibres', ph: '32 A' })}${fUni(`salidas.${i}.polos`, 'Polos', { opciones: ['1', '2', '3', '4'] })}
+      ${/MCB/.test(s.tipo || '') ? fUni(`salidas.${i}.curva`, 'Curva', { opciones: ['B', 'C', 'D'] }) : ''}${fUni(`salidas.${i}.dif`, 'Diferencial', { opciones: ['30 mA', '100 mA', '300 mA'] })}
+      ${datalistsProt(`salidas.${i}`, s)}${fUni(`salidas.${i}.marca`, 'Marca', { lista: 'dl-marcas' })}${fUni(`salidas.${i}.modelo`, 'Modelo', { lista: 'dl-mod-' + `salidas.${i}`.replace(/\W/g, '-') })}
       ${fUni(`salidas.${i}.desc`, 'Descripción / carga', { ph: 'Enchufe 32 A, alumbrado…', ancho: 1 })}
       ${fUni(`salidas.${i}.destinoId`, 'Alimenta al tablero (GEO ELEC)', { opciones: ids.map(x => x.id), ancho: 1 })}
       ${fUni(`salidas.${i}.destino`, 'Destino (texto en el plano)', { ph: 'TDA N°12', ancho: 1 })}</div></div>`).join('');
@@ -3666,6 +3829,9 @@ function htmlEditorUni() {
   const a = m.alim || {}, nombres = [...new Set(ls.get('personal', []).filter(p => p.estado === 'ACTIVO').map(p => p.nombre))];
   return htmlRefUni() + `
   <datalist id="ue-dl-pers">${nombres.map(n => `<option value="${esc(n)}">`).join('')}</datalist>
+  <datalist id="dl-marcas">${Object.keys(CATALOGO).map(n => `<option value="${esc(n)}">`).join('')}</datalist>
+  <datalist id="dl-calibres">${CALIBRES.map(n => `<option value="${n}">`).join('')}</datalist>
+  <datalist id="dl-icu">${ICU.map(n => `<option value="${n}">`).join('')}</datalist>
   <details class="ue-sec" open><summary>2 · Tablero</summary><div class="ue-g">
     ${fUni('tablero.nombre', 'Nombre en el diagrama', { req: 1, ph: 'TDF N°94', may: 1 })}${fUni('tablero.tension', 'Tensión', { req: 1, opciones: TENSIONES })}
     <p class="muted ancho" style="margin:4px 0 0">${esc([m.tablero.tipo, m.tablero.nivel, m.tablero.ubic, m.tablero.tag ? 'TAG ' + m.tablero.tag : 'Sin TAG'].filter(Boolean).join(' · '))}</p></div></details>
@@ -3674,21 +3840,31 @@ function htmlEditorUni() {
     ${a.tipo === 'tablero' ? fUni('alim.idTablero', 'Tablero de origen', { req: 1, opciones: ids.map(x => x.id), ancho: 1 }) : ''}
     ${fUni('alim.nombre', 'Nombre del origen', { req: 1, ph: 'CCDD N°3 CALLE 33 ACCESO 6', may: 1, ancho: 1 })}
     ${fUni('alim.equipo', 'Dispositivo que se bloquea (PB-1)', { req: 1, ph: 'Interruptor salida N°3 / Q-A3', ancho: 1 })}
-    ${fUni('alim.tension', 'Tensión de origen', { opciones: TENSIONES })}${fUni('alim.marca', 'Marca', { ph: 'Schneider' })}
-    ${fUni('alim.modelo', 'Modelo', { ph: 'NSX400F' })}${fUni('alim.in', 'In (regulación)', { ph: '250 A' })}${fUni('alim.isd', 'Isd', { ph: '1250 A' })}
+    ${fUni('alim.tension', 'Tensión de origen', { opciones: TENSIONES })}
+    ${camposProt('alim', a)}
     ${fUni('alim.tipoBloqueo', 'Tipo de bloqueo PB-1', { opciones: TIPOS_BLOQUEO, vacio: false, ancho: 1 })}
     ${fUni('cable.seccion', 'Cable (sección)', { ph: '3x70+1x35 mm²' })}${fUni('cable.largo', 'Largo', { ph: '150 m' })}</div></details>
   <details class="ue-sec" open><summary>4 · Interruptor general (PB-2)</summary><div class="ue-g">
-    ${fUni('general.equipo', 'Identificación', { ph: 'Q0' })}${fUni('general.marca', 'Marca', { ph: 'Schneider' })}
-    ${fUni('general.modelo', 'Modelo', { ph: 'NSX400F' })}${fUni('general.calibre', 'Calibre', { ph: '400 A' })}
-    ${fUni('general.in', 'In (regulación)', { req: 1, ph: '250 A' })}${fUni('general.isd', 'Isd', { ph: '1250 A' })}
+    ${fUni('general.equipo', 'Identificación', { ph: 'Q0' })}
+    ${camposProt('general', m.general)}
     ${fUni('general.bobina', 'Accesorios', { ph: 'Bobina MX, parada de emergencia', ancho: 1 })}
     ${fUni('general.tipoBloqueo', 'Tipo de bloqueo PB-2', { opciones: TIPOS_BLOQUEO, vacio: false, ancho: 1 })}</div></details>
-  <details class="ue-sec"><summary>5 · Protección diferencial y transformador</summary><div class="ue-g">
+  <details class="ue-sec"><summary>5 · Protección diferencial y transformadores</summary><div class="ue-g">
     ${segU('dif.tiene', '¿Tiene protección diferencial general?', SINO)}
-    ${m.dif.tiene === 'SI' ? fUni('dif.tipo', 'Tipo', { ph: 'Relé diferencial / Vigirex' }) + fUni('dif.cod', 'Código', { ph: '50G' }) + fUni('dif.I', 'Sensibilidad', { ph: '300 mA' }) + fUni('dif.T', 'Tiempo', { ph: '150 ms' }) : ''}
-    ${segU('trafo.tiene', '¿Tiene transformador?', SINO)}
-    ${m.trafo.tiene === 'SI' ? fUni('trafo.tipo', 'Tipo', { opciones: ['Autotransformador', 'Transformador', 'Transformador de aislación'] }) + fUni('trafo.kva', 'Potencia', { ph: '300 kVA' }) + fUni('trafo.relacion', 'Relación', { ph: '600/380-220 V' }) + fUni('trafo.grupo', 'Grupo de conexión', { ph: 'Dy1' }) : ''}
+    ${m.dif.tiene === 'SI' ? `<datalist id="dl-dif">${((marcaCat(m.dif.marca) || {}).dif || []).map(x => `<option value="${esc(x)}">`).join('')}</datalist>`
+      + fUni('dif.tipo', 'Tipo', { opciones: ['Relé diferencial con toroide', 'Bloque diferencial (Vigi)', 'Interruptor diferencial (RCCB)'] }) + fUni('dif.cod', 'Código', { ph: '50G' })
+      + fUni('dif.marca', 'Marca', { lista: 'dl-marcas' }) + fUni('dif.modelo', 'Modelo', { lista: 'dl-dif', ph: 'Vigirex RH99M' })
+      + segU('dif.regulable', '¿Sensibilidad y tiempo regulables?', [['SI', 'Sí, regulable'], ['NO', 'No, fijo']])
+      + fUni('dif.I', 'Sensibilidad', { opciones: ['30 mA', '100 mA', '200 mA', '300 mA', '500 mA', '1 A', '3 A'] }) + fUni('dif.T', 'Tiempo', { opciones: ['Instantáneo', '30 ms', '60 ms', '150 ms', '250 ms', '310 ms', '500 ms', '1 s'] }) : ''}
+    <h4 class="ancho" style="margin:16px 0 0">Transformador de potencia</h4>
+    ${segU('trafo.tiene', '¿Tiene transformador o autotransformador de potencia?', SINO)}
+    ${m.trafo.tiene === 'SI' ? fUni('trafo.tipo', 'Tipo', { opciones: ['Autotransformador', 'Transformador', 'Transformador de aislación'] }) + fUni('trafo.kva', 'Potencia', { opciones: ['15 kVA', '30 kVA', '45 kVA', '75 kVA', '112,5 kVA', '150 kVA', '225 kVA', '300 kVA', '500 kVA'] }) + fUni('trafo.relacion', 'Relación', { opciones: ['600/400 V', '600/380-220 V', '400/231 V', '380/220 V', '1000/400 V'] }) + fUni('trafo.grupo', 'Grupo de conexión', { opciones: ['Dy1', 'Dyn1', 'Dyn5', 'Dyn11', 'Yy0', 'Monofásico'] }) : ''}
+    <h4 class="ancho" style="margin:16px 0 0">Transformador de control</h4>
+    <p class="muted ancho" style="margin:2px 0 0">Transformador pequeño que alimenta el circuito de control: luces piloto, bobina de disparo, parada de emergencia, relés.</p>
+    ${segU('trafoCtl.tiene', '¿Tiene transformador de control?', SINO)}
+    ${(m.trafoCtl || {}).tiene === 'SI' ? fUni('trafoCtl.relacion', 'Relación', { opciones: ['400/120 V', '400/220 V', '600/120 V', '600/220 V', '380/24 V', '220/24 V'] }) + fUni('trafoCtl.va', 'Potencia', { opciones: ['50 VA', '100 VA', '150 VA', '250 VA', '500 VA', '1 kVA'] })
+      + fUni('trafoCtl.prot', 'Protección', { opciones: ['Fusibles 2 A (prim.) + 2 A (sec.)', 'Fusibles 1 A', 'MCB 2P 2 A', 'MCB 2P 4 A'] }) + fUni('trafoCtl.marca', 'Marca', { ph: 'Schneider / Legrand' })
+      + fUni('trafoCtl.alimenta', 'Alimenta a', { ancho: 1, ph: 'Luces piloto, bobina MX, parada de emergencia' }) : ''}
   </div></details>
   <details class="ue-sec" open><summary>6 · Barra y salidas (${(m.salidas || []).length})</summary>
     <div class="ue-g">${fUni('barra.tension', 'Tensión de barra', { opciones: TENSIONES })}</div>${sal}
@@ -3729,7 +3905,7 @@ function validarUni(m) {
     while (x && n++ < 30) { if (x === m.id) { err.push('La alimentación forma un ciclo (el tablero de origen depende de este).'); break; } const e = uniEmitido(x); x = e && e.modelo.alim.tipo === 'tablero' ? String(e.modelo.alim.idTablero || '').toUpperCase() : ''; }
     if (!uniEmitido(a.idTablero)) av.push(`El tablero de origen ${a.idTablero} aún no tiene diagrama emitido (la ruta de energía quedará incompleta).`);
   }
-  if (!(g.in || g.calibre)) err.push('Falta la corriente del interruptor general (PB-2).');
+  if (!(g.in || g.calibre)) err.push(String(g.regulable || '').toUpperCase() === 'NO' ? 'Falta la corriente nominal del interruptor general (PB-2).' : 'Falta la corriente del interruptor general (PB-2).');
   if (!of.tiene) err.push('Responde si existe otra fuente de energía.');
   if (of.tiene === 'SI' && (!of.equipo || !of.desc)) err.push('Describe la otra fuente y su dispositivo de bloqueo (PB-3).');
   const ids = (m.salidas || []).map(s => String(s.id || '').trim().toUpperCase()).filter(Boolean);
@@ -3741,7 +3917,7 @@ function validarUni(m) {
   if (num(g.in) && num(g.calibre) && num(g.in) > num(g.calibre)) av.push('La regulación In del interruptor general es mayor que su calibre.');
   if (num(a.in) && num(g.in) && num(g.in) > num(a.in)) av.push('El interruptor general está regulado sobre la protección aguas arriba (revisar selectividad).');
   (m.salidas || []).forEach(s => { if (num(s.in) && num(g.in) && num(s.in) > num(g.in)) av.push(`La salida ${s.id || ''} tiene mayor corriente que el interruptor general.`); });
-  if (!g.isd) av.push('Falta el ajuste Isd del interruptor general.');
+  if (!g.isd && String(g.regulable || '').toUpperCase() !== 'NO' && !/Fusibles|seccionador/i.test(g.tipo || '')) av.push('Falta el ajuste Isd del interruptor general (o márcalo como no regulable).');
   if (!(m.cable || {}).seccion) av.push('Falta la sección del cable de alimentación.');
   if (m.dif.tiene !== 'SI') av.push('Sin protección diferencial general registrada.');
   if (m.tp.tiene !== 'SI') av.push('Sin puesta a tierra registrada.');
@@ -3793,6 +3969,7 @@ $('#ue-form').addEventListener('change', (e) => {
   const el = e.target;
   if (el.id === 'ue-ref-hoja') { UE.m.ref = el.value ? { hoja: el.value, i: null } : null; guardarLocalUni(); renderEditorUni(); return; }
   const k = el.dataset && el.dataset.k; if (!k || !UE) return;
+  if (/\.(marca|tipo)$/.test(k) && !/^tablero\./.test(k)) { guardarLocalUni(); renderEditorUni(); return; }
   if (k === 'alim.idTablero') {
     const id = el.value, e2 = uniEmitido(id), t2 = buscarCache(id);
     UE.m.alim.nombre = e2 ? e2.modelo.tablero.nombre : nombreTab(t2);
