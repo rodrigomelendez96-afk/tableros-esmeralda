@@ -326,7 +326,7 @@
   ul.lista li.plano.con-adm { flex-wrap: wrap; }
   /* Checklists diarios: formato del documento */
   .cd-prog { height: 8px; background: var(--borde, #DADDE1); border-radius: 99px; overflow: hidden; } .cd-prog i { display: block; height: 100%; width: 0; background: #1B7A3A; transition: width .25s; }
-  .aviso-chkd { border-radius: 10px; padding: 8px 10px; font-weight: 700; font-size: 14px; margin: 10px 0; } .aviso-chkd.ok { background: #DFF3E4; color: #135C2A; } .aviso-chkd.no { background: #F8D7DA; color: #8A1C24; }
+  .aviso-chkd { border-radius: 10px; padding: 8px 10px; font-weight: 700; font-size: 14px; margin: 10px 0; } .aviso-chkd.ok { background: #DFF3E4; color: #135C2A; } .aviso-chkd.warn { background: #FFF1CC; color: #7A4F00; } .aviso-chkd.no { background: #F8D7DA; color: #8A1C24; }
   .badge.warn { background: #FFF1CC; color: #7A4F00; }
   .tile-chkd { border-color: #1B7A3A; }
   .cd-hoja { background: #fff; color: #111; border: 1.5px solid #222; font-size: 13px; margin: 0 0 8px; overflow-x: auto; }
@@ -402,6 +402,7 @@
     </div>
     <div class="sesion" id="ini-sesion"></div>
     <button type="button" class="aviso-pend aprob-card" id="ini-aprobar" data-ir="aprobar" hidden></button>
+    <button type="button" class="aviso-pend aprob-card" id="ini-chkrev" hidden></button>
     <button type="button" class="aviso-pend" id="ini-pend" data-ir="envios" hidden></button>
     <button class="big primary inicio-act" id="btn-iniciar">⚡ Iniciar actividad<small>Inspección mensual o mantención trimestral</small></button>
 
@@ -727,11 +728,12 @@
       <p class="aviso-chkd" id="cd-aviso"></p>
       <ul class="lista" id="cd-lista"></ul>
       <p class="muted" id="cd-envio" style="margin:8px 0 0"></p>
+      <button type="button" class="big" id="cd-refrescar" hidden>🔄 Consultar si el supervisor ya firmó</button>
       <button type="button" class="big primary" id="cd-continuar" hidden>Continuar con la actividad →</button>
     </div>
     <div class="card" id="cd-rev-card" hidden>
       <h3>🖊 Revisión del supervisor</h3>
-      <p class="muted" style="margin:0 0 8px">Checklists diarios del personal pendientes de tu firma (últimos 10 días). Revisa el PDF y firma los seleccionados.</p>
+      <p class="muted" style="margin:0 0 8px">Checklists diarios del personal que te asignó como supervisor (últimos 10 días). Revisa el PDF y firma los seleccionados: con tu firma quedan validados y la persona puede iniciar su actividad. Si algo no corresponde, recházalo con el motivo y deberá rehacerlo.</p>
       <div id="cd-rev"><button type="button" class="big" id="btn-cd-rev">Ver checklists por revisar</button></div>
     </div>
     <div class="card"><h3>Días anteriores (este teléfono)</h3><ul class="lista" id="cd-hist"></ul></div>
@@ -1332,7 +1334,7 @@ const CONFIG = {
 };
 
 // Versión visible al pie de la pantalla de inicio (sirve para confirmar que el teléfono tiene la última)
-const VERSION_APP = 'v31 · 10-11-2026';
+const VERSION_APP = 'v32 · 10-11-2026';
 const NIVELES = ['UCL', 'Producción', 'Acarreo', 'SNV'];
 const SEN = 'Cuadro de señalética (riesgo eléctrico, potencia, nivel de tensión, punto de bloqueo, maniobra RCP, logo empresa, personal autorizado, diagrama unilineal, carga de fuego, programa de mantenimiento)';
 const BASE_TD = ['Orden y aseo en el sector', 'Iluminación', 'Número de TAG', 'Soporte o anclaje del tablero en buen estado',
@@ -1518,6 +1520,7 @@ $('#btn-login').addEventListener('click', async () => {
         const sal = uuid();
         creds[usuario] = { sal, hash: await huella(sal, pass), token: j.token, exp: j.exp, perfil: j.perfil, firma: j.firma || '' };
         if (j.ficha) guardarFichaPropia(usuario, j.ficha);
+        if (j.supervisores) ls.set('supervisores', j.supervisores);
         ls.set('creds', creds);
         nueva = { usuario, token: j.token, exp: j.exp, perfil: j.perfil, inicio: Date.now(), firma: j.firma || '' };
       } catch (e) {
@@ -1650,27 +1653,68 @@ function guardarChkdLocal(u, r) {
   ls.set('chkd:' + u, t);
 }
 const chkdHoy = () => { const s = sesion(); return s ? (chkdLocal(s.usuario)[diaISO()] || {}) : {}; };
-const chkDiarioListo = () => CHKD_ORDEN.every(k => chkdHoy()[k]);
+// Un checklist queda VALIDADO cuando lo firma el supervisor asignado. Solo con los 4 validados se puede iniciar la actividad.
+const estadoChkd = (r) => !r ? 'FALTA' : r.revision === 'REVISADO' ? 'VALIDADO' : r.revision === 'RECHAZADO' ? 'RECHAZADO' : ls.get('chkdCola', []).some(x => x.id === r.id) ? 'SIN ENVIAR' : 'PENDIENTE';
+const chkDiarioFirmado = () => CHKD_ORDEN.every(k => chkdHoy()[k] && estadoChkd(chkdHoy()[k]) !== 'RECHAZADO');
+const chkDiarioListo = () => CHKD_ORDEN.every(k => estadoChkd(chkdHoy()[k]) === 'VALIDADO');
+const supervisoresChkd = () => (ls.get('supervisores', []) || []).filter(x => x.usuario !== (sesion() || {}).usuario);
+async function refrescarSupervisores() {
+  if (!sesionActiva() || !navigator.onLine || !configurado()) return;
+  try { const r = await fetchT(CONFIG.SCRIPT_URL + '?accion=supervisores&clave=' + encodeURIComponent(CONFIG.CLAVE) + '&token=' + encodeURIComponent(sesion().token), {}, 30000); const j = await r.json(); if (j.ok) ls.set('supervisores', j.supervisores || []); } catch (e) {}
+}
+// Consulta al servidor el estado de revisión de mis checklists (y, si soy supervisor, cuántos tengo por firmar)
+let refrescandoChkd = null;
+function refrescarEstadoChkd() {
+  if (!sesionActiva() || !navigator.onLine || !configurado()) return Promise.resolve(false);
+  if (refrescandoChkd) return refrescandoChkd;
+  refrescandoChkd = (async () => {
+    try {
+      const s = sesion(), r = await fetchT(CONFIG.SCRIPT_URL + '?accion=chkDiarios&clave=' + encodeURIComponent(CONFIG.CLAVE) + '&token=' + encodeURIComponent(s.token) + '&dias=3', {}, 45000);
+      const j = await r.json(); if (!j.ok) return false;
+      const t = chkdLocal(s.usuario); let cambio = false;
+      (j.mios || []).forEach(m => { const loc = (t[m.fecha] || {})[m.codigo];
+        if (loc && loc.id === m.id && (loc.revision !== m.revision || loc.motivo !== m.motivo)) { Object.assign(loc, { revision: m.revision, reviso: m.reviso, revCargo: m.revCargo, fRev: m.fRev, revCod: m.revCod, motivo: m.motivo }); cambio = true; } });
+      if (cambio) ls.set('chkd:' + s.usuario, t);
+      if (j.revisor) { CDR.pend = j.pendientes || []; ls.set('chkdPorFirmar', CDR.pend.length); } else ls.set('chkdPorFirmar', 0);
+      renderAvisoChkRev(); renderTileChkd(); if (!$('#v-chkd').hidden) renderChkd();
+      return true;
+    } catch (e) { return false; } finally { refrescandoChkd = null; }
+  })();
+  return refrescandoChkd;
+}
+function renderAvisoChkRev() {
+  const b = $('#ini-chkrev'); if (!b) return;
+  const n = sesionActiva() && CARGOS_REVISAN.test((perfilSesion() || {}).cargo || '') ? ls.get('chkdPorFirmar', 0) : 0;
+  b.hidden = !n; b.innerHTML = n ? `🖊 <b>${n} checklist(s) diario(s) por firmar</b><small style="display:block;font-weight:500">El personal no puede iniciar su actividad hasta que los firmes</small>` : '';
+}
 let chkdSiguiente = null;
 function exigirChkDiario(sig) { chkdSiguiente = sig || null; ir('chkd'); }
 // ---- Hub: estado del día ----
 function renderChkd() {
   const s = sesion(); if (!s) return;
-  const hoy = chkdHoy(), n = CHKD_ORDEN.filter(k => hoy[k]).length, cola = ls.get('chkdCola', []);
-  $('#cd-fecha').textContent = `${NOMBRE_DIA[diaSemana(diaISO())]} ${fDMA(diaISO())} · ${n} de ${CHKD_ORDEN.length} completados`;
-  $('#cd-barra').style.width = (n / CHKD_ORDEN.length * 100) + '%';
-  $('#cd-lista').innerHTML = CHKD_ORDEN.map(k => {
-    const C = CHKD[k], r = hoy[k], pend = r && cola.some(x => x.id === r.id);
-    return `<li class="con-adm"><div class="info"><b>${C.icono} ${esc(C.corto)}</b><small>${esc(C.codigo)} · Rev. ${esc(C.rev)}</small>
-      ${r ? `<small style="display:block;font-weight:700;color:${r.nObs ? '#8A5A00' : '#135C2A'}">${r.nObs ? '⚠ ' + r.nObs + ' ítem(s) con observación' : '✔ Conforme'} · firmado ${esc(r.hora)}${pend ? ' · pendiente de envío' : ' · enviado'}</small>` : ''}</div>
-      <span class="badge ${r ? (r.nObs ? 'warn' : 'ok') : 'no'}">${r ? 'listo' : 'pendiente'}</span>
-      <div class="acc-adm">${r ? `<button type="button" class="btn-pdf" data-cd-pdf="${k}">📄 Ver PDF</button>` : `<button type="button" class="primary" data-cd-abrir="${k}">✍ Completar</button>`}</div></li>`;
+  const hoy = chkdHoy(), cola = ls.get('chkdCola', []), est = CHKD_ORDEN.map(k => estadoChkd(hoy[k]));
+  const nFirm = est.filter(e => e !== 'FALTA' && e !== 'RECHAZADO').length, nVal = est.filter(e => e === 'VALIDADO').length;
+  $('#cd-fecha').textContent = `${NOMBRE_DIA[diaSemana(diaISO())]} ${fDMA(diaISO())} · ${nFirm} de ${CHKD_ORDEN.length} firmados por ti · ${nVal} validados por el supervisor`;
+  $('#cd-barra').style.width = ((nFirm + nVal) / (2 * CHKD_ORDEN.length) * 100) + '%';
+  const ETQ = { FALTA: ['no', 'por hacer'], 'SIN ENVIAR': ['warn', 'sin enviar'], PENDIENTE: ['warn', 'espera firma supervisor'], VALIDADO: ['ok', 'validado ✔'], RECHAZADO: ['no', 'rechazado'] };
+  $('#cd-lista').innerHTML = CHKD_ORDEN.map((k, i) => {
+    const C = CHKD[k], r = hoy[k], e = est[i];
+    const linea = !r ? '' : e === 'VALIDADO' ? `✔ Validado por ${esc(r.reviso || 'supervisor')} · ${esc(r.fRev || '')}`
+      : e === 'RECHAZADO' ? `✖ Rechazado por ${esc(r.reviso || 'supervisor')}: ${esc(r.motivo || '')}. Debes rehacerlo.`
+      : `Firmado por ti ${esc(r.hora)} · ${e === 'SIN ENVIAR' ? 'se enviará al tener señal' : 'esperando la firma de ' + esc(r.supervisor || 'tu supervisor')}`;
+    return `<li class="con-adm"><div class="info"><b>${C.icono} ${esc(C.corto)}</b><small>${esc(C.codigo)} · Rev. ${esc(C.rev)}${r && r.nObs ? ' · ⚠ ' + r.nObs + ' con observación' : ''}</small>
+      ${r ? `<small style="display:block;font-weight:700;color:${e === 'VALIDADO' ? '#135C2A' : e === 'RECHAZADO' ? '#8A1C24' : '#8A5A00'}">${linea}</small>` : ''}</div>
+      <span class="badge ${ETQ[e][0]}">${ETQ[e][1]}</span>
+      <div class="acc-adm">${r ? `<button type="button" class="btn-pdf" data-cd-pdf="${k}">📄 Ver PDF</button>` : ''}${!r || e === 'RECHAZADO' ? `<button type="button" class="primary" data-cd-abrir="${k}">✍ ${r ? 'Rehacer' : 'Completar'}</button>` : ''}</div></li>`;
   }).join('');
-  const listo = n === CHKD_ORDEN.length;
+  const listo = nVal === CHKD_ORDEN.length, firmados = chkDiarioFirmado();
   $('#cd-continuar').hidden = !listo || !chkdSiguiente;
-  $('#cd-aviso').innerHTML = listo ? '✔ Checklists del día completos: puedes realizar mantenciones e inspecciones hoy.'
-    : '⛔ Hasta completar y firmar los 4 checklists de hoy no podrás iniciar mantenciones ni inspecciones.';
-  $('#cd-aviso').className = 'aviso-chkd ' + (listo ? 'ok' : 'no');
+  $('#cd-refrescar').hidden = listo || !firmados;
+  const sups = [...new Set(CHKD_ORDEN.map(k => hoy[k] && estadoChkd(hoy[k]) !== 'VALIDADO' ? hoy[k].supervisor : '').filter(Boolean))].join(', ');
+  $('#cd-aviso').innerHTML = listo ? '✔ Checklists del día validados por el supervisor: documento validado al 100%, puedes realizar mantenciones e inspecciones hoy.'
+    : firmados ? `⏳ Firmaste los 4 checklists. Falta la firma de tu supervisor asignado (${esc(sups)}). Cuando los firme podrás iniciar la actividad.${navigator.onLine ? '' : ' Necesitas señal para recibir su validación.'}`
+    : '⛔ Hasta completar y firmar los 4 checklists de hoy, y que tu supervisor los valide, no podrás iniciar mantenciones ni inspecciones.';
+  $('#cd-aviso').className = 'aviso-chkd ' + (listo ? 'ok' : firmados ? 'warn' : 'no');
   // historial de los últimos días
   const t = chkdLocal(s.usuario), dias = Object.keys(t).filter(f => f !== diaISO()).sort().reverse().slice(0, 14);
   $('#cd-hist').innerHTML = dias.length ? dias.map(f => `<li class="con-adm"><div class="info"><b>${esc(NOMBRE_DIA[diaSemana(f)])} ${esc(fDMA(f))}</b>
@@ -1684,8 +1728,8 @@ const CARGOS_REVISAN = /SUPERVISOR|JEFE|PREVENCI/i;
 function renderTileChkd() {
   const el = $('#tile-chkd'); if (!el) return;
   if (!sesionActiva()) { el.textContent = 'Previos a cada jornada · ingresa con tu usuario'; return; }
-  const n = CHKD_ORDEN.filter(k => chkdHoy()[k]).length;
-  el.innerHTML = n === CHKD_ORDEN.length ? '<span class="verde">Hoy: completos ✔</span>' : `<span class="rojo">Hoy: ${n} de ${CHKD_ORDEN.length} · pendientes</span>`;
+  const n = CHKD_ORDEN.filter(k => chkdHoy()[k] && estadoChkd(chkdHoy()[k]) !== 'RECHAZADO').length;
+  el.innerHTML = chkDiarioListo() ? '<span class="verde">Hoy: validados ✔</span>' : n === CHKD_ORDEN.length ? '<span class="amar">Hoy: esperando firma del supervisor</span>' : `<span class="rojo">Hoy: ${n} de ${CHKD_ORDEN.length} · pendientes</span>`;
 }
 // ---- Formulario con el formato original ----
 let CDF = null;   // { k, r (registro en edición) }
@@ -1694,13 +1738,14 @@ function abrirChkdForm(k) {
   const hoy = diaISO();
   CDF = { k, r: { id: 'CD-' + uuid().slice(0, 13), codigo: k, codDoc: C.codigo, titulo: C.titulo.filter(x => !/SISTEMA INTEGRADO|Geovita S\.A\./.test(x)).join(' '),
     fecha: hoy, hora: '', usuario: s.usuario, nombre: p.nombre, rut: p.rut, cargo: p.cargo, area: ult.area || (p.nivel && p.nivel !== 'Transversal' ? p.nivel : ''),
-    supervisor: ult.supervisor || '', resp: {}, obs: {}, otros: Array.from({ length: C.otros || 0 }, () => ({ t: '', v: '', obs: '' })), obsGen: '',
+    supervisor: '', supervisorUsr: '', resp: {}, obs: {}, otros: Array.from({ length: C.otros || 0 }, () => ({ t: '', v: '', obs: '' })), obsGen: '',
     cab: Object.assign({}, (ult.cab || {})), retiro: false } };
   $('#cdf-titulo').textContent = C.icono + ' ' + C.corto;
   $('#cdf-sub').textContent = `${C.codigo} · ${NOMBRE_DIA[diaSemana(hoy)]} ${fDMA(hoy)}${C.semana ? ' · DÍA ' + diaSemana(hoy) + ' de la semana' : ''}`;
   $('#cdf-error').textContent = '';
-  const sups = new Set(ls.get('chkdSup', [])); ls.get('personal', []).filter(x => CARGOS_REVISAN.test(x.cargo || '') && x.estado === 'ACTIVO').forEach(x => sups.add(x.nombre));
-  $('#cd-dl-sup').innerHTML = [...sups].map(n => `<option value="${esc(n)}">`).join('');
+  const lista = supervisoresChkd(), pre = lista.find(x => x.usuario === ult.supervisorUsr);
+  if (pre) { CDF.r.supervisorUsr = pre.usuario; CDF.r.supervisor = pre.nombre; }
+  if (!lista.length) refrescarSupervisores().then(() => { if (CDF && CDF.k === k) renderChkdForm(); });
   ir('chkdf'); renderChkdForm();
 }
 const celOp = (key, v, ops, cls = '') => ops.map(o => `<td class="cd-op${v === o ? ' on' : ''}${cls}" data-cd-k="${key}" data-cd-v="${esc(o)}" role="button" tabindex="0" aria-label="${esc(o)}">${v === o ? '✕' : ''}</td>`).join('');
@@ -1711,7 +1756,9 @@ function renderChkdForm() {
       <td class="cd-tit" rowspan="3">${C.titulo.map((t, i) => `<div class="${i === C.titulo.length - 1 && /Geovita/.test(t) ? '' : 'b'}">${esc(t)}</div>`).join('')}</td>
       <td class="cd-cod">${C.epp ? 'Código: ' : 'Código: '}${esc(C.codigo)}</td></tr><tr><td class="cd-cod">REV: ${esc(C.rev)}</td></tr><tr><td class="cd-cod">${C.epp ? 'Página 1 de 1' : 'FECHA: ' + esc(C.fechaDoc)}</td></tr></table>`;
   const area = `<select data-cd-campo="area"><option value="">Seleccione…</option>${opc(NIVELES.concat(['Superficie', 'Taller', 'Otra']), r.area)}</select>`;
-  const sup = `<input data-cd-campo="supervisor" class="may" list="cd-dl-sup" value="${esc(r.supervisor)}" placeholder="Nombre del supervisor de turno">`;
+  const lsup = supervisoresChkd();
+  const sup = lsup.length ? `<select data-cd-sup="1"><option value="">Seleccione supervisor asignado…</option>${lsup.map(x => `<option value="${esc(x.usuario)}"${x.usuario === r.supervisorUsr ? ' selected' : ''}>${esc(x.nombre)} · ${esc(x.cargo)}</option>`).join('')}</select>`
+    : `<span class="cd-ph">${navigator.onLine ? 'Cargando lista de supervisores…' : 'Sin señal: conéctate una vez para cargar la lista de supervisores.'}</span>`;
   let cuerpo = '';
   if (C.multi) {
     cuerpo = `<div class="cd-obra">${esc(C.obra)}</div>
@@ -1754,7 +1801,7 @@ function renderChkdForm() {
     ${malas ? `<label class="chk cd-retiro"><input type="checkbox" data-cd-campo="retiro"${r.retiro ? ' checked' : ''}><span>Los elementos con observación fueron <b>retirados de uso o reemplazados</b> antes de trabajar.</span></label>` : ''}
     <table class="cd-t cd-firmas"><tbody><tr class="cd-h"><th>${C.epp ? 'TRABAJADOR' : 'REALIZÓ'}</th><th>${C.epp ? 'SUPERVISOR' : 'REVISÓ'}</th></tr>
       <tr><td><small>NOMBRE</small><b>${esc(r.nombre)}</b><small>CARGO</small><b>${esc(r.cargo)}</b><small>FIRMA · FECHA</small><span class="cd-ph">Se firma al guardar · ${esc(fDMA(r.fecha))}</span></td>
-      <td><small>NOMBRE</small>${C.multi ? '<b>' + esc(r.supervisor || '—') + '</b>' : sup}<small>FIRMA · FECHA</small><span class="cd-ph">La firma el supervisor en la app (revisión)</span></td></tr></tbody></table>`;
+      <td><small>NOMBRE</small>${C.multi || !C.epp ? '<b>' + esc(r.supervisor || '—') + '</b>' : sup}<small>FIRMA · FECHA</small><span class="cd-ph">Pendiente: la firma el supervisor asignado en su app. Con su firma el checklist queda validado.</span></td></tr></tbody></table>`;
   $('#cdf-hoja').innerHTML = `<div class="cd-hoja${C.horiz ? ' horiz' : ''}">${cabecera}${cuerpo}${tabla}${pie}</div>`;
   const total = itemsChkd(C).length + (r.otros || []).filter(o => o.t).length, hechos = itemsChkd(C).filter(it => r.resp[it.n]).length + (r.otros || []).filter(o => o.t && o.v).length;
   $('#cdf-prog').textContent = `${hechos} de ${total} respondidos${malas ? ' · ' + malas + ' con observación' : ''}`;
@@ -1778,6 +1825,11 @@ $('#cdf-hoja').addEventListener('input', (e) => {
   else if (el.dataset.cdOtro) { const o = r.otros[+el.dataset.cdOtro], antes = !!o.t; o.t = el.value; if (antes !== !!o.t) { if (!o.t) o.v = ''; const pos = el.selectionStart; renderChkdForm(); const n = $(`[data-cd-otro="${el.dataset.cdOtro}"]`); if (n) { n.focus(); n.setSelectionRange(pos, pos); } } }
 });
 $('#cdf-hoja').addEventListener('input', (e) => { if (e.target.dataset.cdCab === 'instrumento' && $('#cd-instr')) $('#cd-instr').textContent = e.target.value; });
+$('#cdf-hoja').addEventListener('change', (e) => {
+  if (!e.target.dataset.cdSup || !CDF) return;
+  const x = supervisoresChkd().find(z => z.usuario === e.target.value);
+  CDF.r.supervisorUsr = x ? x.usuario : ''; CDF.r.supervisor = x ? x.nombre : ''; renderChkdForm();
+});
 $('#btn-cdf-todo').addEventListener('click', () => {
   if (!CDF) return; const C = CHKD[CDF.k];
   if (!confirm('Marcar todos los ítems sin responder como conformes (SI / ACEPTABLE, y NO en los ítems que preguntan por un problema)?\n\nRevisa igual cada elemento: cambia los que no cumplan.')) return;
@@ -1791,7 +1843,7 @@ $('#btn-cdf-guardar').addEventListener('click', async () => {
   (r.otros || []).forEach((o, i) => { if (o.t && !o.v) faltan.push('responder "' + o.t + '"'); if (o.t && o.v === C.ops[1] && !String(o.obs || '').trim()) faltan.push('observación de "' + o.t + '"'); });
   itemsChkd(C).forEach(it => { if (esMalaChkd(C, it, r.resp[it.n]) && !String(r.obs[it.n] || '').trim()) faltan.push('observación del ítem ' + it.n); });
   if (!r.area) faltan.push('área');
-  if (!C.epp && !String(r.supervisor || '').trim()) faltan.push('supervisor de turno');
+  if (!r.supervisorUsr) faltan.push('supervisor asignado (quien firmará la revisión)');
   if (C.multi) C.cab.forEach(([k, l]) => { if (!String(r.cab[k] || '').trim()) faltan.push(l.toLowerCase()); });
   const malas = cuentaMalasChkd(C, r);
   if (malas && !r.retiro) faltan.push('confirmar que los elementos con observación fueron retirados o reemplazados');
@@ -1804,12 +1856,12 @@ $('#btn-cdf-guardar').addEventListener('click', async () => {
     .concat((r.otros || []).filter(o => o.t && o.v === C.ops[1]).map(o => o.t + ': ' + o.obs)).join(' | ');
   r.firma = { fecha: fz.fecha, iso: fz.iso, codigo: await codigoFirma([r.id, r.codigo, r.fecha, fz.usuario, fz.iso, JSON.stringify(r.resp), JSON.stringify(r.otros)]), img: fz.img };
   guardarChkdLocal(r.usuario, r);
-  if (r.supervisor) ls.set('chkdSup', [...new Set([r.supervisor].concat(ls.get('chkdSup', [])))].slice(0, 12));
-  ls.set('chkdUlt:' + r.usuario, { area: r.area, supervisor: r.supervisor, cab: C.multi ? r.cab : (ls.get('chkdUlt:' + r.usuario, {}).cab || {}) });
+  r.revision = 'PENDIENTE';
+  ls.set('chkdUlt:' + r.usuario, { area: r.area, supervisorUsr: r.supervisorUsr, cab: C.multi ? r.cab : (ls.get('chkdUlt:' + r.usuario, {}).cab || {}) });
   const cola = ls.get('chkdCola', []); cola.push({ id: r.id, usuario: r.usuario, fecha: r.fecha, codigo: r.codigo }); ls.set('chkdCola', cola);
-  CDF = null; toast(`${C.corto}: firmado ✔`);
+  CDF = null; toast(chkDiarioFirmado() ? 'Los 4 checklists firmados ✔ · ahora debe firmarlos tu supervisor asignado' : `${C.corto}: firmado ✔`, 4000);
   ir('chkd'); renderChkd(); renderTileChkd();
-  if (navigator.onLine) enviarChkDiarios();
+  if (navigator.onLine) enviarChkDiarios().then(() => refrescarEstadoChkd());
 });
 $('#btn-cdf-cancelar').addEventListener('click', () => { if (!CDF || confirm('¿Salir sin guardar este checklist?')) { CDF = null; ir('chkd'); } });
 $('#v-chkd').addEventListener('click', async (e) => {
@@ -1822,6 +1874,10 @@ $('#v-chkd').addEventListener('click', async (e) => {
     return;
   }
   if (e.target.closest('#cd-continuar')) { const sig = chkdSiguiente; chkdSiguiente = null; if (sig) sig(); return; }
+  if (e.target.closest('#cd-refrescar')) { const b = $('#cd-refrescar'); b.disabled = true; b.textContent = 'Consultando…';
+    if (!navigator.onLine) toast('Sin señal: no se puede consultar la firma del supervisor.'); else { await enviarChkDiarios(); await refrescarEstadoChkd(); }
+    b.disabled = false; b.textContent = '🔄 Consultar si el supervisor ya firmó'; if (!chkDiarioListo()) toast('El supervisor aún no firma todos los checklists.'); return; }
+  const rz = e.target.closest('[data-cdr-rech]'); if (rz) { rechazarChkd(rz.dataset.cdrRech); return; }
   if (e.target.closest('#btn-cd-rev')) cargarRevisionChkd();
   const vr = e.target.closest('[data-cdr-ver]');
   if (vr) { const x = (CDR.pend || []).find(z => z.id === vr.dataset.cdrVer); if (x) verDocumento({ titulo: CHKD[x.codigo] ? CHKD[x.codigo].corto : x.titulo, codigo: x.nombre + ' · ' + fDMA(x.fecha), blobLocal: pdfChkDiario(x.datos).output('blob'), mime: 'application/pdf', nombre: nombreChkd(x.datos) }); return; }
@@ -1831,6 +1887,7 @@ $('#v-chkd').addEventListener('click', async (e) => {
 const nombreChkd = (r) => `${r.codigo}_${r.fecha}_${r.usuario}.pdf`;
 // ---- Envío al servidor ----
 let enviandoChkd = false;
+setInterval(() => { if (!$('#v-chkd').hidden && sesionActiva() && !chkDiarioListo() && chkDiarioFirmado()) refrescarEstadoChkd(); }, 30000);
 async function enviarChkDiarios() {
   if (enviandoChkd || !navigator.onLine || !configurado() || !window.jspdf) return;
   const s = sesion(); if (!s || !sesionActiva()) return;
@@ -1857,14 +1914,21 @@ async function cargarRevisionChkd() {
   try {
     const r = await fetchT(CONFIG.SCRIPT_URL + '?accion=chkDiarios&clave=' + encodeURIComponent(CONFIG.CLAVE) + '&token=' + encodeURIComponent(sesion().token) + '&dias=10', {}, 60000);
     const j = await r.json(); if (!j.ok) throw new Error(j.error || 'error');
-    CDR.pend = j.pendientes || [];
-    if (!CDR.pend.length) { box.innerHTML = '<p class="muted">No hay checklists pendientes de revisión.</p>'; return; }
+    CDR.pend = j.pendientes || []; ls.set('chkdPorFirmar', CDR.pend.length); renderAvisoChkRev();
+    if (!CDR.pend.length) { box.innerHTML = '<p class="muted">No tienes checklists pendientes de firma.</p><button type="button" class="big" id="btn-cd-rev">🔄 Actualizar</button>'; return; }
     box.innerHTML = `<label class="chk"><input type="checkbox" id="cdr-todos"> Seleccionar todos (${CDR.pend.length})</label><ul class="lista">${CDR.pend.map(x => `<li class="con-adm"><div class="info">
         <label class="chk" style="margin:0"><input type="checkbox" data-cdr-sel="${esc(x.id)}"> <b>${esc(x.nombre)}</b></label>
         <small>${esc(fDMA(x.fecha))} ${esc(x.hora)} · ${esc(CHKD[x.codigo] ? CHKD[x.codigo].corto : x.titulo)}${x.supervisor ? ' · sup. ' + esc(x.supervisor) : ''}</small></div>
-        <span class="badge ${x.nObs ? 'warn' : 'ok'}">${x.nObs ? x.nObs + ' obs.' : 'conforme'}</span><div class="acc-adm"><button type="button" class="btn-pdf" data-cdr-ver="${esc(x.id)}">📄 Ver</button></div></li>`).join('')}</ul>
+        <span class="badge ${x.nObs ? 'warn' : 'ok'}">${x.nObs ? x.nObs + ' obs.' : 'conforme'}</span><div class="acc-adm"><button type="button" class="btn-pdf" data-cdr-ver="${esc(x.id)}">📄 Ver</button><button type="button" data-cdr-rech="${esc(x.id)}">✖ Rechazar</button></div></li>`).join('')}</ul>
       <button type="button" class="big primary" id="btn-cdr-firmar">✍ Firmar revisión de los seleccionados</button>`;
   } catch (err) { box.innerHTML = `<p class="error">No se pudo cargar: ${esc(err.message)}</p>`; }
+}
+async function rechazarChkd(id) {
+  const x = CDR.pend.find(z => z.id === id); if (!x) return;
+  const motivo = (prompt(`Rechazar "${CHKD[x.codigo] ? CHKD[x.codigo].corto : x.titulo}" de ${x.nombre}.\n\nEscribe el motivo (la persona deberá rehacerlo):`) || '').trim();
+  if (!motivo) return;
+  try { await postPersonal({ accion: 'revisarChkDiario', token: sesion().token, ids: [id], decision: 'RECHAZADO', motivo }, 60000); toast('Checklist rechazado: se le avisa a la persona en su app.'); cargarRevisionChkd(); refrescarEstadoChkd(); }
+  catch (err) { toast('No se pudo rechazar: ' + err.message, 5000); }
 }
 async function firmarRevisionChkd() {
   const ids = [...document.querySelectorAll('[data-cdr-sel]:checked')].map(c => c.dataset.cdrSel);
@@ -1873,7 +1937,7 @@ async function firmarRevisionChkd() {
   const firma = { fecha: fz.fecha, codigo: await codigoFirma([ids.join(','), fz.usuario, fz.iso]) }, pdfs = {};
   ids.forEach(id => { const x = CDR.pend.find(z => z.id === id); if (x) pdfs[id] = pdfChkDiario(x.datos, { reviso: Object.assign({ nombre: fz.nombre, cargo: fz.cargo, img: fz.img }, firma) }).output('datauristring').split(',')[1]; });
   const btn = $('#btn-cdr-firmar'); btn.disabled = true; btn.textContent = 'Enviando…';
-  try { const j = await postPersonal({ accion: 'revisarChkDiario', token: sesion().token, ids, firma, pdfs }, 180000); toast(`${(j.revisados || []).length} checklist(s) revisado(s) ✔`); cargarRevisionChkd(); }
+  try { const j = await postPersonal({ accion: 'revisarChkDiario', token: sesion().token, ids, firma, pdfs }, 180000); toast(`${(j.revisados || []).length} checklist(s) firmado(s) y validado(s) ✔`); cargarRevisionChkd(); refrescarEstadoChkd(); }
   catch (err) { toast('No se pudo enviar la revisión: ' + err.message, 5000); btn.disabled = false; btn.textContent = '✍ Firmar revisión de los seleccionados'; }
 }
 // ---- PDF con el formato del documento ----
@@ -1901,7 +1965,7 @@ function pdfChkDiario0(r, opt = {}) {
   const caja2 = (l, v, x, w, h = 6) => { rect(x, y, w, h); txt(l, x + 1.5, y + 4, { b: 1, pt: 6.8 }); txt(v, x + 1.5 + Math.min(42, doc.getTextWidth(l + ' ') + 2), y + 4, { pt: 7, mw: w - 46 }); };
   if (C.multi) {
     txt(C.obra, M + AN / 2, y + 4, { b: 1, pt: 8.5, al: 'center' }); y += 7;
-    const filas = C.cab.map(([k, l]) => [l, r.cab[k] || '']).concat([['SUPERVISOR DE TURNO', r.supervisor], ['MANTENCIÓN REALIZADA POR', r.nombre], ['FECHA MANTENCIÓN', fDMA(r.fecha) + ' · diaria previa a la actividad'], ['ÁREA', r.area]]);
+    const filas = C.cab.map(([k, l]) => [l, r.cab[k] || '']).concat([['SUPERVISOR DE TURNO', r.supervisor + (opt.reviso ? '' : ' (pendiente de firma)')], ['MANTENCIÓN REALIZADA POR', r.nombre], ['FECHA MANTENCIÓN', fDMA(r.fecha) + ' · diaria previa a la actividad'], ['ÁREA', r.area]]);
     filas.forEach(([l, v]) => { txt(l, M + 1, y + 4, { b: 1, pt: 7 }); doc.setDrawColor(0); doc.line(M + 58, y + 5, M + 140, y + 5); txt(v, M + 59, y + 4, { pt: 7.2 }); y += 6.2; });
     // firmas a la derecha
     const fx = M + 146, fy = y - filas.length * 6.2;
@@ -1992,7 +2056,8 @@ function pdfChkDiario0(r, opt = {}) {
     rect(M + w2 + 20 + w2 * 0.45, y, w2 * 0.55 - 20, hf); txt('FECHA', M + w2 + 21.5 + w2 * 0.45, y + 4.2, { b: 1, pt: 6.6 }); if (rev) { txt(rev.fecha, M + w2 + 21.5 + w2 * 0.45, y + 8.2, { pt: 6.6 }); txt('cód. ' + rev.codigo, M + w2 + 21.5 + w2 * 0.45, y + 11, { pt: 5.2 }); }
     y += hf;
   }
-  if (!rev) { txt('Revisión del supervisor: pendiente (se firma en GEO ELEC).', M, y + 4.5, { pt: 6.2, c: [120, 120, 120] }); }
+  if (!rev) txt(`Revisión del supervisor asignado (${r.supervisor || '—'}): PENDIENTE. El documento queda validado con su firma en GEO ELEC.`, M, y + 4.5, { pt: 6.2, c: [160, 90, 0] });
+  else txt(`VALIDADO: revisado y firmado por ${rev.nombre} el ${rev.fecha}${rev.codigo ? ' · código ' + rev.codigo : ''}${rev.img ? '' : ' (firma registrada en GEO ELEC)'}.`, M, y + 4.5, { pt: 6.2, b: 1, c: [19, 92, 42] });
   doc.setFontSize(5.8); doc.setTextColor(120, 120, 120);
   for (let pg = 1; pg <= doc.getNumberOfPages(); pg++) { doc.setPage(pg); doc.text(`Página ${pg} de ${doc.getNumberOfPages()}`, W - M, PH - 5, { align: 'right' }); }
   doc.text(`Documento digital GEO ELEC · ID ${r.id} · firmado por ${r.nombre} (RUT ${rutFmt(r.rut)}) el ${(r.firma || {}).fecha || ''} · código de verificación ${(r.firma || {}).codigo || ''}`, M, (horiz ? 215.9 : 279.4) - 5);
@@ -2000,6 +2065,7 @@ function pdfChkDiario0(r, opt = {}) {
 }
 // La semana del formato OOCC-001: los otros días salen de lo guardado en este teléfono
 function pdfChkDiario(r, opt = {}) {
+  if (!opt.reviso && r.revision === 'REVISADO') opt = Object.assign({}, opt, { reviso: { nombre: r.reviso, cargo: r.revCargo || '', fecha: r.fRev || '', codigo: r.revCod || '', img: '' } });
   if (CHKD[r.codigo] && CHKD[r.codigo].semana && !opt.semana) { const t = chkdLocal(r.usuario), sem = {}; Object.keys(t).forEach(f => { if (lunesDe(f) === lunesDe(r.fecha) && t[f][r.codigo]) sem[f] = t[f][r.codigo]; }); opt = Object.assign({}, opt, { semana: sem }); }
   return pdfChkDiario0(r, opt);
 }
@@ -2369,7 +2435,7 @@ function ir(vista, opt = {}) {
   if (vista === 'inicio' && modoQR()) { VISTAS.forEach(v => $('#v-' + v).hidden = v !== 'ficha'); window.scrollTo(0, 0); return; }
   VISTAS.forEach(v => $('#v-' + v).hidden = v !== vista);
   document.body.classList.toggle('vista-ancha', vista === 'plano-ed');
-  if (vista === 'chkd') setTimeout(renderChkd, 0);
+  if (vista === 'chkd') { setTimeout(renderChkd, 0); if (navigator.onLine) setTimeout(() => refrescarEstadoChkd(), 300); }
   if (vista === 'inicio') {
     if (pila.length && !opt.desdeHist) {
       const n = pila.length;
@@ -2595,7 +2661,7 @@ async function renderInicio() {
   const etq = ls.get('etiquetas', []).length;
   $('#tile-etq').textContent = etq ? `${etq} creada${etq > 1 ? 's' : ''} en este teléfono` : 'Etiquetas para imprimir';
   const pend = (await DB.all().catch(() => [])).length;
-  renderTileChkd();
+  renderTileChkd(); renderAvisoChkRev();
   $('#tile-env').innerHTML = pend ? `<span class="amar">${pend} pendiente${pend > 1 ? 's' : ''}</span>` : '<span class="verde">Todo enviado</span>';
   $('#ini-pend').hidden = !pend;
   $('#ini-pend').textContent = `⏳ ${pend} registro${pend > 1 ? 's' : ''} pendiente${pend > 1 ? 's' : ''} de envío · ${$('#sync-msg').textContent}`;
@@ -2910,7 +2976,15 @@ document.addEventListener('click', (e) => {
 // ===================== RF01 · CONTROLES CRÍTICOS =====================
 let rf01Siguiente = null, rf01Hora = '';
 function exigirRF01(act, siguiente) {
-  if (!chkDiarioListo()) { exigirChkDiario(() => exigirRF01(act, siguiente)); toast('Antes de la actividad: completa y firma los checklists diarios de hoy.', 4000); return; }
+  if (!chkDiarioListo()) {
+    if (chkDiarioFirmado() && navigator.onLine && !exigirRF01._consultado) {
+      exigirRF01._consultado = true; toast('Consultando la firma del supervisor…', 2500);
+      enviarChkDiarios().then(refrescarEstadoChkd).finally(() => { exigirRF01(act, siguiente); exigirRF01._consultado = false; }); return;
+    }
+    exigirChkDiario(() => exigirRF01(act, siguiente));
+    toast(chkDiarioFirmado() ? 'Tus checklists de hoy esperan la firma de tu supervisor asignado. Sin su validación no puedes iniciar la actividad.' : 'Antes de la actividad: completa y firma los checklists diarios de hoy.', 5000);
+    return;
+  }
   rf01Siguiente = siguiente; rf01Hora = '';
   $('#rf01-ok').checked = false; $('#btn-rf01-seguir').disabled = true;
   $('#rf01-act').textContent = 'Actividad: ' + ACT[act].nombre;
@@ -3715,7 +3789,7 @@ async function sincronizar(manual = false) {
         break; // se reintenta luego, en orden
       }
     }
-    await enviarChkDiarios();
+    await enviarChkDiarios(); refrescarEstadoChkd(); if (!supervisoresChkd().length) refrescarSupervisores();
     if (!error) { await actualizarTableros(); cargarDocs(); cargarEnlaces(); cargarUni(manual); cargarPlanos(manual); refrescarFichaPropia(); if (esAdmin()) regenerarChecklists('', true); }
   } catch (err) { error = err.message; }
   sincronizando = false; $('#btn-sync').disabled = false;
@@ -7756,6 +7830,7 @@ window.addEventListener('pagehide', () => cerrarCamara(true));
 // ===================== ARRANQUE =====================
 $('#version-app').textContent = 'Versión ' + VERSION_APP;
 renderAdminUI();
+$('#ini-chkrev').addEventListener('click', () => { exigirChkDiario(null); setTimeout(() => { cargarRevisionChkd(); $('#cd-rev-card').scrollIntoView({ behavior: 'smooth' }); }, 150); });
 $('#tile-chkd-btn').addEventListener('click', () => requiereLogin(() => requiereFirma(() => exigirChkDiario(null), 'los checklists diarios se firman'), 'Para completar los checklists diarios'));
 $('#btn-iniciar').addEventListener('click', () => requiereLogin(() => requiereFirma(() => ir('actividad'), 'cada mantención e inspección queda firmada por quien la realiza'), 'Para iniciar una mantención o inspección'));
 document.querySelectorAll('#v-actividad [data-act]').forEach(b => b.addEventListener('click', () => {
