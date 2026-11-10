@@ -557,10 +557,19 @@
       <h2>📐 Planos eléctricos</h2>
       <p class="muted" style="margin:4px 0 0">Planos tipo GEOVITA: un esquema estándar por tipo de tablero, listo para usar y editable (componentes, símbolos, textos, conductores y puntos de bloqueo). Cada cambio se emite como nueva revisión con firma y aprobación del Jefe de terreno o Jefe de departamento.</p>
       <div class="tabs tabs-in" id="pl-niveles" hidden></div>
-      <input id="pl-buscar" type="search" placeholder="Buscar tipo de tablero (ej.: CDD, TDF 400)" style="margin-top:12px">
+      <h3 style="margin:14px 0 0">1 · ¿Qué tipo de tablero?</h3>
+      <input id="pl-buscar" type="search" placeholder="Buscar tipo de tablero (ej.: CDD, TDF 400)" style="margin-top:8px">
+      <div class="tipo-grid" id="pl-tipos"></div>
+    </div>
+    <div class="card" id="pl-paso2" hidden>
+      <h3 id="pl-p2-tit">2 · Plano tipo</h3>
+      <p class="muted" id="pl-p2-desc" style="margin:4px 0 8px"></p>
       <ul class="lista" id="pl-lista"></ul>
       <p class="muted" id="pl-info" style="margin:10px 0 0"></p>
     </div>
+    <div class="card" id="pl-diag"><h3>📐 Diagramas unilineales de cada tablero</h3>
+      <p class="muted" style="margin:4px 0 8px">Se confeccionan a partir del plano tipo y quedan asociados a cada tablero (ficha del tablero).</p>
+      <div id="pl-diag-acc"></div></div>
     <button class="big" data-ir="inicio">Volver al inicio</button>
   </section>
 
@@ -1384,6 +1393,7 @@
   </div>
 </div>
 
+<div id="dl-global" hidden></div>
 <div id="visor" hidden>
   <div class="vis-top">
     <button type="button" id="vis-cerrar" aria-label="Cerrar">✕</button>
@@ -1429,7 +1439,7 @@ const CONFIG = {
 };
 
 // Versión visible al pie de la pantalla de inicio (sirve para confirmar que el teléfono tiene la última)
-const VERSION_APP = 'v43 · 10-11-2026';
+const VERSION_APP = 'v44 · 10-11-2026';
 const NIVELES = ['SNV', 'Producción', 'Acarreo', 'Hundimiento', 'UCL'];
 const NIVEL_ETQ = { SNV: 'SNV · Sub nivel ventilación', UCL: 'UCL' };
 const EMPRESA = 'GEOVITA';
@@ -5834,7 +5844,8 @@ function tocarLienzo(ev) {
 const nombresTableros = () => tablerosActivos().map(t => ({ id: t.id, n: nombreTab(t) || t.id, u: t.ubicacion || '' }));
 const accComunes = (ro, extra = '') => `<div class="pe-acc">${extra}<button type="button" data-pe-acc="mover"${ro}>✥ Mover</button><button type="button" data-pe-acc="duplicar"${ro}>⧉ Duplicar</button><button type="button" data-pe-acc="copiar"${ro}>⧉ Copiar a…</button>
   <button type="button" class="peligro" data-pe-acc="borrarSel"${ro}>🗑 Borrar</button><button type="button" data-pe-acc="listo">✔ Listo</button></div>`;
-function renderPanelPE() {
+function renderPanelPE() { renderPanelPE0(); listasPanelPE(); combos($('#pe-panel')); }
+function renderPanelPE0() {
   const box = $('#pe-panel'), m = PE.m, ro = PE.bloqueado ? ' disabled' : '', sel = PE.sel;
   if (PE.modo === 'linea') {
     box.innerHTML = `<h3>Línea / conductor nuevo</h3><p class="muted">${PE.pend.length / 2} punto(s).</p>
@@ -5928,6 +5939,23 @@ function renderPanelPE() {
       + accComunes(ro, mov ? `<button type="button" data-pe-acc="restaurarPos"${ro}>↺ Posición original</button>` : '');
   }
 }
+// Listas desplegables para los datos de puntos de bloqueo y símbolos del plano
+function listasPanelPE() {
+  const box = $('#pe-panel'); if (!box || !PE) return;
+  const lab = (el) => { const l = el.previousElementSibling; return l && l.tagName === 'LABEL' ? l.textContent : ''; };
+  const pon = (sel, id) => box.querySelectorAll(sel).forEach(el => { if (!el.getAttribute('list') && el.tagName === 'INPUT') el.setAttribute('list', id); });
+  pon('[data-pb-k="equipo"]', 'dl-ids'); pon('[data-pb-k="ubic"]', 'dl-ubic'); pon('[data-pb-k="ajuste"]', 'dl-ajuste'); pon('[data-pb-k="accesorios"]', 'dl-acc');
+  const pm = box.querySelector('[data-pb-k="modelo"]'), pmar = box.querySelector('[data-pb-k="marca"]');
+  if (pm && pmar) { const C = CATALOGO[pmar.value] || {}; const l = [].concat(C.mccb || [], C.mcb || [], C.dif || []); if (l.length) { SUG['dl-pb-mod'] = l; pm.setAttribute('list', 'dl-pb-mod'); } }
+  box.querySelectorAll('input[data-add-k]').forEach(el => {
+    if (el.getAttribute('list') || el.type === 'number') return; const t = lab(el);
+    const id = /Identificación|TAG/.test(t) ? 'dl-ids' : /Corriente \/ polos/.test(t) ? 'dl-corrpol' : /Corriente|Rango/.test(t) ? 'dl-calibres' : /Sensibilidad/.test(t) ? 'dl-difsens'
+      : /Tiempo/.test(t) ? 'dl-tiempo' : /Marca/.test(t) ? 'dl-marcas' : /Relación \(V\)/.test(t) ? 'dl-rel' : /Tensión/.test(t) ? 'dl-tension' : /kVA\)/.test(t) ? 'dl-kva'
+      : /kW\)/.test(t) ? 'dl-kw' : /Grupo de conexión/.test(t) ? 'dl-grupo' : /Cable/.test(t) ? 'dl-cables' : /Color/.test(t) ? 'dl-color' : /Ubicación|Origen/.test(t) ? 'dl-ubic'
+      : /Nombre del tablero|Destino|Alimenta/.test(t) ? 'dl-tabnom' : /Escala/.test(t) ? 'dl-caj-escala' : '';
+    if (id) el.setAttribute('list', id);
+  });
+}
 function renderListaPB() {
   const m = PE.m;
   $('#pe-pbs').innerHTML = m.pb.length ? m.pb.map((p, i) => `<li><div class="info"><b style="color:var(--rojo)">${pbN(m, i)} · ${esc(p.equipo || 'POR IDENTIFICAR')}</b>
@@ -5941,12 +5969,14 @@ function renderListaPB() {
 const CAJ_CAMPOS = [['titulo', 'Título del plano (descripción)', 1], ['instalacion', 'Instalación / destino'], ['ubicacion', 'Ubicación (nivel, calle, zanja, sector)'],
   ['proyecto', 'Proyecto N°'], ['planoOrig', 'Plano original (N°)'], ['escala', 'Escala'], ['lamina', 'Lámina N°'], ['laminas', 'Total de láminas'],
   ['obra', 'Obra / contrato'], ['cliente', 'Cliente'], ['notas', 'Notas', 2], ['referencias', 'Planos y documentos de referencia', 2]];
+const CAJ_LISTA = { escala: 'dl-caj-escala', cliente: 'dl-caj-cliente', obra: 'dl-caj-obra', lamina: 'dl-caj-lamina', laminas: 'dl-caj-lamina', ubicacion: 'dl-caj-ubic', instalacion: 'dl-caj-inst' };
 function renderCajPE() {
   if (!PE) return;
   const C = cajPlano(PE.hoja, PE.base, PE.m), ro = PE.bloqueado ? ' disabled' : '', orig = (PE.base.cab || {}).originales || [];
   $('#pe-caj-campos').innerHTML = CAJ_CAMPOS.map(([k, lab, tipo]) => `<div class="${tipo ? 'ancho' : ''}"><label>${esc(lab)}</label>${tipo === 2
-    ? `<textarea data-caj-k="${k}" class="may" rows="3"${ro}>${esc(C[k] || '')}</textarea>` : `<input data-caj-k="${k}" class="may" value="${esc(C[k] || '')}"${ro}>`}</div>`).join('')
+    ? `<textarea data-caj-k="${k}" class="may" rows="3"${ro}>${esc(C[k] || '')}</textarea>` : `<input data-caj-k="${k}" class="may" value="${esc(C[k] || '')}"${CAJ_LISTA[k] ? ` list="${CAJ_LISTA[k]}"` : ''}${ro}>`}</div>`).join('')
     + (orig.length ? `<p class="muted ancho" style="margin:10px 0 0">Rótulo original del DWG: ${esc(orig.join(' · '))}</p>` : '');
+  combos($('#pe-caj-campos'));
 }
 $('#pe-caj-campos').addEventListener('input', (e) => {
   const el = e.target.closest('[data-caj-k]'); if (!el || !PE || PE.bloqueado) return;
@@ -6033,7 +6063,7 @@ function htmlEsqTipo() {
 function renderEsqPE() {
   if (!PE || !PE.m.uni) return;
   const box = $('#pe-esq-form'), abiertos = [...box.querySelectorAll('details')].map(d => d.open);
-  box.innerHTML = htmlEsqTipo();
+  box.innerHTML = htmlEsqTipo(); combos(box);
   const ds = box.querySelectorAll('details');
   if (abiertos.length) ds.forEach((d, i) => { if (abiertos[i] != null) d.open = abiertos[i]; });
   else ds.forEach((d, i) => { d.open = i < 1; });
@@ -6213,23 +6243,35 @@ document.addEventListener('click', async (e) => {
   if (dx) { try { const h = await hojaPorId(dx.dataset.plDxf); const base = await basePlano(h); await dxfPlano(h, modeloVigente(h, base)); } catch (err) { toast('No se pudo: ' + err.message, 5000); } }
 });
 
+let plSel = ls.get('plSel', '');
 async function renderPlanos() {
   const q = $('#pl-buscar').value.trim().toUpperCase(), adm = esAdmin();
-  const hs = hojasTipo().filter(h => !q || [h.id, h.tipoKey, h.nombre, (PLANTILLAS[h.tipoKey] || {}).desc].join(' ').toUpperCase().includes(q));
-  $('#pl-lista').innerHTML = `<li class="sub">Planos tipo GEOVITA · ${hs.length} tipo(s) de tablero</li>` + hs.map(h => {
-    const e = plaVigente(h.id), bo = (PLADATA.borradores || {})[h.id], pa = (PLADATA.porAprobar || {})[h.id], P = PLANTILLAS[h.tipoKey];
+  const todas = hojasTipo(), hs = todas.filter(h => !q || [h.id, h.tipoKey, h.nombre, (PLANTILLAS[h.tipoKey] || {}).desc].join(' ').toUpperCase().includes(q));
+  if (plSel && !todas.some(h => h.id === plSel)) plSel = '';
+  const estado = (h) => { const e = plaVigente(h.id), bo = (PLADATA.borradores || {})[h.id], pa = (PLADATA.porAprobar || {})[h.id];
+    return pa ? `Rev. ${pa.rev} por aprobar` : adm && bo ? `Borrador Rev. ${bo.rev}` : e ? `Rev. ${e.rev} vigente` : 'Rev. 0 · esquema estándar'; };
+  $('#pl-tipos').innerHTML = hs.map(h => `<button type="button" class="${plSel === h.id ? 'on' : ''}" data-pl-tipo="${h.id}">
+    <span class="ti">${(PLANTILLAS[h.tipoKey] || {}).icono || '📐'}</span><b>${esc(h.nombre)}</b><small>${esc(estado(h))}</small></button>`).join('') || '<p class="muted">Sin resultados.</p>';
+  const h = todas.find(x => x.id === plSel);
+  $('#pl-paso2').hidden = !h;
+  if (h) {
+    const e = plaVigente(h.id), bo = (PLADATA.borradores || {})[h.id], pa = (PLADATA.porAprobar || {})[h.id], P = PLANTILLAS[h.tipoKey] || {};
+    $('#pl-p2-tit').textContent = '2 · ' + h.nombre;
+    $('#pl-p2-desc').textContent = (P.desc || '') + ' · ' + CODIGO_PLA(h.id);
     const vig = e ? `<span class="pl-est vig">Rev. ${e.rev} vigente · ${esc(e.fecha || '')}</span>` : '<span class="pl-est imp">Rev. 0 · esquema estándar</span>';
-    const est = pa ? `<span class="pl-est apr">Rev. ${pa.rev} por aprobar</span>` : '';
-    return `<li class="plano con-adm"><div class="info"><b>${P.icono} ${esc(h.nombre)}</b><small>${esc(CODIGO_PLA(h.id))} · ${esc(P.desc)}</small>
-      <div>${vig} ${est} ${adm && bo ? `<span class="pl-est bor">Borrador Rev. ${bo.rev}</span>` : ''}</div></div>
+    const nTab = tablerosActivos().filter(t => clavePlantilla(t) === h.tipoKey).length;
+    $('#pl-lista').innerHTML = `<li class="plano con-adm"><div class="info"><b>${P.icono || '📐'} ${esc(h.nombre)}</b><small>${nTab} tablero(s) de este tipo registrados</small>
+      <div>${vig} ${pa ? `<span class="pl-est apr">Rev. ${pa.rev} por aprobar</span>` : ''} ${adm && bo ? `<span class="pl-est bor">Borrador Rev. ${bo.rev}</span>` : ''}</div></div>
       <div class="acc-adm"><button type="button" class="btn-pdf" data-plano="${h.id}">📄 Ver plano</button>
       ${adm ? `<button type="button" data-pl-editar="${h.id}">✏️ ${bo ? 'Seguir editando' : 'Editar plano'}</button><button type="button" class="btn-pdf" data-pl-dxf="${h.id}">⤓ DXF</button>` : ''}
-      ${pa ? `<button type="button" class="btn-pdf" data-aprpl-ver="${h.id}">Revisión por aprobar</button>` : ''}</div></li>`;
-  }).join('') + (hs.length ? '' : '<li><div class="info"><small>Sin resultados.</small></div></li>')
-    + `<li class="sub">Diagramas unilineales de cada tablero</li><li class="plano con-adm"><div class="info"><b>📐 Diagramas por tablero</b><small>Se confeccionan a partir del plano tipo y quedan asociados a cada tablero (ficha del tablero). El registro se irá completando a medida que se emitan.</small></div>
-      </li>${adm ? '<li><div class="acc-adm" style="margin:0"><button type="button" data-ir="uni-nuevo">📐 Confeccionar diagrama de un tablero</button></div></li>' : ''}`;
-  $('#pl-info').textContent = adm ? 'Para editar: ✏️ Editar plano. El esquema (componentes) se ajusta en su panel; los símbolos, textos, conductores y puntos de bloqueo con las herramientas del editor.' : 'Para descargar el plano en PDF: 📄 Ver plano.';
+      ${pa ? `<button type="button" class="btn-pdf" data-aprpl-ver="${h.id}">Revisión por aprobar</button>` : ''}
+      ${adm ? `<button type="button" data-pl-uni="${h.tipoKey}">📐 Diagrama de un tablero de este tipo</button>` : ''}</div></li>`;
+    $('#pl-info').textContent = adm ? 'Al editar, el plano tiene el mismo formato que el diagrama unilineal: lienzo a la izquierda y "Esquema del tablero" a la derecha, con listas desplegables en cada dato.' : 'Para descargar el plano en PDF: 📄 Ver plano.';
+  }
+  $('#pl-diag-acc').innerHTML = adm ? '<button type="button" class="big" data-ir="uni-nuevo">📐 Confeccionar diagrama de un tablero</button>' : '<p class="muted" style="margin:0">Los diagramas emitidos se ven en la ficha de cada tablero.</p>';
 }
+$('#pl-tipos').addEventListener('click', (e) => { const b = e.target.closest('[data-pl-tipo]'); if (!b) return; plSel = plSel === b.dataset.plTipo ? '' : b.dataset.plTipo; ls.set('plSel', plSel); renderPlanos().then(() => { if (plSel) $('#pl-paso2').scrollIntoView({ behavior: 'smooth', block: 'start' }); }); });
+document.addEventListener('click', (e) => { const b = e.target.closest('[data-pl-uni]'); if (!b) return; unTipo = b.dataset.plUni; ir('uni-nuevo'); });
 $('#pl-buscar').addEventListener('input', () => renderPlanos());
 document.addEventListener('click', async (e) => {
   const b = e.target.closest('[data-plano]'); if (!b) return;
@@ -6375,12 +6417,81 @@ const CATALOGO = {
   'Hyundai': { mccb: [], mcb: [], dif: [], disparo: [] }
 };
 const TIPOS_PROT = ['MCCB (caja moldeada)', 'MCB (miniatura)', 'Interruptor-seccionador', 'Fusibles', 'Guardamotor'];
+// ===== Listas de opciones para rellenar rápido (diagramas unilineales, planos tipo y puntos de bloqueo) =====
+const SUG = {
+  'dl-isd': ['Fijo (10 x In)', '1,5 x Ir', '2 x Ir', '4 x Ir', '6 x Ir', '8 x Ir', '10 x Ir', '500 A', '800 A', '1000 A', '1250 A', '1600 A', '2000 A', '2500 A', '3200 A', '4000 A', '5000 A'],
+  'dl-acc': ['Bobina MX (apertura a distancia)', 'Bobina MN (mínima tensión)', 'Contacto auxiliar OF', 'Contacto de alarma SD', 'Bobina MX + contacto auxiliar', 'Bobina MX + parada de emergencia', 'Mando motorizado', 'Manija rotativa con candado', 'Enclavamiento con candado', 'Sin accesorios'],
+  'dl-ids': ['Q0', 'Q0-B', 'Q-T1', 'Q1', 'Q2', 'Q3', 'Q4', 'Q5', 'Q6', 'Q7', 'Q8', 'Q9', 'Q10', 'Q11', 'Q12', 'S1', 'S2', 'KM1', 'KM2', 'F1', 'F2', 'T1', 'TC', 'RD', '50G', 'VDF-1', 'PS-1', 'UPS-1'],
+  'dl-largo': ['5 m', '10 m', '15 m', '20 m', '30 m', '50 m', '75 m', '100 m', '150 m', '200 m', '250 m', '300 m', '400 m', '500 m'],
+  'dl-kw': ['0,75 kW', '1,5 kW', '2,2 kW', '3 kW', '4 kW', '5,5 kW', '7,5 kW', '11 kW', '15 kW', '18,5 kW', '22 kW', '30 kW', '37 kW', '45 kW', '55 kW', '75 kW', '90 kW', '110 kW', '132 kW', '160 kW', '200 kW', '250 kW'],
+  'dl-desc-sal': ['ALIMENTADOR A TDA', 'ALIMENTADOR A TDF 400 V', 'ALIMENTADOR A TDF 600 V', 'ALIMENTADOR TABLERO DE COMUNICACIONES', 'ENCHUFE HEMBRA 3X16 A', 'ENCHUFE HEMBRA 3X32 A', 'ENCHUFE HEMBRA 3X63 A', 'ENCHUFE JUMBO', 'ALUMBRADO', 'ALUMBRADO DE EMERGENCIA', 'VENTILADOR', 'VENTILADOR AUXILIAR', 'BOMBA DE DRENAJE', 'CORREA TRANSPORTADORA', 'PARTIDOR SUAVE', 'VARIADOR DE FRECUENCIA', 'CARGADOR DE BATERÍAS', 'UPS', 'BANCO DE CONDENSADORES', 'SUPRESOR DE TRANSIENTES', 'MEDICIÓN', 'RESERVA', 'RESERVA EQUIPADA'],
+  'dl-tp': ['BARRA CU A MALLA DEL CCDD', 'BARRA DE TIERRA DEL TABLERO A MALLA', 'CONDUCTOR CU DESNUDO 2/0 AWG A MALLA', 'CONDUCTOR CU DESNUDO 4/0 AWG A MALLA', 'BARRA EQUIPOTENCIAL DEL NIVEL'],
+  'dl-cod-dif': ['50G', '51G', '50/51G', 'RD', 'RD-1', 'RD-2', 'ID'],
+  'dl-fuente': ['GRUPO GENERADOR', 'GRUPO GENERADOR 150 KVA', 'GRUPO GENERADOR 300 KVA', 'UPS', 'BANCO DE BATERÍAS', 'ALIMENTACIÓN DE RESPALDO DESDE OTRO TABLERO', 'CONDENSADORES (ENERGÍA RESIDUAL)'],
+  'dl-ctl': ['LUCES PILOTO, BOBINA MX, PARADA DE EMERGENCIA', 'LUCES PILOTO Y PARADA DE EMERGENCIA', 'CIRCUITO DE CONTROL DE CONTACTORES', 'BOBINA MX', 'PLC Y RELÉS DE CONTROL'],
+  'dl-tension': ['220 V', '231 V', '380 V', '400 V', '400-231 V', '440 V', '480 V', '600 V', '690 V', '1000 V', '13,8 kV', '15 kV', '24 V DC', '48 V DC', '110 V DC', '125 V DC'],
+  'dl-rel': ['600/400-231 V', '600/231 V', '600/120 V', '400/231 V', '400/120 V', '380/220 V', '13800/600 V', '13800/400 V', '15000/600 V', '600/24 V'],
+  'dl-kva': ['5 kVA', '10 kVA', '15 kVA', '30 kVA', '45 kVA', '75 kVA', '112,5 kVA', '150 kVA', '225 kVA', '300 kVA', '500 kVA', '750 kVA', '1000 kVA', '1500 kVA', '2000 kVA'],
+  'dl-grupo': ['Dyn1', 'Dyn5', 'Dyn11', 'Yyn0', 'Yd1', 'Yd11', 'Dd0', 'Ii0 (monofásico)'],
+  'dl-corrpol': ['1P · 10 A', '1P · 16 A', '2P · 16 A', '2P · 32 A', '3P · 16 A', '3P · 32 A', '3P · 63 A', '3P · 100 A', '3P · 160 A', '3P · 250 A', '3P · 400 A', '3P · 630 A', '3P · 800 A', '4P · 63 A', '4P · 250 A', '4P · 400 A'],
+  'dl-difsens': ['30 mA · tipo A', '30 mA · tipo AC', '30 mA · tipo B', '100 mA · tipo A', '300 mA · tipo A', '300 mA · tipo B', '500 mA · tipo A', '1 A · tipo A', '3 A · tipo A'],
+  'dl-tiempo': ['Instantáneo', '30 ms', '60 ms', '80 ms', '150 ms', '300 ms', '500 ms', '1 s'],
+  'dl-color': ['ROJO', 'AZUL', 'NEGRO', 'BLANCO', 'VERDE', 'AMARILLO', 'NARANJO'],
+  'dl-ajuste': ['Ir 1 x In · Isd 10 x Ir', 'Ir 0,8 x In · Isd 8 x Ir', 'Ir 0,9 x In · Isd 10 x Ir · Icu 36 kA', 'Termomagnético fijo · Icu 25 kA', 'Termomagnético fijo · Icu 36 kA', 'Curva C · Icu 10 kA', 'Curva D · Icu 10 kA'],
+  'dl-caj-escala': ['S/E', '1:1', '1:20', '1:50', '1:100', '1:200', '1:500'],
+  'dl-caj-cliente': ['CODELCO CHILE · DIVISIÓN EL TENIENTE'],
+  'dl-caj-obra': ['OBRAS PREMIN MINA CENTRAL SUR · CONTRATO 4600030339', 'CONTRATO 4600030339 · GEOVITA'],
+  'dl-caj-lamina': ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'],
+  'dl-caj-inst': ['MINA ESMERALDA', 'MINA ESMERALDA · NIVEL PRODUCCIÓN', 'MINA ESMERALDA · NIVEL ACARREO', 'MINA ESMERALDA · NIVEL HUNDIMIENTO', 'MINA ESMERALDA · SUB NIVEL VENTILACIÓN', 'MINA ESMERALDA · UCL']
+};
+// Listas que dependen de los tableros registrados (ubicaciones y nombres)
+function sugDinamicas() {
+  const ts = (ls.get('tableros', { lista: [] }).lista || []).filter(t => !t.baja);
+  const u = [...new Set(ts.map(t => String(t.ubicacion || '').toUpperCase()).filter(Boolean))].sort();
+  const n = [...new Set(ts.map(t => nombreTab(t)).filter(Boolean).map(x => String(x).toUpperCase()))].sort();
+  return { 'dl-ubic': u, 'dl-tabnom': n, 'dl-origen': n.concat(u.filter(x => !n.includes(x))), 'dl-caj-ubic': NIVELES.map(x => (NIVEL_ETQ[x] || x).toUpperCase()).concat(u) };
+}
+const MAN_COMBO = '__otro';
+// Convierte cada casilla con lista (datalist) en una lista desplegable con la opción "Otro (escribir)"
+function combos(root) {
+  if (!root) return;
+  const din = sugDinamicas();
+  root.querySelectorAll('input[list]:not([type=search]):not([type=number]):not([data-sin-combo])').forEach(inp => {
+    const id = inp.getAttribute('list');
+    let ops = SUG[id] || din[id];
+    if (!ops) { const dl = root.querySelector('datalist#' + CSS.escape(id)) || document.getElementById(id); ops = dl ? [...dl.options].map(o => o.value).filter(Boolean) : []; }
+    if (!ops.length) return;
+    const v = inp.value, sel = document.createElement('select');
+    [...inp.attributes].forEach(a => { if (!['list', 'type', 'value', 'placeholder', 'autocomplete'].includes(a.name)) sel.setAttribute(a.name, a.value); });
+    sel.dataset.combo = id; sel.dataset.ph = inp.placeholder || '';
+    const lista = ops.includes(v) || !v ? ops : [v].concat(ops);
+    sel.innerHTML = `<option value="">${esc(inp.placeholder ? 'Seleccione… (ej.: ' + inp.placeholder + ')' : 'Seleccione…')}</option>`
+      + lista.map(o => `<option value="${esc(o)}"${o === v ? ' selected' : ''}>${o === v && !ops.includes(v) ? '✎ ' : ''}${esc(o)}</option>`).join('')
+      + `<option value="${MAN_COMBO}">✎ Otro (escribir)…</option>`;
+    if (inp.disabled) sel.disabled = true;
+    inp.replaceWith(sel);
+  });
+}
+// "Otro (escribir)": la lista se cambia por una casilla de texto en el mismo lugar
+function aManual(sel) {
+  const inp = document.createElement('input');
+  [...sel.attributes].forEach(a => { if (!['data-combo', 'data-ph'].includes(a.name)) inp.setAttribute(a.name, a.value); });
+  inp.setAttribute('list', sel.dataset.combo); inp.setAttribute('data-sin-combo', '1'); inp.placeholder = sel.dataset.ph ? 'Escribe (ej.: ' + sel.dataset.ph + ')' : 'Escribe el dato';
+  inp.value = ''; sel.replaceWith(inp); inp.focus();
+}
+['input', 'change'].forEach(ev => document.addEventListener(ev, (e) => {
+  const sel = e.target; if (!sel.matches || !sel.matches('select[data-combo]') || sel.value !== MAN_COMBO) return;
+  e.stopImmediatePropagation(); if (ev === 'input' || document.contains(sel)) aManual(sel);
+}, true));
 const CALIBRES = ['6 A', '10 A', '16 A', '20 A', '25 A', '32 A', '40 A', '50 A', '63 A', '80 A', '100 A', '125 A', '160 A', '200 A', '250 A', '320 A', '400 A', '500 A', '630 A', '800 A', '1000 A', '1250 A', '1600 A'];
 const ICU = ['6 kA', '10 kA', '15 kA', '25 kA', '36 kA', '50 kA', '70 kA', '100 kA'];
+document.getElementById('dl-global').innerHTML = [['dl-calibres', CALIBRES], ['dl-icu', ICU], ['dl-marcas', Object.keys(CATALOGO)], ['dl-cables', ['3x2,5+T mm²', '3x4+T mm²', '3x6+T mm²', '3x10+T mm²', '3x16+1x10 mm²', '3x25+1x16 mm²', '3x35+1x16 mm²', '3x50+1x25 mm²', '3x70+1x35 mm²', '3x95+1x50 mm²', '3x120+1x70 mm²', '3x150+1x95 mm²', '3x185+1x95 mm²', '3x240+1x120 mm²', '4x16AWG', '4x10AWG', '4x8AWG', '4x6AWG', '4x4AWG', '4x2AWG', '4x1/0AWG', '4x2/0AWG']]].concat(Object.entries(SUG)).map(([id, l]) => `<datalist id="${id}">${l.map(x => `<option value="${esc(x)}">`).join('')}</datalist>`).join('');
 const marcaCat = (m) => { const k = Object.keys(CATALOGO).find(x => x.toUpperCase() === String(m || '').toUpperCase() || x.toUpperCase().startsWith(String(m || '').toUpperCase() + ' ') || String(m || '').toUpperCase().startsWith(x.toUpperCase().split(' ')[0])); return k ? CATALOGO[k] : null; };
 const claseCat = (tipo) => /MCB/.test(tipo || '') ? 'mcb' : 'mccb';
 function datalistsProt(base, o) {
-  const c = marcaCat(o.marca) || {}, mods = (c[claseCat(o.tipo)] || []).concat(claseCat(o.tipo) === 'mcb' ? [] : (c.mcb || [])), disp = c.disparo || [];
+  // sin marca elegida: modelos de todas las marcas del catálogo (así igual hay lista desplegable)
+  const c = marcaCat(o.marca) || (o.marca ? {} : Object.values(CATALOGO).reduce((t, x) => { ['mccb', 'mcb', 'dif', 'disparo'].forEach(k => { t[k] = [...new Set((t[k] || []).concat(x[k] || []))]; }); return t; }, {}));
+  const mods = (c[claseCat(o.tipo)] || []).concat(claseCat(o.tipo) === 'mcb' ? [] : (c.mcb || [])), disp = c.disparo || [];
   const id = base.replace(/\W/g, '-');
   return `<datalist id="dl-mod-${id}">${mods.map(x => `<option value="${esc(x)}">`).join('')}</datalist><datalist id="dl-disp-${id}">${disp.map(x => `<option value="${esc(x)}">`).join('')}</datalist>`;
 }
@@ -6557,7 +6668,22 @@ async function abrirEditorUni(id, opt = {}) {
   ir('uni-ed', { id });
 }
 const opc = (lista, v) => { if (v && !lista.includes(v) && CARGAS.some(c => c[0] === v)) v = nombreCarga(v); return lista.map(o => `<option${o === v ? ' selected' : ''}>${esc(o)}</option>`).join('') + (v && !lista.includes(v) ? `<option selected>${esc(v)}</option>` : ''); };
+// Lista de opciones por defecto según el dato (si el campo no trae una propia)
+function listaDe(k) {
+  if (/(^|\.)in$/.test(k) || /\.calibre$/.test(k)) return 'dl-calibres';
+  if (/\.isd$/.test(k)) return 'dl-isd'; if (/\.icu$/.test(k)) return 'dl-icu';
+  if (/(accesorios|bobina)$/.test(k)) return 'dl-acc';
+  if (/(^|\.)(equipo|id)$/.test(k) && !/^tablero/.test(k)) return 'dl-ids';
+  if (/ubicacion$/.test(k)) return 'dl-ubic'; if (k === 'alim.nombre') return 'dl-origen';
+  if (/\.destino$/.test(k)) return 'dl-tabnom'; if (/largo$/.test(k)) return 'dl-largo'; if (/\.kw$/.test(k)) return 'dl-kw';
+  if (/salidas\.\d+\.desc$/.test(k)) return 'dl-desc-sal'; if (/dif\.cod$/.test(k)) return 'dl-cod-dif'; if (k === 'tp.desc') return 'dl-tp';
+  if (k === 'otraFuente.desc') return 'dl-fuente'; if (k === 'trafoCtl.alimenta') return 'dl-ctl'; if (/marca$/.test(k)) return 'dl-marcas';
+  if (/(^|\.)tension$/.test(k)) return 'dl-tension'; if (/relacion$/.test(k)) return 'dl-rel'; if (/\.kva$/.test(k)) return 'dl-kva'; if (/\.grupo$/.test(k)) return 'dl-grupo';
+  if (/cable\.seccion$/.test(k) || /\.cable$/.test(k)) return 'dl-cables';
+  return '';
+}
 function fUni(k, label, opt = {}) {
+  if (!opt.opciones && !opt.area && !opt.lista && listaDe(k)) opt = Object.assign({}, opt, { lista: listaDe(k) });
   const v = getP(UE.m, k) ?? '', sug = UE.sug.has(k) ? ' sug' : '';
   const ctl = opt.opciones
     ? `<select data-k="${k}" class="${sug}">${opt.vacio !== false ? '<option value="">—</option>' : ''}${opc(opt.opciones, v)}</select>`
@@ -6699,7 +6825,7 @@ function htmlEditorUni() {
   <details class="ue-sec"><summary>5 · Protección diferencial y transformadores</summary><div class="ue-g">
     <p class="muted ancho" style="margin:0 0 4px">${esc(DIF_AYUDA)}</p>
     ${segU('dif.tiene', '¿Tiene protección diferencial general?', SINO)}
-    ${m.dif.tiene === 'SI' ? `<datalist id="dl-dif">${((marcaCat(m.dif.marca) || {}).dif || []).map(x => `<option value="${esc(x)}">`).join('')}</datalist>`
+    ${m.dif.tiene === 'SI' ? `<datalist id="dl-dif">${((marcaCat(m.dif.marca) || (m.dif.marca ? {} : { dif: Object.values(CATALOGO).flatMap(x => x.dif || []) })).dif || []).map(x => `<option value="${esc(x)}">`).join('')}</datalist>`
       + fUni('dif.tipo', 'Tipo', { opciones: ['Relé diferencial con toroide', 'Bloque diferencial (Vigi)', 'Interruptor diferencial (RCCB)'] }) + fUni('dif.cod', 'Código', { ph: '50G' })
       + fUni('dif.marca', 'Marca', { lista: 'dl-marcas' }) + fUni('dif.modelo', 'Modelo', { lista: 'dl-dif', ph: 'Vigirex RH99M' })
       + segU('dif.regulable', '¿Sensibilidad y tiempo regulables?', [['SI', 'Sí, regulable'], ['NO', 'No, fijo']])
@@ -6747,7 +6873,7 @@ function htmlEditorUni() {
 }
 function renderEditorUni() {
   const abiertos = [...document.querySelectorAll('#ue-form details')].map(d => d.open);
-  $('#ue-form').innerHTML = htmlEditorUni();
+  $('#ue-form').innerHTML = htmlEditorUni(); combos($('#ue-form'));
   if (abiertos.length) document.querySelectorAll('#ue-form details').forEach((d, i) => { if (abiertos[i] != null) d.open = abiertos[i]; });
   renderRefVista(); actualizarUni();
 }
