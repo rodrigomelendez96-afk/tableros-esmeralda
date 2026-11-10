@@ -269,6 +269,16 @@
   .ue-sal-h { display: flex; justify-content: space-between; align-items: center; }
   .ue-sal-h button { min-height: 36px; padding: 4px 12px; margin-left: 6px; }
   #ue-prev .ue-svg { width: 100%; height: auto; border: 1px solid var(--borde); border-radius: 8px; background: #fff; display: block; margin-top: 8px; cursor: zoom-in; }
+  #ue-prev .ue-zona { fill: rgba(0, 119, 168, 0.06); stroke: rgba(0, 119, 168, 0.55); stroke-width: 0.35; stroke-dasharray: 1.6 1.2; cursor: pointer; }
+  #ue-prev .ue-zona:hover { fill: rgba(0, 119, 168, 0.16); }
+  .ue-flash { box-shadow: 0 0 0 3px #0077A8; border-radius: 10px; transition: box-shadow .3s; }
+  .ue-esq { background: #F3F8FB; border: 1px solid #CFE3EE; border-radius: 10px; padding: 8px 12px 10px; margin-top: 6px; }
+  .ue-esq-f { display: flex; gap: 8px; } .ue-esq-f select { flex: 1; min-width: 0; } .ue-esq-f button { white-space: nowrap; }
+  .sug-mues { background: #FFF6D6; border: 1px solid #E8C76A; padding: 0 4px; border-radius: 4px; }
+  .tipo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-top: 10px; }
+  .tipo-grid button { text-align: left; min-height: 96px; padding: 10px; display: flex; flex-direction: column; gap: 3px; align-items: flex-start; }
+  .tipo-grid button .ti { font-size: 22px; } .tipo-grid button b { font-size: 14px; line-height: 1.2; } .tipo-grid button small { font-size: 11.5px; color: var(--gris); line-height: 1.25; font-weight: 500; }
+  .tipo-grid button.on { background: #FFE9E6; border-color: var(--rojo); box-shadow: inset 0 0 0 2px var(--rojo); }
   /* Editor de planos */
   .pe-barra { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 6px; margin: 0 0 8px; }
   .pe-barra button { min-height: 52px; padding: 4px 2px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-size: 18px; }
@@ -353,6 +363,7 @@
     <div id="ini-admin" hidden>
       <h3 class="sec-tit">Administración</h3>
       <div class="tiles">
+        <button type="button" class="tile ancho" data-ir="uni-nuevo"><span class="t-ico">📐</span><b>Diagramas unilineales</b><small>Nuevo diagrama por tipo de tablero (esquema estándar) · borradores · planos tipo</small></button>
         <button type="button" class="tile ancho" data-ir="admin"><span class="t-ico">⚙️</span><b>Panel de administración</b><small id="tile-admin">Tableros dados de baja, documentos retirados y registro de cambios</small></button>
       </div>
     </div>
@@ -454,6 +465,26 @@
       <ul class="lista" id="pl-lista"></ul>
       <p class="muted" id="pl-info" style="margin:10px 0 0"></p>
     </div>
+    <button class="big" data-ir="inicio">Volver al inicio</button>
+  </section>
+
+  <!-- ============ DIAGRAMAS UNILINEALES: ASISTENTE POR TIPO DE TABLERO ============ -->
+  <section id="v-uni-nuevo" hidden>
+    <div class="card adm">
+      <h2>📐 Diagramas unilineales</h2>
+      <p class="muted" style="margin:4px 0 0">Elige el tipo de tablero: la app carga su esquema unilineal estándar (protecciones, diferencial, transformadores, salidas y puntos de bloqueo) y tú solo confirmas o ajustas los datos.</p>
+      <h3 style="margin:14px 0 0">1 · ¿Qué tipo de tablero?</h3>
+      <div class="tipo-grid" id="un-tipos"></div>
+    </div>
+    <div class="card adm" id="un-paso2" hidden>
+      <h3 id="un-p2-tit">2 · ¿Qué tablero?</h3>
+      <p class="muted" id="un-p2-desc" style="margin:4px 0 8px"></p>
+      <div class="grid2" style="margin-bottom:10px"><button class="big" id="btn-un-tipo-pdf">📄 Ver plano tipo</button><button class="big" id="btn-un-tipo-dxf">⤓ Plano tipo DXF</button></div>
+      <input id="un-buscar" type="search" placeholder="Buscar por ID, número o ubicación">
+      <label class="chk"><input type="checkbox" id="un-todos"> Mostrar tableros de todos los tipos</label>
+      <ul class="lista" id="un-tabs"></ul>
+    </div>
+    <div class="card adm"><h3>Diagramas en curso y pendientes</h3><div id="adm-uni-b"></div></div>
     <button class="big" data-ir="inicio">Volver al inicio</button>
   </section>
 
@@ -1150,7 +1181,7 @@
 // ===================== CONFIGURACIÓN =====================
 const CONFIG = {
   // URL de la aplicación web de Apps Script (termina en /exec)
-  SCRIPT_URL: 'script.google.com/macros/s/AKfycbz5WAbvd0_J4yC92xXNokbk6uLGklbYlT0Yk6uJn1ELW2K43EwDfHanoCfJASBgL2_Tsw/exec',
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbz5WAbvd0_J4yC92xXNokbk6uLGklbYlT0Yk6uJn1ELW2K43EwDfHanoCfJASBgL2_Tsw/exec',
   // Debe ser igual a CONFIG.CLAVE en Codigo.gs
   CLAVE: 'geovita-esm-2026',
   // N° de contrato fijo (se registra en todas las fichas; no se puede modificar en el formulario)
@@ -1158,7 +1189,7 @@ const CONFIG = {
 };
 
 // Versión visible al pie de la pantalla de inicio (sirve para confirmar que el teléfono tiene la última)
-const VERSION_APP = 'v26 · 09-11-2026';
+const VERSION_APP = 'v27 · 09-11-2026';
 const NIVELES = ['UCL', 'Producción', 'Acarreo', 'SNV'];
 const SEN = 'Cuadro de señalética (riesgo eléctrico, potencia, nivel de tensión, punto de bloqueo, maniobra RCP, logo empresa, personal autorizado, diagrama unilineal, carga de fuego, programa de mantenimiento)';
 const BASE_TD = ['Orden y aseo en el sector', 'Iluminación', 'Número de TAG', 'Soporte o anclaje del tablero en buen estado',
@@ -1540,7 +1571,7 @@ async function firmarDocumentoRegistro(registro, titulo) {
 }
 
 // ===================== NAVEGACIÓN =====================
-const VISTAS = ['inicio', 'firma', 'aprobar', 'planos', 'plano-ed', 'uni-ed', 'enlaces', 'enlace', 'login', 'clave', 'persona', 'cred', 'chk', 'hist', 'admin', 'admin-form', 'tableros', 'envios', 'etiquetas', 'actividad', 'rf01', 'pregunta', 'etiqueta', 'ficha', 'unilineal', 'form', 'scan', 'docs', 'subir'];
+const VISTAS = ['inicio', 'firma', 'aprobar', 'planos', 'plano-ed', 'uni-nuevo', 'uni-ed', 'enlaces', 'enlace', 'login', 'clave', 'persona', 'cred', 'chk', 'hist', 'admin', 'admin-form', 'tableros', 'envios', 'etiquetas', 'actividad', 'rf01', 'pregunta', 'etiqueta', 'ficha', 'unilineal', 'form', 'scan', 'docs', 'subir'];
 // Botón / gesto "atrás" del teléfono: cada pantalla abierta queda en el historial del navegador,
 // así "atrás" vuelve a la pantalla anterior en vez de salir de la app.
 const pila = [];                 // pantallas abiertas sobre "inicio": { v, id, alInicio }
@@ -1580,6 +1611,7 @@ function renderVista(v) {
   else if (v === 'hist') renderHistCompleto();
   else if (v === 'enlaces') { renderEnlaces(); cargarEnlaces(); }
   else if (v === 'planos') { renderPlanos(); cargarPlanos(); }
+  else if (v === 'uni-nuevo') { renderUniNuevo(); cargarUni(); }
   else if (v === 'aprobar') { renderAprobar(); cargarUni(true); cargarPlanos(true); }
 }
 const vistaActual = () => VISTAS.find(v => !$('#v-' + v).hidden);
@@ -3158,6 +3190,17 @@ function simBloqueo(L, id, xc, ym, xDestino) {
   L.linea(xa, ym, xDestino - dir * 1.8, ym, { c: UC.R, w: 0.4 });
   L.poli([[xDestino, ym], [xDestino - dir * 2.4, ym - 1], [xDestino - dir * 2.4, ym + 1]], { c: UC.R, w: 0.3, fill: UC.R });
 }
+// Carga al final de una salida (y = fin del interruptor)
+function simCarga(L, x, y, carga) {
+  const ln = (a, b, c, d) => L.linea(a, b, c, d, { w: 0.35 });
+  if (carga === 'enchufe3' || carga === 'enchufe1' || carga === 'enchufeJ') {
+    const r = carga === 'enchufeJ' ? 3.2 : 2.5; ln(x, y, x, y + 2.6); ln(x - r, y + 2.6, x + r, y + 2.6); L.arco(x, y + 2.6, r, 0, 180, { w: 0.35 });
+    if (carga === 'enchufeJ') L.texto(x, y + 4.4, 'J', { pt: 4, b: 1, al: 'center' });
+  } else if (carga === 'ilum') { ln(x, y, x, y + 1.6); L.circ(x, y + 3.8, 2.2, { w: 0.3 }); const d = 1.55; ln(x - d, y + 3.8 - d, x + d, y + 3.8 + d); ln(x - d, y + 3.8 + d, x + d, y + 3.8 - d); }
+  else if (carga === 'motor') { ln(x, y, x, y + 1.4); L.circ(x, y + 4, 2.6, { w: 0.3 }); L.texto(x, y + 5.2, 'M', { pt: 6, b: 1, al: 'center' }); }
+  else if (carga === 'reserva') { ln(x, y, x, y + 2.5); ln(x - 1.4, y + 2.5, x + 1.4, y + 2.5); }
+  else { ln(x, y, x, y + 3.5); L.poli([[x, y + 4.9], [x - 0.9, y + 3.1], [x + 0.9, y + 3.1]], { w: 0.2, fill: UC.N }); }
+}
 function simTierra(L, x, y, etiqueta) {
   L.linea(x, y, x, y + 6, { c: UC.G, w: 0.35 });
   [[3.2, 6], [2.1, 7.3], [1, 8.6]].forEach(([d, yy]) => L.linea(x - d, y + yy, x + d, y + yy, { c: UC.G, w: 0.35 }));
@@ -3190,7 +3233,8 @@ const CODIGO_UNI = (id) => 'RE-' + CONFIG.CONTRATO + '-ELEC-UNI-' + id;
 // ---------- Plano completo ----------
 // cx: { cadena:[nombres aguas arriba], abajo:[nombres aguas abajo], historial:[{rev,fecha,por}], refTxt, borrador }
 function construirUni(m, cx = {}) {
-  const L = new Lienzo(), t = m.tablero || {}, a = m.alim || {}, gnl = m.general || {}, dif = m.dif || {}, tr = m.trafo || {}, of = m.otraFuente || {};
+  const L = new Lienzo(); L.zonas = []; const zona = (x, y, w, h, z) => L.zonas.push({ x, y, w, h, z });
+  const t = m.tablero || {}, a = m.alim || {}, gnl = m.general || {}, dif = m.dif || {}, tr = m.trafo || {}, of = m.otraFuente || {};
   const sal = (m.salidas || []).filter(s => s.id || s.desc || s.in);
   const BL = bloqueosUni(m);
   const marco = () => {
@@ -3232,7 +3276,7 @@ function construirUni(m, cx = {}) {
 
   // ===== Título =====
   L.texto(16, 19, recortar('DIAGRAMA UNILINEAL – ' + (t.nombre || m.id) + (t.tension ? ' · ' + t.tension : ''), 230, 14, true), { pt: 14, b: 1 });
-  L.texto(16, 24.5, recortar([t.tipo, t.nivel, t.ubic, t.tag ? 'TAG ' + t.tag : ''].filter(Boolean).join(' · '), 230, 7.5), { pt: 7.5, c: UC.GR });
+  L.texto(16, 24.5, recortar(cx.tipo ? 'PLANO TIPO · ESQUEMA ESTÁNDAR GEO ELEC · ' + (t.tipo || '') : [t.tipo, t.nivel, t.ubic, t.tag ? 'TAG ' + t.tag : ''].filter(Boolean).join(' · '), 230, 7.5), { pt: 7.5, c: cx.tipo ? UC.R : UC.GR, b: cx.tipo ? 1 : 0 });
   L.linea(249, 14, 249, 283, { w: 0.2, c: UC.CL });
 
   // ===== Diagrama =====
@@ -3248,6 +3292,7 @@ function construirUni(m, cx = {}) {
   const ym1 = simInterruptor(L, X, y + 15);
   lineasInfo(L, X + 6, y + 18.5, [[a.equipo || 'Dispositivo sin identificar', 1], [marcaModelo(a)], [ajustes(a)]], cajaAR - X - 9);
   simBloqueo(L, 'PB-1', X - 40, ym1, X - 4.6);
+  zona(20, y, cajaAR - 20, 40, 'alim');
   L.linea(X, y + 31, X, y + 60, { w: 0.4 });
   // Cable
   const cab = m.cable || {};
@@ -3261,6 +3306,7 @@ function construirUni(m, cx = {}) {
     const ym3 = simInterruptor(L, X2, y + 15);
     envolver(of.equipo || '', 240 - X2 - 8, 6.3, true, 3).forEach((l, i) => L.texto(X2 + 6, y + 20.5 + i * 3.1, l, { pt: 6.3, b: 1 }));
     simBloqueo(L, 'PB-3', X2 - 24, ym3, X2 - 4.6);
+    zona(168, y, 72, 40, 'otra');
   }
   // Tablero
   y = 92;
@@ -3272,6 +3318,7 @@ function construirUni(m, cx = {}) {
   const ym2 = simInterruptor(L, X, yy);
   lineasInfo(L, X + 6, yy + 3.5, [[(gnl.equipo || 'Q0') + ' Interruptor general', 1], [marcaModelo(gnl)], [ajustes(gnl)], [gnl.bobina || '']], (otra ? X2 - 8 : 236) - X - 6);
   simBloqueo(L, 'PB-2', X - 40, ym2, X - 4.6);
+  zona(20, yT, 130, 12, 'tablero'); zona(X - 54, yy - 4, 54 + Math.min(110, (otra ? X2 - 8 : 236) - X), 20, 'general');
   yy += 16;
   if (siUni(dif.tiene)) {
     L.linea(X, yy, X, yy + 12, { w: 0.4 });
@@ -3280,6 +3327,7 @@ function construirUni(m, cx = {}) {
     L.linea(X - 9.6, yy + 6, X - 1.7, yy + 6, { w: 0.3, c: '#0077A8' });
     L.texto(X - 13, yy + 7, recortar(dif.cod || '50G', 6, 4.6, true), { pt: 4.6, b: 1, al: 'center', c: '#0077A8' });
     lineasInfo(L, X + 6, yy + 5, [[dif.tipo || 'Protección diferencial', 1], [[dif.I ? 'I = ' + dif.I : '', dif.T ? 'T = ' + dif.T : ''].filter(Boolean).join(' · ')]], (otra ? X2 - 8 : 236) - X - 6);
+    zona(X - 18, yy, 110, 12, 'dif');
     yy += 12;
   }
   if (siUni(tr.tiene)) {
@@ -3287,6 +3335,7 @@ function construirUni(m, cx = {}) {
     L.circ(X, yy + 7, 5, { w: 0.4 }); L.circ(X, yy + 13.5, 5, { w: 0.4 });
     L.linea(X, yy + 18.5, X, yy + 21, { w: 0.4 });
     lineasInfo(L, X + 8, yy + 9, [[[tr.tipo || 'Transformador', tr.kva].filter(Boolean).join(' '), 1], [[tr.relacion, tr.grupo].filter(Boolean).join(' · ')]], (otra ? X2 - 8 : 236) - X - 8);
+    zona(X - 8, yy, 100, 21, 'trafo');
     yy += 21;
   }
   // Transformador de control (luces piloto, bobina de disparo, parada de emergencia…)
@@ -3307,6 +3356,7 @@ function construirUni(m, cx = {}) {
       .concat(envolver('Alimenta: ' + (tc.alimenta || 'circuito de control'), anchoT, 5.2, false, 2).map(l => [l]));
     let yt = yy + 6;
     lin.filter(l => l[0]).forEach(([t2, b]) => { L.texto(xc - 3, yt, recortar(t2, anchoT, b ? 5.6 : 5.2, !!b), { pt: b ? 5.6 : 5.2, b, al: 'right' }); yt += 2.8; });
+    zona(20, yy, xc + 4 - 20, 25, 'trafoCtl');
     yy += 25;
   }
   // Barra y salidas
@@ -3329,8 +3379,9 @@ function construirUni(m, cx = {}) {
       const xi = x0 + k * s, w = Math.max(10, s - 1.2);
       L.linea(xi, yFila, xi, yFila + 3, { w: 0.35 });
       simInterruptor(L, xi, yFila + 3, 0.72);
-      L.linea(xi, yFila + 14.5, xi, yFila + 18, { w: 0.35 });
-      L.poli([[xi, yFila + 19.4], [xi - 0.9, yFila + 17.6], [xi + 0.9, yFila + 17.6]], { w: 0.2, fill: UC.N });
+      if (o.dif) { L.rect(xi + 2.4, yFila + 6.6, 2.8, 2.8, { w: 0.22 }); L.linea(xi + 2.4, yFila + 9.4, xi + 5.2, yFila + 6.6, { w: 0.18 }); }
+      simCarga(L, xi, yFila + 14.5, o.carga);
+      zona(xi - Math.max(5, w / 2), yFila, Math.max(10, w), 36, 'salida:' + (m.salidas || []).indexOf(o));
       L.texto(xi, yFila + 22.6, recortar(o.id || '—', w, 6.2, true), { pt: 6.2, b: 1, al: 'center' });
       L.texto(xi, yFila + 25.5, recortar([o.polos ? o.polos + 'x' : '', o.in].join('') + (o.dif ? ' ' + o.dif : ''), w, 5.2), { pt: 5.2, al: 'center' });
       envolver(o.desc || '', w, 4.8, false, 2).forEach((l, j) => L.texto(xi, yFila + 28.2 + j * 2.4, l, { pt: 4.8, al: 'center', c: UC.GR }));
@@ -3344,10 +3395,16 @@ function construirUni(m, cx = {}) {
   if (otra) L.linea(X2, 72, X2, yb, { w: 0.4 });
   const yFin = Math.min(Math.max(finCaja + 8, yT + 70), 278);
   L.rect(20, yT, 220, yFin - yT, { w: 0.6 });
-  if (siUni((m.tp || {}).tiene)) simTierra(L, 228, yFin - 13, 'TP');
-  if (yFin <= 262) {   // simbología (como en los planos del fabricante)
-    const ys = 268; L.texto(20, ys - 3.5, 'SIMBOLOGÍA', { pt: 5.8, b: 1, c: UC.GR });
-    L.rect(20, ys - 1.5, 220, 14, { w: 0.2, c: UC.CL });
+  if (siUni((m.tp || {}).tiene)) { simTierra(L, 228, yFin - 13, 'TP'); zona(222, yFin - 15, 16, 14, 'tp'); }
+  zona(X - 52, 32, 22, 30, 'pb'); zona(X - 52, yT + 14, 22, 24, 'pb');
+  const cargasUsadas = [['enchufe1', 'Enchufe hembra'], ['enchufeJ', 'Enchufe jumbo'], ['ilum', 'Iluminación'], ['motor', 'Motor / ventilador']].filter(([k]) => sal.some(o => o.carga === k || (k === 'enchufe1' && o.carga === 'enchufe3')));
+  const conDif = sal.some(o => o.dif), extra = cargasUsadas.length || conDif;
+  if (yFin <= (extra ? 254 : 262)) {   // simbología (como en los planos del fabricante)
+    const ys = extra ? 260 : 268; L.texto(20, ys - 3.5, 'SIMBOLOGÍA', { pt: 5.8, b: 1, c: UC.GR });
+    L.rect(20, ys - 1.5, 220, extra ? 22 : 14, { w: 0.2, c: UC.CL });
+    if (extra) { let xx = 26;
+      cargasUsadas.forEach(([k, n]) => { simCarga(L, xx, ys + 13, k); L.texto(xx + 5, ys + 17.5, n, { pt: 5 }); xx += 44; });
+      if (conDif) { L.rect(xx - 1.4, ys + 15.3, 2.8, 2.8, { w: 0.22 }); L.linea(xx - 1.4, ys + 18.1, xx + 1.4, ys + 15.3, { w: 0.18 }); L.texto(xx + 4, ys + 17.5, 'Diferencial 30 mA en la salida', { pt: 5 }); } }
     simInterruptor(L, 26, ys, 0.62); L.texto(30, ys + 6, 'Interruptor (MCCB / MCB)', { pt: 5 });
     L.circ(70, ys + 5, 1.2, { w: 0.3, c: '#0077A8' }); L.circ(76, ys + 5, 2.6, { w: 0.3, c: '#0077A8' }); L.texto(76, ys + 5.8, '50G', { pt: 3.4, b: 1, al: 'center', c: '#0077A8' });
     L.texto(80.5, ys + 6, 'Toroide y relé diferencial', { pt: 5 });
@@ -3425,7 +3482,7 @@ function construirUni(m, cx = {}) {
   if (siUni(dif.tiene)) comp.push([dif.cod || 'RD', dif.tipo || 'Protección diferencial', [dif.marca, dif.modelo].filter(Boolean).join(' '), [dif.I, dif.T, String(dif.regulable || '').toUpperCase() === 'NO' ? 'fijo' : ''].filter(Boolean).join(' · ')]);
   if (siUni(tr.tiene)) comp.push(['T1', tr.tipo || 'Transformador', '', [tr.kva, tr.relacion, tr.grupo].filter(Boolean).join(' · ')]);
   if (siUni((m.trafoCtl || {}).tiene)) { const tc2 = m.trafoCtl; comp.push(['TC', 'Transformador de control' + (tc2.alimenta ? ' (' + tc2.alimenta + ')' : ''), tc2.marca || '', [tc2.relacion, tc2.va, tc2.prot].filter(Boolean).join(' · ')]); }
-  sal.forEach(o => comp.push([o.id || '—', [o.tipo, o.desc, o.destino ? '› ' + o.destino : ''].filter(Boolean).join(' · '), [o.marca, o.modelo].filter(Boolean).join(' '), [o.polos ? o.polos + ' polos' : '', o.in, o.curva ? 'curva ' + o.curva : '', o.dif].filter(Boolean).join(' · ')]));
+  sal.forEach(o => comp.push([o.id || '—', [o.tipo, nombreCarga(o.carga), o.desc, o.destino ? '› ' + o.destino : ''].filter(Boolean).join(' · '), [o.marca, o.modelo].filter(Boolean).join(' '), [o.polos ? o.polos + ' polos' : '', o.in, o.curva ? 'curva ' + o.curva : '', o.dif].filter(Boolean).join(' · ')]));
   if (siUni((m.tp || {}).tiene)) comp.push(['TP', 'Puesta a tierra', '', (m.tp || {}).desc || '']);
   if (siUni(of.tiene)) comp.push([of.equipo || 'PB-3', 'Otra fuente: ' + (of.desc || ''), '', of.ubicacion || '']);
   tabla('COMPONENTES', [['Ítem', 0.12], ['Descripción', 0.42], ['Marca / modelo', 0.2], ['Ajuste', 0.26]], comp, { negrita: 1, maxLin: 2 });
@@ -3672,7 +3729,7 @@ function transformPlano(base) {
     else {
       let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
       const inc = (x, y) => { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; };
-      base.e.forEach(e => { if (e[0] === 't') inc(e[2], e[3]); else for (let k = 0; k < e[3].length; k += 2) inc(e[3][k], e[3][k + 1]); });
+      base.e.forEach(e => { if (e[0] === 't') { const b = cajaTexto(e, e[7]).bb; inc(b[0], b[1]); inc(b[2], b[3]); } else for (let k = 0; k < e[3].length; k += 2) inc(e[3][k], e[3][k + 1]); });
       base.pb.forEach(p => inc(p[0], p[1]));
       if (!isFinite(x0)) { x0 = 0; y0 = 0; x1 = base.w; y1 = base.h; }
       const mx = (x1 - x0) * 0.025 + 1, my = (y1 - y0) * 0.035 + 1;
@@ -3859,8 +3916,11 @@ function cuadroSimbologia(L, T, base, m, usados, conPB) {
   if (base.tipo === 'vec') base.e.forEach(e => { if (e[0] === 't') pts.push(T.P(e[2], e[3])); else for (let k = 0; k < e[3].length; k += 2) pts.push(T.P(e[3][k], e[3][k + 1])); });
   (m.pb || []).forEach(p => pts.push(T.P(p.x, p.y)));
   (m.add || []).forEach(a => { if (a.x != null) pts.push(T.P(a.x, a.y)); });
+  if (base.tipo === 'vec') base.e.forEach(e => { if (e[0] === 't') { const b = cajaTexto(e, e[7]).bb; [[b[0], b[1]], [b[2], b[1]], [b[0], b[3]], [b[2], b[3]], [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2]].forEach(q => pts.push(T.P(q[0], q[1]))); } });
   const cuenta = ([x, y]) => pts.filter(p => p[0] >= x - 2 && p[0] <= x + w + 2 && p[1] >= y - 2 && p[1] <= y + h + 2).length;
-  const [x, y] = cand.map(c => [c, cuenta(c)]).sort((a, b) => a[1] - b[1])[0][0];
+  const mejor = cand.map(c => [c, cuenta(c)]).sort((a, b) => a[1] - b[1])[0];
+  if (mejor[1] > 0) { cuadroSimbologiaBanda(L, filas); return; }   // sin esquina libre: va en la banda inferior, sin tapar el dibujo
+  const [x, y] = mejor[0];
   L.rect(x, y, w, h, { fill: '#FFFFFF', c: UC.N, w: 0.3 });
   L.rect(x, y, w, 5.4, { fill: UC.OSC, sinBorde: 1 }); L.texto(x + 1.6, y + 3.8, 'SIMBOLOGÍA', { pt: 6, b: 1, c: '#FFFFFF' });
   filas.forEach(([k, n], i) => {
@@ -3873,6 +3933,15 @@ function cuadroSimbologia(L, T, base, m, usados, conPB) {
         else if (q.t === 'p') q.pts = o.pts.map(p => P(p[0], p[1])); else if (q.t === 't') { [q.x, q.y] = P(o.x, o.y); q.pt = o.pt * esc; }
         q.w = 0.22; L.op(q); }); }
     L.texto(x + 11, yy + 1.4, recortar(n, w - 12.5, 5), { pt: 5 });
+  });
+}
+// Simbología compacta en la banda inferior (cuando ninguna esquina del dibujo está libre)
+function cuadroSimbologiaBanda(L, filas) {
+  const x = 14, y = 222.6, n = filas.length;
+  let xx = x + 22; L.texto(x, y + 1.2, 'SIMBOLOGÍA:', { pt: 5, b: 1, c: UC.GR });
+  filas.slice(0, 6).forEach(([k, nom]) => {
+    if (k === 'pb') simPB(L, xx + 2, y + 0.4, 3.4, ''); else { L.circ(xx + 2, y, 1.2, { w: 0.2 }); }
+    L.texto(xx + 5, y + 1.2, recortar(nom, 34, 4.6), { pt: 4.6 }); xx += 40;
   });
 }
 async function pdfPlano(hoja, m) {
@@ -3896,7 +3965,7 @@ async function dxfPlano(hoja, m) {
 
 // ===================== EDITOR DE PLANOS =====================
 let PE = null;
-const PE_HERR = [['ver', '✋', 'Mover vista'], ['sel', '👆', 'Seleccionar'], ['area', '⬚', 'Seleccionar área'], ['pb', '⚠', 'Punto de bloqueo'], ['sim', '⎓', 'Símbolo'],
+const PE_HERR = [['ver', '✋', 'Mano (mover plano)'], ['sel', '👆', 'Seleccionar'], ['area', '⬚', 'Seleccionar área'], ['pb', '⚠', 'Punto de bloqueo'], ['sim', '⎓', 'Símbolo'],
   ['texto', 'T', 'Texto'], ['linea', '╱', 'Línea / conductor'], ['tapa', '▭', 'Tapar'], ['borrar', '🗑', 'Borrar']];
 const PE_AYUDA = {
   ver: 'Arrastra para mover el plano. Pellizca o usa la rueda del mouse para acercar.',
@@ -3930,7 +3999,7 @@ async function abrirEditorPlano(id) {
   ['del', 'add', 'pb'].forEach(k => { m[k] = m[k] || []; }); ['txt', 'mv', 'caj'].forEach(k => { m[k] = m[k] || {}; });
   if (m.rechazo) origen = `⚠ Devuelto por ${m.rechazo.por} (${m.rechazo.cargo}) el ${m.rechazo.fecha}: ${m.rechazo.obs}` + (origen ? ' · ' + origen : '');
   if (pa) origen = `Esta revisión está enviada a aprobación (Rev. ${pa.rev}). Para corregirla, el aprobador debe devolverla.` + (origen ? ' · ' + origen : '');
-  PE = { hoja, base, m, T: transformPlano(base), modo: 'sel', sel: [], pend: [], undo: [], view: { x: 0, y: 0, w: 420, h: 297 }, orto: true, bloqueado: !!pa, simTipo: 'int' };
+  PE = { hoja, base, m, T: transformPlano(base), modo: 'ver', sel: [], pend: [], undo: [], view: { x: 0, y: 0, w: 420, h: 297 }, orto: true, bloqueado: !!pa, simTipo: 'int' };
   $('#pe-titulo').textContent = 'Plano eléctrico · ' + (hoja.plano && hoja.plano !== 'PDF' ? hoja.plano + ' · ' : '') + hoja.titulo;
   $('#pe-sub').textContent = `${CODIGO_PLA(id)} · Rev. ${m.rev} en edición${e ? ' · vigente: Rev. ' + e.rev : ' · vigente: Rev. 0 (importado)'}`;
   $('#pe-aviso').hidden = !origen; $('#pe-aviso').textContent = origen;
@@ -4519,9 +4588,11 @@ async function renderPlanos() {
   const q = $('#pl-buscar').value.trim().toUpperCase(), qk = claveNum(q.replace(/^(TDF|TDA|TGF|TEJ)\s*/, '$1 N°'));
   const hojas = R.hojas.filter(h => (plNivel === 'Todos' || h.nivel === plNivel) &&
     (!q || [h.plano, h.titulo].concat(h.tableros).concat(R.tableros.filter(x => x.hoja === h.id).map(x => x.tagRef || '')).join(' ').toUpperCase().includes(q) || (qk && R.tableros.some(x => x.hoja === h.id && x.clave === qk))));
-  $('#pl-lista').innerHTML = ['Producción', 'Acarreo', 'Tipos'].map(n => {
+  const tipos = `<li class="sub">Planos tipo GEOVITA · esquema estándar por tipo de tablero</li>` + TIPOS.filter(x => PLANTILLAS[x.key]).map(x => `<li class="plano con-adm"><div class="info"><b>${PLANTILLAS[x.key].icono} ${esc(x.nombre)}</b><small>${esc(PLANTILLAS[x.key].desc)}</small></div>
+    <div class="acc-adm"><button type="button" class="btn-pdf" data-tipo-pdf="${x.key}">📄 Plano tipo</button><button type="button" class="btn-pdf" data-tipo-dxf="${x.key}">⤓ DXF</button>${esAdmin() ? `<button type="button" data-ir="uni-nuevo" data-un-pre="${x.key}">📐 Confeccionar</button>` : ''}</div></li>`).join('');
+  $('#pl-lista').innerHTML = (q ? '' : tipos) + ['Producción', 'Acarreo', 'Tipos'].map(n => {
     const hs = hojas.filter(h => h.nivel === n); if (!hs.length) return '';
-    return `<li class="sub">${n === 'Tipos' ? 'Tableros tipo (fabricante)' : n} · ${hs.length} plano(s)</li>` + hs.map(h => {
+    return `<li class="sub">${n === 'Tipos' ? 'Tableros tipo (fabricante)' : 'Planos de referencia ' + n + ' (DWG)'} · ${hs.length} plano(s)</li>` + hs.map(h => {
       const e = plaVigente(h.id), bo = (PLADATA.borradores || {})[h.id], pa = (PLADATA.porAprobar || {})[h.id], adm = esAdmin();
       const est = pa ? `<span class="pl-est apr">Rev. ${pa.rev} por aprobar</span>` : '';
       const vig = e ? `<span class="pl-est vig">Rev. ${e.rev} vigente · ${esc(e.fecha || '')}</span>` : '<span class="pl-est imp">Rev. 0 · importado del DWG</span>';
@@ -4714,6 +4785,90 @@ const TIPOS_BLOQUEO = ['Candado departamental + candados personales + tarjetas',
 let UE = null;   // { m, t, sug:Set, sucio, base }
 const getP = (o, p) => p.split('.').reduce((a, k) => (a == null ? a : a[k]), o);
 function setP(o, p, v) { const ks = p.split('.'); let a = o; ks.slice(0, -1).forEach(k => { if (a[k] == null) a[k] = /^\d+$/.test(k) ? [] : {}; a = a[k]; }); a[ks[ks.length - 1]] = v; }
+// ===== Esquemas estándar por tipo de tablero (base: planos ELEC de Producción/Acarreo, checklists ELEC-005 a 010 y PT-ELE-003) =====
+// Cada esquema precarga las protecciones, la protección diferencial, los transformadores y las salidas típicas del tipo.
+// Los valores quedan marcados como "sugeridos" (amarillo) hasta que se confirmen con la placa del tablero.
+const CARGAS = [['tablero', 'Alimentador a otro tablero'], ['enchufe3', 'Enchufe hembra trifásico'], ['enchufe1', 'Enchufe hembra monofásico'], ['enchufeJ', 'Enchufe hembra jumbo'],
+  ['ilum', 'Iluminación'], ['motor', 'Motor / ventilador'], ['control', 'Circuito de control'], ['reserva', 'Reserva']];
+const nombreCarga = (k) => (CARGAS.find(c => c[0] === k) || [])[1] || '';
+const SAL = (id, carga, tipo, polos, inn, extra = {}) => Object.assign({ id, carga, tipo, polos, in: inn, curva: '', dif: '', marca: '', modelo: '', desc: '', destino: '', destinoId: '' }, extra);
+const MCB = 'MCB (miniatura)', MCCB = 'MCCB (caja moldeada)', CTL_400 = { tiene: 'SI', relacion: '400/220 V', va: '100 VA', prot: 'Fusibles 2 A (prim.) + 2 A (sec.)', alimenta: 'Luces piloto, bobina de disparo, parada de emergencia' };
+const PLANTILLAS = {
+  TDF600: { icono: '⚡', desc: 'Fuerza 600 V. Interruptor general MCCB con relé diferencial 50G y bobina de disparo; salidas trifásicas a tableros aguas abajo.',
+    m: { tablero: { tension: '600 V' }, alim: { tension: '600 V' }, general: { tipo: MCCB, polos: '3', regulable: 'SI', calibre: '400 A', icu: '36 kA', bobina: 'Bobina MX + parada de emergencia' },
+      dif: { tiene: 'SI', tipo: 'Relé diferencial con toroide', cod: '50G', I: '100 mA', T: '60 ms', regulable: 'SI' }, trafo: { tiene: 'NO' },
+      trafoCtl: Object.assign({}, CTL_400, { relacion: '600/120 V' }), barra: { tension: '600 V' }, tp: { tiene: 'SI', desc: 'Barra Cu a malla de tierra' },
+      salidas: [SAL('Q1', 'tablero', MCCB, '3', '250 A', { desc: 'Alimentador TDF 400 V' }), SAL('Q2', 'tablero', MCCB, '3', '250 A', { desc: 'Alimentador tablero' }), SAL('Q3', 'reserva', MCCB, '3', '160 A', { desc: 'Reserva' })] } },
+  TDF400: { icono: '🔌', desc: 'Fuerza 400 V. General MCCB con relé 50G; enchufes hembra trifásicos 5x32 A y monofásicos 3x16 A con diferencial 30 mA; iluminación.',
+    m: { tablero: { tension: '400 V' }, alim: { tension: '400 V' }, general: { tipo: MCCB, polos: '3', regulable: 'SI', calibre: '250 A', icu: '25 kA', bobina: 'Bobina MX + parada de emergencia' },
+      dif: { tiene: 'SI', tipo: 'Relé diferencial con toroide', cod: '50G', I: '100 mA', T: '60 ms', regulable: 'SI' }, trafo: { tiene: 'NO' }, trafoCtl: CTL_400,
+      barra: { tension: '400 V' }, tp: { tiene: 'SI', desc: 'Barra Cu a malla de tierra' },
+      salidas: [SAL('Q1', 'enchufe3', MCB, '3', '32 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 5x32 A' }), SAL('Q2', 'enchufe3', MCB, '3', '32 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 5x32 A' }),
+        SAL('Q3', 'enchufe1', MCB, '1', '16 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 3x16 A' }), SAL('Q4', 'enchufe1', MCB, '1', '16 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 3x16 A' }),
+        SAL('Q5', 'ilum', MCB, '1', '10 A', { curva: 'C', dif: '30 mA', desc: 'Iluminación del tablero' })] } },
+  TDA: { icono: '💡', desc: 'Alumbrado 400-231 V. Alimentado por enchufe macho 5x32 A; general con bobina, piloto y parada de emergencia; circuitos de alumbrado y enchufes 3x16 A con 30 mA.',
+    m: { tablero: { tension: '400-231 V' }, alim: { tension: '400 V', equipo: 'Enchufe macho 5x32 A (desenchufar) / interruptor de salida en origen' },
+      general: { tipo: MCB, polos: '4', regulable: 'NO', calibre: '50 A', bobina: 'Bobina de disparo + parada de emergencia + luz piloto' }, dif: { tiene: 'NO' }, trafo: { tiene: 'NO' },
+      trafoCtl: { tiene: 'NO' }, barra: { tension: '400-231 V' }, tp: { tiene: 'SI', desc: 'Conductor de protección a tierra del tablero de origen' },
+      salidas: [SAL('Q1', 'ilum', MCB, '1', '10 A', { curva: 'C', dif: '30 mA', desc: 'Alumbrado circuito 1' }), SAL('Q2', 'ilum', MCB, '1', '10 A', { curva: 'C', dif: '30 mA', desc: 'Alumbrado circuito 2' }),
+        SAL('Q3', 'enchufe1', MCB, '1', '16 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 3x16 A' }), SAL('Q4', 'enchufe1', MCB, '1', '16 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 3x16 A' }),
+        SAL('Q5', 'enchufe3', MCB, '3', '32 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 5x32 A' })] } },
+  CDD: { icono: '🏭', desc: 'Centro de distribución. Interruptor general, relé 50G y transformador de poder; alimentadores a los tableros del sector.',
+    m: { tablero: { tension: '600 V' }, alim: { tension: '600 V' }, general: { tipo: MCCB, polos: '3', regulable: 'SI', calibre: '630 A', icu: '50 kA' },
+      dif: { tiene: 'SI', tipo: 'Relé diferencial con toroide', cod: '50G', I: '300 mA', T: '150 ms', regulable: 'SI' },
+      trafo: { tiene: 'SI', tipo: 'Transformador', kva: '500 kVA', relacion: '600/380-220 V', grupo: 'Dyn1' }, trafoCtl: { tiene: 'NO' }, barra: { tension: '380-220 V' },
+      tp: { tiene: 'SI', desc: 'Malla de tierra del centro (2 chicotes)' },
+      salidas: [SAL('Q1', 'tablero', MCCB, '3', '250 A', { desc: 'Alimentador TDF' }), SAL('Q2', 'tablero', MCCB, '3', '250 A', { desc: 'Alimentador TDF' }), SAL('Q3', 'tablero', MCCB, '3', '160 A', { desc: 'Alimentador TDA' }),
+        SAL('Q4', 'reserva', MCCB, '3', '160 A', { desc: 'Reserva' })] } },
+  TEJ: { icono: '🚜', desc: 'Tablero eléctrico jumbo 600 V. General 3x250 A con 50G y parada de emergencia; enchufe hembra jumbo 225 A y enchufes con diferencial 30 mA.',
+    m: { tablero: { tension: '600 V' }, alim: { tension: '600 V' }, general: { tipo: MCCB, polos: '3', regulable: 'SI', calibre: '250 A', icu: '36 kA', bobina: 'Bobina MX + parada de emergencia (P/E)' },
+      dif: { tiene: 'SI', tipo: 'Relé diferencial con toroide', cod: '50G', I: '100 mA', T: '60 ms', regulable: 'SI' }, trafo: { tiene: 'NO' },
+      trafoCtl: Object.assign({}, CTL_400, { relacion: '600/220 V' }), barra: { tension: '600 V' }, tp: { tiene: 'SI', desc: 'Barra de tierra T.P.' },
+      salidas: [SAL('Q1', 'enchufeJ', MCCB, '3', '225 A', { desc: 'Enchufe hembra jumbo 225 A' }), SAL('Q2', 'enchufe1', MCB, '1', '16 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 16 A' }),
+        SAL('Q3', 'enchufe3', MCB, '3', '32 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 32 A' })] } },
+  TSM: { icono: '🧰', desc: 'Servicios menores 400-231 V. General con diferencial 30 mA; enchufes y alumbrado.',
+    m: { tablero: { tension: '400-231 V' }, alim: { tension: '400 V' }, general: { tipo: MCB, polos: '4', regulable: 'NO', calibre: '63 A' },
+      dif: { tiene: 'SI', tipo: 'Interruptor diferencial (RCCB)', cod: 'ID', I: '30 mA', T: 'Instantáneo', regulable: 'NO' }, trafo: { tiene: 'NO' }, trafoCtl: { tiene: 'NO' },
+      barra: { tension: '400-231 V' }, tp: { tiene: 'SI', desc: 'Barra de tierra' },
+      salidas: [SAL('Q1', 'enchufe3', MCB, '3', '32 A', { curva: 'C', desc: 'Enchufe hembra 5x32 A' }), SAL('Q2', 'enchufe1', MCB, '1', '16 A', { curva: 'C', desc: 'Enchufe hembra 3x16 A' }),
+        SAL('Q3', 'ilum', MCB, '1', '10 A', { curva: 'C', desc: 'Alumbrado' })] } },
+  TDFYC: { icono: '⚙️', desc: 'Fuerza y control 400 V. General con 50G; partidores (guardamotor + contactor) para motores; circuito de control.',
+    m: { tablero: { tension: '400 V' }, alim: { tension: '400 V' }, general: { tipo: MCCB, polos: '3', regulable: 'SI', calibre: '160 A', icu: '25 kA', bobina: 'Bobina MX + parada de emergencia' },
+      dif: { tiene: 'SI', tipo: 'Relé diferencial con toroide', cod: '50G', I: '100 mA', T: '60 ms', regulable: 'SI' }, trafo: { tiene: 'NO' },
+      trafoCtl: Object.assign({}, CTL_400, { alimenta: 'Contactores, luces piloto, parada de emergencia' }), barra: { tension: '400 V' }, tp: { tiene: 'SI', desc: 'Barra de tierra' },
+      salidas: [SAL('Q1', 'motor', 'Guardamotor', '3', '25 A', { desc: 'Motor 1 (partida directa)' }), SAL('Q2', 'motor', 'Guardamotor', '3', '25 A', { desc: 'Motor 2 (partida directa)' }),
+        SAL('Q3', 'enchufe3', MCB, '3', '32 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 5x32 A' })] } },
+  TPV: { icono: '🌀', desc: 'Partidor de ventilador. General MCCB; guardamotor y contactor del ventilador; circuito de control con piloto y parada de emergencia.',
+    m: { tablero: { tension: '600 V' }, alim: { tension: '600 V' }, general: { tipo: MCCB, polos: '3', regulable: 'SI', calibre: '125 A', icu: '25 kA', bobina: 'Parada de emergencia' },
+      dif: { tiene: 'SI', tipo: 'Relé diferencial con toroide', cod: '50G', I: '100 mA', T: '60 ms', regulable: 'SI' }, trafo: { tiene: 'NO' },
+      trafoCtl: Object.assign({}, CTL_400, { relacion: '600/220 V', alimenta: 'Contactor, luz piloto, parada de emergencia' }), barra: { tension: '600 V' }, tp: { tiene: 'SI', desc: 'Barra de tierra' },
+      salidas: [SAL('Q1', 'motor', 'Guardamotor', '3', '63 A', { desc: 'Ventilador (partida directa)' })] } }
+};
+const clavePlantilla = (t) => { const tp = tipoPorNombre(t.tipo); return tp && PLANTILLAS[tp.key] ? tp.key : ''; };
+// Aplica el esquema estándar: conserva lo registrado en terreno (origen, punto de bloqueo, cable) y marca lo precargado como sugerido
+function aplicarPlantilla(m, key, sug) {
+  const P = PLANTILLAS[key]; if (!P) return [];
+  const T = JSON.parse(JSON.stringify(P.m)), marcados = [];
+  const poner = (ruta, v) => { const partes = ruta.split('.'); let o = m; partes.slice(0, -1).forEach(k => { o = o[k] = o[k] || {}; }); o[partes[partes.length - 1]] = v; if (sug && v) { sug.add(ruta); marcados.push(ruta); } };
+  ['general', 'dif', 'trafo', 'trafoCtl', 'barra', 'tp'].forEach(sec => { m[sec] = Object.assign({}, m[sec] || {}); if (sec === 'general') m.general.equipo = m.general.equipo || 'Q0';
+    Object.entries(T[sec] || {}).forEach(([k, v]) => { if (sec !== 'general' || !['equipo', 'tipoBloqueo'].includes(k)) poner(sec + '.' + k, v); }); });
+  if (!m.tablero.tension) poner('tablero.tension', T.tablero.tension);
+  if (!m.alim.tension) poner('alim.tension', T.alim.tension);
+  if (T.alim.equipo && !m.alim.equipo) poner('alim.equipo', T.alim.equipo);
+  m.salidas = T.salidas.map(x => Object.assign({}, x));
+  m.salidas.forEach((x, i) => ['in', 'desc'].forEach(k => { if (sug && x[k]) sug.add(`salidas.${i}.${k}`); }));
+  m.plantilla = key;
+  return marcados;
+}
+// Modelo de un plano tipo (esquema estándar sin tablero asociado), para usar como referencia
+function modeloTipo(key) {
+  const tp = TIPOS.find(x => x.key === key) || { nombre: key };
+  const m = modeloNuevo({ id: 'TIPO-' + key, tipo: tp.nombre, nivel: '', ubicacion: '' });
+  m.tablero.nombre = 'TABLERO TIPO ' + (tp.nombre || key).split(' – ')[0];
+  m.alim.nombre = 'ORIGEN (CCDD / TABLERO)'; m.alim.equipo = m.alim.equipo || 'INTERRUPTOR DE SALIDA EN EL ORIGEN';
+  aplicarPlantilla(m, key, null); m.otraFuente.tiene = 'NO'; m.descRev = 'ESQUEMA ESTÁNDAR GEO ELEC'; m.estado = 'TIPO';
+  return m;
+}
 function modeloNuevo(t) {
   const tipo = tipoPorNombre(t.tipo) || {};
   const ten = (String(t.tipo || '').match(/(\d{3,4})\s?V/) || [])[1];
@@ -4734,7 +4889,7 @@ function modeloNuevo(t) {
   };
   return m;
 }
-async function abrirEditorUni(id) {
+async function abrirEditorUni(id, opt = {}) {
   if (!esAdmin()) { toast('Solo el administrador confecciona y emite diagramas.'); return; }
   id = String(id).toUpperCase();
   const t = buscarCache(id) || fichaActual;
@@ -4747,13 +4902,17 @@ async function abrirEditorUni(id) {
   else if (pa0 && !bo) { m = JSON.parse(JSON.stringify(pa0.modelo)); m.estado = 'BORRADOR'; m.firmas = {}; origen = ''; }
   else if (bo) { m = JSON.parse(JSON.stringify(bo.modelo)); origen = `Borrador Rev. ${bo.rev} guardado por ${bo.por || '—'} (${bo.fecha || ''}).`; }
   else if (e) { m = JSON.parse(JSON.stringify(e.modelo)); m.rev = e.rev + 1; m.estado = 'BORRADOR'; delete m.fechaEmision; m.descRev = ''; m.firmas = {}; delete m.rechazo; origen = `Nueva revisión a partir de la Rev. ${e.rev} emitida.`; }
-  else { m = modeloNuevo(t); origen = ''; }
+  else {
+    m = modeloNuevo(t); origen = '';
+    const key = opt.plantilla || clavePlantilla(t);
+    if (key) { opt._sug = new Set(); aplicarPlantilla(m, key, opt._sug); origen = `Se cargó el esquema estándar de ${(TIPOS.find(x => x.key === key) || {}).nombre || key}. Confirma cada dato con la placa del tablero (los campos en amarillo) y toca los componentes del diagrama para ir a sus datos.`; }
+  }
   // datos actualizados de la ficha del tablero
   Object.assign(m.tablero, { tipo: t.tipo || m.tablero.tipo, nivel: t.nivel || m.tablero.nivel, ubic: t.ubicacion || m.tablero.ubic, tag: t.tag || m.tablero.tag });
   if (m.rechazo) origen = `⚠ Devuelto por ${m.rechazo.por} (${m.rechazo.cargo}) el ${m.rechazo.fecha}: ${m.rechazo.obs}` + (origen ? ' · ' + origen : '');
   const pa = (UNIDATA.porAprobar || {})[id];
   if (pa) origen = `Esta revisión está enviada a aprobación (Rev. ${pa.rev}). Si la corriges y guardas, se retira de la aprobación.` + (origen ? ' · ' + origen : '');
-  UE = { m, t, sug: new Set(m._sug || []), sucio: false };
+  UE = { m, t, sug: new Set([...(m._sug || []), ...(opt._sug || [])]), sucio: false };
   delete m._sug;
   $('#ue-titulo').textContent = 'Diagrama unilineal · ' + (m.tablero.nombre || id);
   $('#ue-sub').textContent = `${id} · Rev. ${m.rev} en confección${e ? ' · vigente: Rev. ' + e.rev : ''}`;
@@ -4763,7 +4922,7 @@ async function abrirEditorUni(id) {
   renderEditorUni();
   ir('uni-ed', { id });
 }
-const opc = (lista, v) => lista.map(o => `<option${o === v ? ' selected' : ''}>${esc(o)}</option>`).join('') + (v && !lista.includes(v) ? `<option selected>${esc(v)}</option>` : '');
+const opc = (lista, v) => { if (v && !lista.includes(v) && CARGAS.some(c => c[0] === v)) v = nombreCarga(v); return lista.map(o => `<option${o === v ? ' selected' : ''}>${esc(o)}</option>`).join('') + (v && !lista.includes(v) ? `<option selected>${esc(v)}</option>` : ''); };
 function fUni(k, label, opt = {}) {
   const v = getP(UE.m, k) ?? '', sug = UE.sug.has(k) ? ' sug' : '';
   const ctl = opt.opciones
@@ -4828,7 +4987,7 @@ function htmlEditorUni() {
   const m = UE.m, ids = tablerosActivos().filter(x => x.id !== m.id);
   const sal = (m.salidas || []).map((s, i) => `<div class="ue-sal">
       <div class="ue-sal-h"><b>Salida ${i + 1}</b><span><button type="button" data-sal-up="${i}" aria-label="Subir">↑</button><button type="button" data-sal-del="${i}" aria-label="Quitar">✕</button></span></div>
-      <div class="ue-g">${fUni(`salidas.${i}.id`, 'Identificación', { ph: 'Q1' })}${fUni(`salidas.${i}.tipo`, 'Tipo', { opciones: ['MCB (miniatura)', 'MCCB (caja moldeada)', 'Diferencial (RCCB)', 'Guardamotor', 'Fusibles'] })}
+      <div class="ue-g">${fUni(`salidas.${i}.id`, 'Identificación', { ph: 'Q1' })}${fUni(`salidas.${i}.carga`, 'Tipo de carga', { opciones: CARGAS.map(c => c[1]) })}${fUni(`salidas.${i}.tipo`, 'Protección', { opciones: ['MCB (miniatura)', 'MCCB (caja moldeada)', 'Diferencial (RCCB)', 'Guardamotor', 'Fusibles'] })}
       ${fUni(`salidas.${i}.in`, 'Corriente (In)', { lista: 'dl-calibres', ph: '32 A' })}${fUni(`salidas.${i}.polos`, 'Polos', { opciones: ['1', '2', '3', '4'] })}
       ${/MCB/.test(s.tipo || '') ? fUni(`salidas.${i}.curva`, 'Curva', { opciones: ['B', 'C', 'D'] }) : ''}${fUni(`salidas.${i}.dif`, 'Diferencial', { opciones: ['30 mA', '100 mA', '300 mA'] })}
       ${datalistsProt(`salidas.${i}`, s)}${fUni(`salidas.${i}.marca`, 'Marca', { lista: 'dl-marcas' })}${fUni(`salidas.${i}.modelo`, 'Modelo', { lista: 'dl-mod-' + `salidas.${i}`.replace(/\W/g, '-') })}
@@ -4845,6 +5004,9 @@ function htmlEditorUni() {
   <datalist id="dl-calibres">${CALIBRES.map(n => `<option value="${n}">`).join('')}</datalist>
   <datalist id="dl-icu">${ICU.map(n => `<option value="${n}">`).join('')}</datalist>
   <details class="ue-sec" open><summary>2 · Tablero</summary><div class="ue-g">
+    <div class="ancho ue-esq"><label>Esquema estándar del tipo de tablero</label><div class="ue-esq-f"><select id="ue-plantilla">${TIPOS.filter(x => PLANTILLAS[x.key]).map(x => `<option value="${x.key}"${(m.plantilla || clavePlantilla(UE.t)) === x.key ? ' selected' : ''}>${esc(x.nombre)}</option>`).join('')}</select>
+      <button type="button" id="btn-ue-plantilla">Cargar esquema</button></div>
+      <p class="muted" style="margin:4px 0 0">Carga las protecciones y salidas típicas del tipo. Lo precargado queda en <span class="sug-mues">amarillo</span> hasta que lo confirmes. Toca un componente del diagrama para ir a sus datos.</p></div>
     ${fUni('tablero.nombre', 'Nombre en el diagrama', { req: 1, ph: 'TDF N°94', may: 1 })}${fUni('tablero.tension', 'Tensión', { req: 1, opciones: TENSIONES })}
     <p class="muted ancho" style="margin:4px 0 0">${esc([m.tablero.tipo, m.tablero.nivel, m.tablero.ubic, m.tablero.tag ? 'TAG ' + m.tablero.tag : 'Sin TAG'].filter(Boolean).join(' · '))}</p></div></details>
   <details class="ue-sec" open><summary>3 · Alimentación aguas arriba (PB-1)</summary><div class="ue-g">
@@ -4954,7 +5116,8 @@ function actualizarUni(soloPrev) {
   ueTimer = setTimeout(() => {
     try {
       const L = construirUni(Object.assign({}, m, { firmas: firmasPrevia() }), contextoUni(m, true));
-      $('#ue-prev').innerHTML = L.pags.map(p => uniASvg(p, { clase: 'ue-svg' })).join('');
+      const zonas = L.zonas.map(z => `<rect class="ue-zona" data-zona="${z.z}" x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="1.5"/>`).join('');
+      $('#ue-prev').innerHTML = L.pags.map((p, i) => i ? uniASvg(p, { clase: 'ue-svg' }) : uniASvg(p, { clase: 'ue-svg' }).replace('</svg>', zonas + '</svg>')).join('');
     } catch (err) { $('#ue-prev').innerHTML = `<p class="error">No se pudo dibujar: ${esc(err.message)}</p>`; }
   }, 250);
 }
@@ -4973,6 +5136,7 @@ $('#ue-form').addEventListener('input', (e) => {
   const el = e.target.closest('[data-k]'); if (!el || !UE) return;
   let v = el.value;
   if (el.classList.contains('may')) v = v.toLocaleUpperCase('es-CL');
+  if (/^salidas\.\d+\.carga$/.test(el.dataset.k)) v = (CARGAS.find(c => c[1] === v) || [v])[0];
   setP(UE.m, el.dataset.k, v);
   if (UE.sug.delete(el.dataset.k)) el.classList.remove('sug');
   guardarLocalUni(); actualizarUni();
@@ -4999,7 +5163,7 @@ $('#ue-form').addEventListener('click', (e) => {
   if (sg) { setP(UE.m, sg.closest('[data-seg]').dataset.seg, sg.dataset.v); guardarLocalUni(); renderEditorUni(); return; }
   const r = e.target.closest('[data-ref-i]');
   if (r) { const i = +r.dataset.refI; UE.m.ref = { hoja: REF.tableros[i].hoja, i }; guardarLocalUni(); renderEditorUni(); return; }
-  if (e.target.closest('#btn-ue-sal')) { const n = (UE.m.salidas || []).length + 1; (UE.m.salidas = UE.m.salidas || []).push({ id: 'Q' + n, desc: '', polos: '3', in: '', dif: '', destino: '', destinoId: '' }); guardarLocalUni(); renderEditorUni(); return; }
+  if (e.target.closest('#btn-ue-sal')) { const n = (UE.m.salidas || []).length + 1; (UE.m.salidas = UE.m.salidas || []).push({ id: 'Q' + n, carga: 'enchufe3', tipo: 'MCB (miniatura)', desc: '', polos: '3', in: '', dif: '', destino: '', destinoId: '' }); guardarLocalUni(); renderEditorUni(); return; }
   const d = e.target.closest('[data-sal-del]');
   if (d) { if (confirm('¿Quitar esta salida?')) { UE.m.salidas.splice(+d.dataset.salDel, 1); guardarLocalUni(); renderEditorUni(); } return; }
   const u = e.target.closest('[data-sal-up]');
@@ -5008,6 +5172,11 @@ $('#ue-form').addEventListener('click', (e) => {
   const px = e.target.closest('[data-pbx-del]');
   if (px) { UE.m.pbExtra.splice(+px.dataset.pbxDel, 1); guardarLocalUni(); renderEditorUni(); return; }
   if (e.target.closest('#btn-ue-usar-ref')) usarDatosRef();
+  if (e.target.closest('#btn-ue-plantilla')) {
+    const key = $('#ue-plantilla').value, tp = TIPOS.find(x => x.key === key);
+    if ((UE.m.salidas || []).length && !confirm(`¿Cargar el esquema estándar "${tp.nombre}"? Reemplaza protecciones, diferencial, transformadores y salidas (se conserva el origen y el punto de bloqueo PB-1).`)) return;
+    aplicarPlantilla(UE.m, key, UE.sug); guardarLocalUni(); renderEditorUni(); toast('Esquema estándar cargado: confirma cada dato (amarillo).', 4000);
+  }
 });
 // Copia al formulario los datos leídos del plano (quedan marcados como sugeridos hasta que se confirmen)
 function usarDatosRef() {
@@ -5033,8 +5202,24 @@ function usarDatosRef() {
 }
 const modeloLimpio = () => { const m = JSON.parse(JSON.stringify(UE.m)); m._sug = [...UE.sug]; m.descRev = $('#ue-descrev').value.trim(); return m; };
 $('#ue-descrev').addEventListener('input', () => { if (UE) { UE.m.descRev = $('#ue-descrev').value.trim(); guardarLocalUni(); actualizarUni(true); } });
-$('#ue-prev').addEventListener('click', async () => {
+// Tocar un componente del diagrama abre sus datos en el formulario
+const SEC_ZONA = { tablero: '2', alim: '3', general: '4', dif: '5', trafo: '5', trafoCtl: '5', salida: '6', tp: '7', otra: '8', pb: '9' };
+function irAZonaUni(z) {
+  const [k, i] = z.split(':'), n = SEC_ZONA[k]; if (!n) return false;
+  const det = [...document.querySelectorAll('#ue-form details')].find(d => (d.querySelector('summary') || {}).textContent.trim().startsWith(n + ' ·'));
+  if (!det) return false;
+  det.open = true;
+  let destino = det;
+  if (k === 'salida' && i != null) destino = det.querySelectorAll('.ue-sal')[+i] || det;
+  else if (k === 'dif' || k === 'trafo' || k === 'trafoCtl') destino = det.querySelector(`[data-seg="${k}.tiene"]`) || det;
+  destino.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  destino.classList.add('ue-flash'); setTimeout(() => destino.classList.remove('ue-flash'), 1600);
+  return true;
+}
+$('#ue-prev').addEventListener('click', async (ev) => {
   if (!UE) return;
+  const zn = ev.target.closest && ev.target.closest('[data-zona]');
+  if (zn && irAZonaUni(zn.dataset.zona)) return;
   try { const doc = await pdfUni(UE.m, true); verDocumento({ titulo: 'Vista previa (borrador)', codigo: CODIGO_UNI(UE.m.id) + ' · Rev. ' + UE.m.rev, blobLocal: doc.output('blob'), mime: 'application/pdf', nombre: nombreArchUni(UE.m, 'pdf', 1) }); }
   catch (err) { toast(err.message, 5000); }
 });
@@ -5160,6 +5345,7 @@ async function rechazarUni(id) {
     if (!$('#v-ficha').hidden && fichaActual && fichaActual.id === id) renderUniFicha(buscarCache(id) || fichaActual);
   } catch (err) { toast('No se pudo: ' + err.message, 6000); }
 }
+document.addEventListener('click', (e) => { const p = e.target.closest('[data-un-pre]'); if (p) { unTipo = p.dataset.unPre; } }, true);
 document.addEventListener('click', (e) => {
   const v = e.target.closest('[data-apr-ver]'); if (v) { verPorAprobar(v.dataset.aprVer); return; }
   const ok = e.target.closest('[data-apr-ok]'); if (ok) { requiereFirma(() => aprobarUni(ok.dataset.aprOk), 'la aprobación queda firmada por ti'); return; }
@@ -5167,8 +5353,54 @@ document.addEventListener('click', (e) => {
 });
 
 // ---------- Panel de administración: estado de los diagramas ----------
+// ---------- Asistente: nuevo diagrama a partir del tipo de tablero ----------
+let unTipo = '';
+function renderUniNuevo() {
+  if (!esAdmin()) { $('#un-tipos').innerHTML = '<p class="muted">Activa el modo administrador para confeccionar diagramas. Los planos tipo están en Planos eléctricos.</p>'; return; }
+  const cuenta = (k) => tablerosActivos().filter(t => clavePlantilla(t) === k).length;
+  $('#un-tipos').innerHTML = TIPOS.filter(x => PLANTILLAS[x.key]).map(x => `<button type="button" class="${unTipo === x.key ? 'on' : ''}" data-un-tipo="${x.key}">
+    <span class="ti">${PLANTILLAS[x.key].icono}</span><b>${esc(x.nombre)}</b><small>${cuenta(x.key)} tablero(s) registrados</small></button>`).join('');
+  $('#un-paso2').hidden = !unTipo;
+  if (unTipo) renderUniTableros();
+  renderAdminUni();
+}
+function renderUniTableros() {
+  const tp = TIPOS.find(x => x.key === unTipo), q = $('#un-buscar').value.trim().toUpperCase(), todos = $('#un-todos').checked;
+  $('#un-p2-tit').textContent = '2 · ¿Qué tablero ' + tp.nombre.split(' – ')[0] + '?';
+  $('#un-p2-desc').textContent = PLANTILLAS[unTipo].desc;
+  const em = UNIDATA.emitidos || {}, bo = UNIDATA.borradores || {}, pa = UNIDATA.porAprobar || {};
+  const lista = tablerosActivos().filter(t => (todos || clavePlantilla(t) === unTipo) && (!q || [t.id, nombreTab(t), t.ubicacion, t.tag].join(' ').toUpperCase().includes(q)));
+  $('#un-tabs').innerHTML = lista.length ? lista.slice(0, 60).map(t => {
+    const est = pa[t.id] ? `⏳ Rev. ${pa[t.id].rev} por aprobar` : bo[t.id] ? `✏️ Borrador Rev. ${bo[t.id].rev}` : em[t.id] ? `✔ Rev. ${em[t.id].rev} vigente` : 'Sin diagrama GEO ELEC';
+    const refs = refsDeTablero(t).length ? ' · 📐 tiene plano de referencia' : '';
+    return `<li class="con-adm"><div class="info"><b>${esc(t.id)} · ${esc(nombreTab(t) || '')}</b><small>${esc([t.tipo, t.ubicacion].filter(Boolean).join(' · '))}<br>${est}${refs}</small></div>
+      <div class="acc-adm"><button type="button" class="btn-pdf" data-un-tab="${esc(t.id)}">${bo[t.id] ? 'Seguir borrador' : em[t.id] ? 'Nueva revisión' : 'Confeccionar con esquema ' + tp.codigo}</button></div></li>`;
+  }).join('') + (lista.length > 60 ? `<li><div class="info"><small>… ${lista.length - 60} más: usa el buscador.</small></div></li>` : '')
+    : `<li><div class="info"><small>No hay tableros de este tipo registrados${q ? ' con esa búsqueda' : ''}. Regístralos con su QR (alta del tablero) o revisa el plano tipo.</small></div></li>`;
+}
+document.addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-un-tipo]'); if (b) { unTipo = b.dataset.unTipo; renderUniNuevo(); setTimeout(() => $('#un-paso2').scrollIntoView({ behavior: 'smooth', block: 'start' }), 60); return; }
+  const tb = e.target.closest('[data-un-tab]');
+  if (tb) { const t = buscarCache(tb.dataset.unTab); fichaActual = t ? Object.assign({ tipoKey: clavePlantilla(t) }, t) : fichaActual; abrirEditorUni(tb.dataset.unTab, { plantilla: clavePlantilla(t) === unTipo ? unTipo : (UNIDATA.borradores || {})[tb.dataset.unTab] ? '' : unTipo }); return; }
+  const tp = e.target.closest('[data-tipo-pdf]'); if (tp) { verPlanoTipo(tp.dataset.tipoPdf, 'pdf'); return; }
+  const td = e.target.closest('[data-tipo-dxf]'); if (td) { verPlanoTipo(td.dataset.tipoDxf, 'dxf'); return; }
+});
+$('#un-buscar').addEventListener('input', () => { if (unTipo) renderUniTableros(); });
+$('#un-todos').addEventListener('change', () => { if (unTipo) renderUniTableros(); });
+$('#btn-un-tipo-pdf').addEventListener('click', () => verPlanoTipo(unTipo, 'pdf'));
+$('#btn-un-tipo-dxf').addEventListener('click', () => verPlanoTipo(unTipo, 'dxf'));
+// Plano tipo: esquema estándar de un tipo de tablero, como referencia para confeccionar los diagramas
+async function verPlanoTipo(key, formato) {
+  if (!key) return;
+  try {
+    const m = modeloTipo(key), L = construirUni(m, { tipo: true, historial: [] }), nombre = 'PLANO_TIPO_' + key + '_GEO_ELEC.' + formato;
+    if (formato === 'dxf') { descargarBlob(dxfABlob(uniADxf(L)), nombre); return; }
+    if (!window.jspdf) throw new Error('el generador de PDF aún está cargando');
+    verDocumento({ titulo: 'Plano tipo · ' + (TIPOS.find(x => x.key === key) || {}).nombre, codigo: CODIGO_UNI(m.id), blobLocal: uniAPdf(L).output('blob'), mime: 'application/pdf', nombre });
+  } catch (err) { toast('No se pudo: ' + err.message, 5000); }
+}
 function renderAdminUni() {
-  const box = $('#adm-uni'); if (!box) return;
+  const box = $('#adm-uni-b') && !$('#v-uni-nuevo').hidden ? $('#adm-uni-b') : $('#adm-uni'); if (!box) return;
   const tabs = tablerosActivos(), em = UNIDATA.emitidos || {}, bo = UNIDATA.borradores || {};
   const sin = tabs.filter(t => !em[t.id]);
   const fila = (t, extra) => `<li><div class="info"><b>${esc(t.id)}</b><small>${esc([nombreTab(t), t.ubicacion].filter(Boolean).join(' · '))}${extra ? ' · ' + extra : ''}</small></div>
