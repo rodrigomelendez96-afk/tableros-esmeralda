@@ -323,6 +323,17 @@
   .chip-ref { min-height: 38px; padding: 6px 12px; font-size: 13px; border-radius: 999px; }
   .chip-ref.on { background: var(--tinta); color: #fff; border-color: var(--tinta); }
   ul.lista li.plano { flex-wrap: nowrap; }
+  ul.lista li.plano.con-adm { flex-wrap: wrap; }
+  /* Ficha del personal autorizado */
+  .fp-estado { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .fp-acred { font-weight: 800; border-radius: 10px; padding: 8px 12px; font-size: 14px; }
+  .fp-acred.ok { background: #DFF3E4; color: #135C2A; } .fp-acred.warn { background: #FFF1CC; color: #7A4F00; } .fp-acred.no { background: #F8D7DA; color: #8A1C24; }
+  .fp-tipo { font-size: 13px; font-weight: 800; color: var(--gris); text-transform: uppercase; letter-spacing: .3px; margin: 14px 0 2px; }
+  .fp-snap { background: #EEF5FF; border: 1px solid #B9D3F3; border-radius: 10px; padding: 8px 10px; font-size: 13px; margin: 0 0 8px; }
+  .sesion { flex-wrap: wrap; }
+  .sesion .ses-acc { display: flex; flex-wrap: wrap; gap: 6px; flex-basis: 100%; }
+  .sesion .ses-acc button { flex: 1 1 auto; }
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   /* Enlaces de interés */
   ul.lista li.enl { flex-wrap: wrap; }
   .enl a.abrir { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 6px 14px; border-radius: 10px;
@@ -374,7 +385,7 @@
       <button type="button" class="tile" data-docs="PROC"><span class="t-ico">📘</span><b>Procedimientos</b><small>Documentos de las actividades</small></button>
       <button type="button" class="tile" data-docs="PLANOS"><span class="t-ico">🗺️</span><b>Planos</b><small>Zonas de transición, mapas de calor, puntos de encuentro</small></button>
       <button type="button" class="tile" data-ir="enlaces"><span class="t-ico">🔗</span><b>Enlaces de interés</b><small>Monitoreo sísmico y apoyo a la operación</small></button>
-      <button type="button" class="tile ancho" data-ir="planos"><span class="t-ico">📐</span><b>Planos eléctricos</b><small>Producción y Acarreo · puntos de bloqueo · buscar por tablero</small></button>
+      <button type="button" class="tile ancho" data-ir="planos"><span class="t-ico">📐</span><b>Planos eléctricos</b><small>Planos tipo editables por tipo de tablero · puntos de bloqueo</small></button>
     </div>
     <div id="ini-admin" hidden>
       <h3 class="sec-tit">Administración</h3>
@@ -646,8 +657,8 @@
   <!-- ============ AGREGAR / EDITAR PERSONA (ADMINISTRADOR) ============ -->
   <section id="v-persona" hidden>
     <div class="card adm">
-      <h2 id="pe-titulo">Agregar persona</h2>
-      <p class="muted" id="pe-info">Con estos datos la app genera el usuario y la contraseña.</p>
+      <h2 id="pers-titulo">Agregar persona</h2>
+      <p class="muted" id="pers-info">Con estos datos la app genera el usuario y la contraseña.</p>
       <label for="pe-nombre">Nombre completo (nombres y apellidos) *</label>
       <input id="pe-nombre" class="may" placeholder="Ej.: JUAN ANDRÉS PÉREZ SOTO">
       <label for="pe-rut">RUT *</label>
@@ -665,10 +676,50 @@
         <label for="pe-motivo">Motivo del cambio *</label>
         <textarea id="pe-motivo" class="may"></textarea>
       </div>
-      <p class="error" id="pe-error"></p>
+      <p class="error" id="pers-error"></p>
     </div>
     <button class="big primary" id="btn-pe-guardar">Crear usuario y contraseña</button>
     <button class="big" id="btn-pe-cancel">Cancelar</button>
+  </section>
+
+  <!-- ============ FICHA DEL PERSONAL AUTORIZADO ============ -->
+  <section id="v-fichap" hidden>
+    <div class="card">
+      <h2 id="fp-nombre">Ficha del personal autorizado</h2>
+      <p class="muted" id="fp-sub" style="margin:4px 0 10px"></p>
+      <div id="fp-snap"></div>
+      <div class="fp-estado" id="fp-estado"></div>
+      <p class="muted" id="fp-msg" style="margin:8px 0 0"></p>
+    </div>
+    <div class="card adm" id="fp-subir" hidden>
+      <h3>＋ Agregar documento a la ficha</h3>
+      <p class="muted" style="margin:0 0 6px">Acreditación como personal autorizado de la División, difusiones y evaluaciones de procedimientos, certificados o cursos.</p>
+      <label for="fp-tipo">Tipo de documento *</label><select id="fp-tipo"></select>
+      <label for="fp-tit">Título / procedimiento *</label><input id="fp-tit" class="may" placeholder="Ej.: ACREDITACIÓN PERSONAL AUTORIZADO DET">
+      <label for="fp-cod">Código (opcional)</label><input id="fp-cod" class="may" placeholder="Ej.: PT-4600030339-ELE-003">
+      <div class="g2"><div><label for="fp-emi">Fecha de emisión</label><input type="date" id="fp-emi"></div>
+        <div><label for="fp-vence">Vence (si aplica)</label><input type="date" id="fp-vence"></div></div>
+      <div id="fp-box-res"><label for="fp-res">Resultado</label><select id="fp-res"><option value="">—</option><option>APROBADO</option><option>REPROBADO</option></select></div>
+      <label for="fp-reemplaza">¿Reemplaza a un documento de la ficha?</label><select id="fp-reemplaza"></select>
+      <label for="fp-obs">Observación</label><input id="fp-obs" class="may">
+      <div class="foto" id="fp-box-arch">
+        <span>Archivo * (PDF o foto del documento)</span>
+        <div class="fila-btn">
+          <label class="btn-foto">📷 Foto<input type="file" accept="image/*" capture="environment" hidden class="fp-file"></label>
+          <label class="btn-foto sec">📎 Elegir archivo<input type="file" accept="application/pdf,image/*" hidden class="fp-file"></label>
+        </div>
+        <div class="prev" id="fp-prev"></div>
+      </div>
+      <p class="error" id="fp-error"></p>
+      <button class="big primary" id="btn-fp-subir">Subir a la ficha</button>
+    </div>
+    <div class="card"><h3>📇 Documentos de la ficha</h3><div id="fp-docs"></div></div>
+    <div class="card" id="fp-act-card"><h3>🔧 Mantenciones e inspecciones realizadas</h3>
+      <p class="muted" style="margin:0 0 6px">Cada informe de mantención lleva anexa la ficha que tenía la persona ese día.</p><ul class="lista" id="fp-act"></ul></div>
+    <div class="card" id="fp-hist-card" hidden><h3>Documentos reemplazados o retirados</h3><ul class="lista" id="fp-hist"></ul></div>
+    <button class="big" id="btn-fp-actual" hidden>Ver ficha actual</button>
+    <button class="big" id="btn-fp-pdf">📄 Descargar ficha (PDF)</button>
+    <button class="big" id="btn-fp-volver">Volver</button>
   </section>
 
   <!-- ============ CREDENCIALES GENERADAS ============ -->
@@ -1203,7 +1254,7 @@
 // ===================== CONFIGURACIÓN =====================
 const CONFIG = {
   // URL de la aplicación web de Apps Script (termina en /exec)
-  SCRIPT_URL: 'script.google.com/macros/s/AKfycbz5WAbvd0_J4yC92xXNokbk6uLGklbYlT0Yk6uJn1ELW2K43EwDfHanoCfJASBgL2_Tsw/exec',
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbz5WAbvd0_J4yC92xXNokbk6uLGklbYlT0Yk6uJn1ELW2K43EwDfHanoCfJASBgL2_Tsw/exec',
   // Debe ser igual a CONFIG.CLAVE en Codigo.gs
   CLAVE: 'geovita-esm-2026',
   // N° de contrato fijo (se registra en todas las fichas; no se puede modificar en el formulario)
@@ -1211,7 +1262,7 @@ const CONFIG = {
 };
 
 // Versión visible al pie de la pantalla de inicio (sirve para confirmar que el teléfono tiene la última)
-const VERSION_APP = 'v28.1 · 09-11-2026';
+const VERSION_APP = 'v29 · 10-11-2026';
 const NIVELES = ['UCL', 'Producción', 'Acarreo', 'SNV'];
 const SEN = 'Cuadro de señalética (riesgo eléctrico, potencia, nivel de tensión, punto de bloqueo, maniobra RCP, logo empresa, personal autorizado, diagrama unilineal, carga de fuego, programa de mantenimiento)';
 const BASE_TD = ['Orden y aseo en el sector', 'Iluminación', 'Número de TAG', 'Soporte o anclaje del tablero en buen estado',
@@ -1396,6 +1447,7 @@ $('#btn-login').addEventListener('click', async () => {
         if (!j.ok) { err.textContent = j.error || 'No se pudo ingresar.'; return; }
         const sal = uuid();
         creds[usuario] = { sal, hash: await huella(sal, pass), token: j.token, exp: j.exp, perfil: j.perfil, firma: j.firma || '' };
+        if (j.ficha) guardarFichaPropia(usuario, j.ficha);
         ls.set('creds', creds);
         nueva = { usuario, token: j.token, exp: j.exp, perfil: j.perfil, inicio: Date.now(), firma: j.firma || '' };
       } catch (e) {
@@ -1430,7 +1482,7 @@ function renderSesion() {
   const box = $('#ini-sesion'), p = perfilSesion();
   box.innerHTML = p
     ? `<span class="t-ico">👷</span><div class="quien"><b>${esc(p.nombre)}</b><small>${esc(p.cargo)} · ${esc(p.grupo)}${p.nivel && p.nivel !== 'Transversal' ? ' · ' + esc(p.nivel) : ' · Transversal'}</small></div>
-       <button type="button" id="btn-ses-firma">${sesion().firma ? 'Firma' : '✍ Crear firma'}</button><button type="button" id="btn-ses-clave">Clave</button><button type="button" id="btn-ses-salir">Salir</button>`
+       <div class="ses-acc"><button type="button" id="btn-ses-ficha">📇 Mi ficha</button><button type="button" id="btn-ses-firma">${sesion().firma ? 'Firma' : '✍ Crear firma'}</button><button type="button" id="btn-ses-clave">Clave</button><button type="button" id="btn-ses-salir">Salir</button></div>`
     : `<span class="t-ico">🔐</span><div class="quien"><b>Personal autorizado</b><small>Ingresa para registrar actividades</small></div><button type="button" id="btn-ses-entrar">Ingresar</button>`;
 }
 document.addEventListener('click', (e) => {
@@ -1438,6 +1490,7 @@ document.addEventListener('click', (e) => {
   else if (e.target.closest('#btn-ses-entrar')) requiereLogin(() => ir('inicio'), 'Para usar las funciones de mantenimiento');
   else if (e.target.closest('#btn-ses-clave')) abrirCambioClave();
   else if (e.target.closest('#btn-ses-firma')) abrirFirma();
+  else if (e.target.closest('#btn-ses-ficha')) abrirFichaPers({ usuario: sesion().usuario });
 });
 function abrirCambioClave() {
   const p = perfilSesion(); if (!p) return;
@@ -1463,6 +1516,230 @@ $('#btn-clave-ok').addEventListener('click', async () => {
     toast('Contraseña cambiada ✔'); volver();
   } catch (e) { err.textContent = e.message; } finally { btn.disabled = false; }
 });
+
+// ===================== FICHA DEL PERSONAL AUTORIZADO =====================
+// Acreditación de la División, difusiones y evaluaciones de procedimientos de cada persona. La carga el administrador;
+// cada persona ve la suya ("Mi ficha"). La ficha vigente el día de una mantención se anexa a su informe (trazabilidad).
+const TIPOS_FP = { ACRED: 'Acreditación personal autorizado', DIFUSION: 'Difusión de procedimiento', EVALUACION: 'Evaluación de procedimiento',
+  CERT: 'Certificado / licencia / curso', OTRO: 'Otro documento' };
+const ORDEN_FP = ['ACRED', 'DIFUSION', 'EVALUACION', 'CERT', 'OTRO'];
+const fDMA = (f) => f ? String(f).slice(0, 10).split('-').reverse().join('-') : '—';
+const vigFP = (vence, ref = new Date()) => {
+  if (!vence) return 'SIN VENCIMIENTO';
+  const d = (new Date(String(vence).slice(0, 10) + 'T12:00') - ref) / 864e5;
+  return d < -0.5 ? 'VENCIDO' : d <= 30 ? 'POR VENCER' : 'VIGENTE';
+};
+function acredFP(docs, ref = new Date()) {
+  const ac = (docs || []).filter(x => x.tipo === 'ACRED').map(x => ({ v: vigFP(x.vence, ref), vence: x.vence || '' }));
+  if (!ac.length) return { estado: 'SIN ACREDITACIÓN', vence: '' };
+  const ok = ac.filter(x => x.v !== 'VENCIDO').sort((a, b) => (b.vence || '9999').localeCompare(a.vence || '9999'));
+  if (!ok.length) return { estado: 'ACREDITACIÓN VENCIDA', vence: ac.map(x => x.vence).sort().pop() || '' };
+  return { estado: ok[0].v === 'POR VENCER' ? 'ACREDITACIÓN POR VENCER' : 'ACREDITADO', vence: ok[0].vence };
+}
+const clsAcred = (e) => /^ACREDITADO/.test(e) ? 'ok' : /POR VENCER/.test(e) ? 'warn' : 'no';
+const clsVig = (v) => v === 'VENCIDO' ? 'no' : v === 'POR VENCER' ? 'warn' : 'ok';
+function guardarFichaPropia(usuario, f) { if (f) ls.set('fichaPropia', Object.assign({ usuario }, f)); }
+// Consulta al servidor con el modo administrador o con la sesión de la persona
+async function getFichaServ(params, ms = 30000) {
+  const q = Object.assign({ clave: CONFIG.CLAVE }, params);
+  if (esAdmin()) q.claveAdmin = ls.get('claveAdmin', '');
+  else if (sesionActiva()) q.token = sesion().token;
+  else throw new Error('Ingresa con tu usuario para ver la ficha y sus documentos.');
+  const r = await fetchT(CONFIG.SCRIPT_URL + '?' + Object.entries(q).map(([k, v]) => k + '=' + encodeURIComponent(v)).join('&'), {}, ms);
+  const j = await r.json(); if (!j.ok) throw new Error(j.error || 'error');
+  return j;
+}
+async function refrescarFichaPropia() {
+  if (!sesionActiva() || !navigator.onLine || !configurado()) return;
+  try {
+    const j = await getFichaServ({ accion: 'fichaPersonal', usuario: sesion().usuario }), F = fichaCompleta(j);
+    ls.set('fichaP:' + sesion().usuario, F);
+    guardarFichaPropia(sesion().usuario, { actualizado: j.consultado, acred: j.acred, docs: j.docs.map(d => ({ id: d.id, tipo: d.tipo, titulo: d.titulo, codigo: d.codigo, emision: d.emision, vence: d.vence, resultado: d.resultado })) });
+  } catch (e) {}
+}
+const fichaCompleta = (j) => ({ persona: j.persona, acred: j.acred, docs: j.docs || [], historico: j.historico || [], actividades: j.actividades || [], consultado: j.consultado });
+// Ficha que va anexa al informe de mantención (copia guardada en el teléfono: funciona sin señal en la mina)
+function fichaParaInforme(r) {
+  const p = perfilSesion() || {}, F = ls.get('fichaPropia', null), mia = F && F.usuario === (sesion() || {}).usuario ? F : null;
+  const ref = r.fActividad ? new Date(r.fActividad + 'T12:00') : new Date(), docs = mia ? mia.docs || [] : [];
+  return { usuario: (sesion() || {}).usuario || '', nombre: r.realizadoPor || p.nombre || '', rut: r.rut || p.rut || '', cargo: r.cargo || p.cargo || '',
+    grupo: p.grupo || '', nivel: p.nivel || '', actualizado: mia ? mia.actualizado : '', sinDatos: !mia, acred: acredFP(docs, ref), docs };
+}
+// ---- Vista ----
+let FPV = null;   // { usuario, F (ficha completa) | snap (ficha al momento de una mantención) }
+let fpArchivo = null;
+async function abrirFichaPers(o) {
+  FPV = Object.assign({}, o); fpArchivo = null;
+  $('#fp-prev').innerHTML = ''; $('#fp-error').textContent = ''; $('#fp-msg').textContent = '';
+  ir('fichap'); renderFichaPers();
+  if (o.snap) return;
+  FPV.F = ls.get('fichaP:' + o.usuario, null); renderFichaPers();
+  if (!navigator.onLine) { $('#fp-msg').textContent = FPV.F ? 'Sin señal: se muestra la última ficha guardada en este teléfono.' : 'Sin señal y esta ficha no está guardada en el teléfono.'; return; }
+  $('#fp-msg').textContent = 'Actualizando…';
+  try {
+    const j = await getFichaServ({ accion: 'fichaPersonal', usuario: o.usuario });
+    if (!FPV || FPV.usuario !== o.usuario || FPV.snap) return;
+    FPV.F = fichaCompleta(j); ls.set('fichaP:' + o.usuario, FPV.F);
+    if (sesionActiva() && sesion().usuario === o.usuario) guardarFichaPropia(o.usuario, { actualizado: j.consultado, acred: j.acred, docs: j.docs.map(d => ({ id: d.id, tipo: d.tipo, titulo: d.titulo, codigo: d.codigo, emision: d.emision, vence: d.vence, resultado: d.resultado })) });
+    $('#fp-msg').textContent = ''; renderFichaPers();
+  } catch (err) { $('#fp-msg').textContent = 'No se pudo actualizar: ' + err.message; }
+}
+function htmlDocsFP(docs, opt = {}) {
+  if (!docs.length) return '<p class="muted">Sin documentos cargados.' + (esAdmin() && !opt.snap ? ' Agrega la acreditación, difusiones y evaluaciones con el formulario de arriba.' : '') + '</p>';
+  const puedeVer = sesionActiva() || esAdmin();
+  return ORDEN_FP.filter(k => docs.some(d => d.tipo === k)).map(k => `<div class="fp-tipo">${esc(TIPOS_FP[k])}</div><ul class="lista">` + docs.filter(d => d.tipo === k).map(d => {
+    const v = d.vigencia || vigFP(d.vence, opt.ref);
+    return `<li class="con-adm"><div class="info"><b>${esc(d.titulo)}</b><small>${esc([d.codigo, d.emision ? 'emitido ' + fDMA(d.emision) : '', d.vence ? 'vence ' + fDMA(d.vence) : 'sin vencimiento', d.resultado, d.id].filter(Boolean).join(' · '))}</small>
+      ${d.obs ? `<small style="display:block">${esc(d.obs)}</small>` : ''}</div><span class="badge ${clsVig(v)}">${esc(v.toLowerCase())}</span>
+      <div class="acc-adm">${d.fileId && puedeVer ? `<button type="button" class="btn-pdf" data-fp-ver="${esc(d.id)}">👁 Ver documento</button>` : ''}
+      ${esAdmin() && !opt.snap ? `<button type="button" data-fp-rem="${esc(d.id)}">🔁 Reemplazar</button><button type="button" data-fp-ret="${esc(d.id)}">⛔ Retirar</button>` : ''}</div></li>`;
+  }).join('') + '</ul>').join('') + (puedeVer ? '' : '<p class="muted">Ingresa con tu usuario para ver los documentos.</p>');
+}
+function renderFichaPers() {
+  if (!FPV) return;
+  const F = FPV.F, sn = FPV.snap, p = (F && F.persona) || {}, adm = esAdmin();
+  $('#fp-nombre').textContent = sn ? (FPV.nombre || 'Mantenedor') : (p.nombre || FPV.usuario || 'Ficha del personal');
+  $('#fp-sub').textContent = sn ? 'Ficha del personal autorizado al momento de la mantención'
+    : p.nombre ? [p.cargo, p.grupo, p.nivel, p.rut ? 'RUT ' + rutFmt(p.rut) : '', 'usuario ' + p.usuario].filter(Boolean).join(' · ') : 'Ficha del personal autorizado';
+  $('#fp-snap').innerHTML = sn ? `<div class="fp-snap">Mantención del <b>${esc(fDMA(FPV.fecha))}</b>${FPV.tablero ? ' en <b>' + esc(FPV.tablero) + '</b>' : ''}. Documentos que tenía en su ficha ese día${sn.al ? ' (registrado ' + esc(sn.al) + ')' : ''}.</div>` : '';
+  const ac = sn ? { estado: sn.estado || 'SIN DATOS', vence: sn.vence } : F ? F.acred : null;
+  $('#fp-estado').innerHTML = ac ? `<span class="fp-acred ${clsAcred(ac.estado)}">${esc(ac.estado)}${ac.vence ? ' · vence ' + esc(fDMA(ac.vence)) : ''}</span>` : '';
+  $('#fp-subir').hidden = !adm || !!sn || !F;
+  if (!sn && F) {
+    $('#fp-tipo').innerHTML = ORDEN_FP.map(k => `<option value="${k}">${esc(TIPOS_FP[k])}</option>`).join('');
+    $('#fp-reemplaza').innerHTML = '<option value="">No, es un documento nuevo</option>' + F.docs.map(d => `<option value="${esc(d.id)}">${esc(TIPOS_FP[d.tipo] + ': ' + d.titulo)}</option>`).join('');
+    renderFPForm();
+  }
+  $('#fp-docs').innerHTML = sn ? htmlDocsFP(sn.docs || [], { snap: true, ref: FPV.fecha ? new Date(FPV.fecha + 'T12:00') : new Date() })
+    : F ? htmlDocsFP(F.docs) : '<p class="muted">Cargando…</p>';
+  const act = (F && F.actividades) || [];
+  $('#fp-act-card').hidden = !!sn;
+  $('#fp-act').innerHTML = act.length ? act.map(a => `<li><div class="info"><b>${esc(fDMA(a.fAct))} · ${esc(a.tipo || 'Actividad')}</b><small>${esc([a.id, a.ubic, a.nivel].filter(Boolean).join(' · '))}</small></div>
+      <span class="badge ${a.itemsNo ? 'no' : 'ok'}">${a.itemsNo ? a.itemsNo + ' NO' : 'OK'}</span><button type="button" class="btn-pdf" data-fp-tab="${esc(a.id)}">Tablero</button></li>`).join('')
+    : '<li><div class="info"><small>Sin actividades registradas.</small></div></li>';
+  const hist = (F && F.historico) || [];
+  $('#fp-hist-card').hidden = !!sn || !hist.length;
+  $('#fp-hist').innerHTML = hist.map(d => `<li class="con-adm"><div class="info"><b>${esc(TIPOS_FP[d.tipo] || d.tipo)}: ${esc(d.titulo)}</b><small>${esc([d.estado, d.retiro, d.motivo].filter(Boolean).join(' · '))}</small></div>
+      ${d.fileId && (sesionActiva() || adm) ? `<div class="acc-adm"><button type="button" class="btn-pdf" data-fp-ver="${esc(d.id)}">👁 Ver</button></div>` : ''}</li>`).join('');
+  $('#btn-fp-actual').hidden = !sn || !FPV.usuario || !(sesionActiva() || adm);
+  $('#btn-fp-pdf').hidden = !F && !sn;
+}
+function renderFPForm() { $('#fp-box-res').hidden = $('#fp-tipo').value !== 'EVALUACION'; }
+$('#fp-tipo').addEventListener('change', renderFPForm);
+$('#fp-reemplaza').addEventListener('change', () => {
+  const d = FPV && FPV.F && FPV.F.docs.find(x => x.id === $('#fp-reemplaza').value); if (!d) return;
+  $('#fp-tipo').value = d.tipo; $('#fp-tit').value = d.titulo; $('#fp-cod').value = d.codigo || ''; renderFPForm();
+});
+document.querySelectorAll('.fp-file').forEach(inp => inp.addEventListener('change', async (e) => {
+  const file = e.target.files && e.target.files[0]; e.target.value = ''; if (!file) return;
+  liberar(fpArchivo);
+  try {
+    fpArchivo = esImagen(file) ? await prepararArchivo(file, { max: 2400, q: 0.85 }) : { blob: file, mime: file.type || 'application/pdf', nombre: file.name, img: false };
+    if (!esImagen(file) && file.size > 15 * 1024 * 1024) { fpArchivo = null; throw new Error(`${file.name} pesa ${tamTxt(file.size)}; el máximo es 15 MB.`); }
+    $('#fp-prev').innerHTML = archivoHTML(fpArchivo, 'fp');
+    if (!$('#fp-tit').value.trim()) $('#fp-tit').value = file.name.replace(/\.\w+$/, '').replace(/[_-]+/g, ' ').toLocaleUpperCase('es-CL');
+  } catch (err) { toast(err.message, 5000); }
+}));
+$('#fp-prev').addEventListener('click', (e) => { if (e.target.closest('[data-quitar]')) { liberar(fpArchivo); fpArchivo = null; $('#fp-prev').innerHTML = ''; } });
+$('#btn-fp-subir').addEventListener('click', async () => {
+  const err = $('#fp-error'); err.textContent = '';
+  if (!FPV || !FPV.usuario || !esAdmin()) return;
+  const doc = { tipo: $('#fp-tipo').value, titulo: $('#fp-tit').value.trim().toLocaleUpperCase('es-CL'), codigo: $('#fp-cod').value.trim().toLocaleUpperCase('es-CL'),
+    emision: $('#fp-emi').value, vence: $('#fp-vence').value, resultado: $('#fp-tipo').value === 'EVALUACION' ? $('#fp-res').value : '',
+    reemplaza: $('#fp-reemplaza').value, obs: $('#fp-obs').value.trim().toLocaleUpperCase('es-CL') };
+  const faltan = []; if (!doc.titulo) faltan.push('título'); if (!fpArchivo) faltan.push('archivo');
+  if (doc.tipo === 'ACRED' && !doc.vence) faltan.push('fecha de vencimiento de la acreditación');
+  if (faltan.length) { err.textContent = 'Falta: ' + faltan.join(', ') + '.'; return; }
+  if (doc.vence && doc.emision && doc.vence < doc.emision) { err.textContent = 'El vencimiento es anterior a la emisión.'; return; }
+  const btn = $('#btn-fp-subir'); btn.disabled = true; btn.textContent = 'Subiendo…';
+  try {
+    const j = await accionAdmin({ accion: 'subirDocPersonal', usuario: FPV.usuario, doc, archivo: { data: await blobAB64(fpArchivo.blob), mime: fpArchivo.mime, nombre: fpArchivo.nombre } });
+    FPV.F = fichaCompleta(j.ficha); ls.set('fichaP:' + FPV.usuario, FPV.F);
+    liberar(fpArchivo); fpArchivo = null; $('#fp-prev').innerHTML = '';
+    ['#fp-tit', '#fp-cod', '#fp-emi', '#fp-vence', '#fp-obs'].forEach(x => $(x).value = ''); $('#fp-res').value = '';
+    toast('Documento agregado a la ficha ✔'); renderFichaPers(); cargarPersonalSilencioso();
+  } catch (e2) { err.textContent = 'No se pudo subir: ' + e2.message; }
+  finally { btn.disabled = false; btn.textContent = 'Subir a la ficha'; }
+});
+async function cargarPersonalSilencioso() { try { const r = await fetchT(CONFIG.SCRIPT_URL + '?accion=personal&clave=' + encodeURIComponent(CONFIG.CLAVE) + '&claveAdmin=' + encodeURIComponent(ls.get('claveAdmin', '')), {}, 20000); const j = await r.json(); if (j.ok) ls.set('personal', j.personal); } catch (e) {} }
+$('#v-fichap').addEventListener('click', async (e) => {
+  const v = e.target.closest('[data-fp-ver]');
+  if (v) {
+    const lista = FPV.snap ? FPV.snap.docs || [] : (FPV.F.docs || []).concat(FPV.F.historico || []), d = lista.find(x => x.id === v.dataset.fpVer); if (!d) return;
+    verDocumento({ titulo: d.titulo, codigo: [TIPOS_FP[d.tipo] || d.tipo, d.codigo].filter(Boolean).join(' · '), fileId: 'fp-' + d.fileId, remotoPers: d.fileId, mime: d.mime || '', nombre: d.archivo || d.titulo, estado: 'PERS' });
+    return;
+  }
+  const rm = e.target.closest('[data-fp-rem]');
+  if (rm) { $('#fp-reemplaza').value = rm.dataset.fpRem; $('#fp-reemplaza').dispatchEvent(new Event('change')); $('#fp-subir').scrollIntoView({ behavior: 'smooth' }); toast('Elige el archivo nuevo y súbelo: el anterior queda en el historial.', 3500); return; }
+  const rt = e.target.closest('[data-fp-ret]');
+  if (rt) {
+    const motivo = pedirMotivo('¿Retirar este documento de la ficha? Queda en el historial.'); if (!motivo) return;
+    try { const j = await accionAdmin({ accion: 'retirarDocPersonal', id: rt.dataset.fpRet, motivo }); FPV.F = fichaCompleta(j.ficha); ls.set('fichaP:' + FPV.usuario, FPV.F); renderFichaPers(); toast('Documento retirado'); }
+    catch (err) { toast('No se pudo retirar: ' + err.message, 4000); }
+    return;
+  }
+  const tb = e.target.closest('[data-fp-tab]'); if (tb) abrirFicha(tb.dataset.fpTab);
+});
+$('#btn-fp-volver').addEventListener('click', volver);
+$('#btn-fp-actual').addEventListener('click', () => abrirFichaPers({ usuario: FPV.usuario }));
+$('#btn-fp-pdf').addEventListener('click', () => {
+  if (!window.jspdf) { toast('El generador de PDF aún está cargando.'); return; }
+  const doc = pdfFichaPers(FPV), nombre = 'Ficha_personal_' + ((FPV.F && FPV.F.persona && FPV.F.persona.usuario) || FPV.usuario || 'mantenedor') + (FPV.snap ? '_' + (FPV.fecha || '') : '') + '.pdf';
+  verDocumento({ titulo: 'Ficha del personal autorizado', codigo: $('#fp-nombre').textContent, blobLocal: doc.output('blob'), mime: 'application/pdf', nombre });
+});
+// Historial del tablero → ficha del mantenedor al momento de esa mantención
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-hficha]'); if (!b || !fichaActual) return;
+  const h = (fichaActual.hist || [])[+b.dataset.hficha]; if (!h) return;
+  abrirFichaPers({ usuario: h.usuario, nombre: h.por, fecha: h.fAct || String(h.fecha || '').slice(0, 10), tablero: fichaActual.id,
+    snap: h.ficha || { estado: 'SIN DATOS', docs: [], al: '' } });
+});
+// PDF de la ficha (para adjuntar o imprimir)
+function pdfFichaPers(V) {
+  const { jsPDF } = window.jspdf, doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const W = 210, M = 12, AN = W - 2 * M, ROJO = [183, 28, 28], TINTA = [31, 35, 40], GRIS = [91, 100, 112], BORDE = [150, 156, 164], FONDO = [242, 243, 245];
+  const F = V.F, sn = V.snap, p = (F && F.persona) || {}, ref = sn && V.fecha ? new Date(V.fecha + 'T12:00') : new Date();
+  let y = M;
+  const cab = () => {
+    if (logoListo()) { const lh = 10, lw = lh * LOGO.naturalWidth / LOGO.naturalHeight; doc.addImage(LOGO, 'PNG', M, y, lw, lh); }
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(13); doc.setTextColor(...TINTA); doc.text('FICHA DEL PERSONAL AUTORIZADO', W - M, y + 5, { align: 'right' });
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...GRIS);
+    doc.text('Departamento Eléctrico Geovita · Contrato ' + CONFIG.CONTRATO + ' · El Teniente', W - M, y + 9.5, { align: 'right' });
+    doc.setDrawColor(...ROJO); doc.setLineWidth(1); doc.line(M, y + 13, W - M, y + 13); doc.setLineWidth(0.25); y += 18;
+  };
+  const salto = (h) => { if (y + h > 297 - 14) { doc.addPage(); y = M; cab(); } };
+  const tit = (t) => { salto(14); doc.setFillColor(...ROJO); doc.rect(M, y, AN, 6, 'F'); doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(255, 255, 255); doc.text(t, M + 2, y + 4.2); y += 6; };
+  const tabla = (cols, filas) => {
+    const una = (vals, esCab) => {
+      doc.setFontSize(7.4); const ls_ = vals.map((v, i) => doc.splitTextToSize(String(v || '—'), cols[i][1] - 3));
+      const h = Math.max(...ls_.map(l => l.length)) * 3.3 + 2.6; salto(h); let x = M;
+      ls_.forEach((l, i) => { doc.setDrawColor(...BORDE); if (esCab) { doc.setFillColor(...FONDO); doc.rect(x, y, cols[i][1], h, 'FD'); } else doc.rect(x, y, cols[i][1], h);
+        doc.setFont('helvetica', esCab ? 'bold' : 'normal'); doc.setTextColor(...(esCab ? GRIS : /VENCID/.test(vals[i]) ? ROJO : TINTA)); doc.text(l, x + 1.5, y + 3.6); x += cols[i][1]; });
+      y += h;
+    };
+    una(cols.map(c => c[0]), true); filas.forEach(f => una(f));
+  };
+  cab();
+  tit('DATOS DE LA PERSONA');
+  const ac = sn ? { estado: sn.estado, vence: sn.vence } : (F && F.acred) || { estado: '—' };
+  tabla([['Nombre', 62], ['RUT', 28], ['Cargo', 48], ['Grupo / nivel', 48]], [[sn ? V.nombre : p.nombre, p.rut ? rutFmt(p.rut) : '—', p.cargo, [p.grupo, p.nivel].filter(Boolean).join(' · ')]]);
+  y += 2;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(...(clsAcred(ac.estado || '') === 'ok' ? [19, 92, 42] : clsAcred(ac.estado || '') === 'warn' ? [122, 79, 0] : ROJO));
+  doc.text('Estado: ' + (ac.estado || '—') + (ac.vence ? ' · vence ' + fDMA(ac.vence) : ''), M, y + 5); y += 9;
+  if (sn) { doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...TINTA); doc.text(`Ficha al momento de la mantención del ${fDMA(V.fecha)}${V.tablero ? ' en ' + V.tablero : ''}.`, M, y + 2); y += 6; }
+  tit('DOCUMENTOS (ACREDITACIÓN, DIFUSIONES Y EVALUACIONES)');
+  const docs = ((sn ? sn.docs : F && F.docs) || []).slice().sort((a, b) => ORDEN_FP.indexOf(a.tipo) - ORDEN_FP.indexOf(b.tipo));
+  tabla([['Tipo', 36], ['Documento / procedimiento', 66], ['Emisión', 19], ['Vence', 19], ['Estado', 28], ['ID', 18]],
+    docs.length ? docs.map(d => [TIPOS_FP[d.tipo] || d.tipo, [d.titulo, d.codigo, d.resultado].filter(Boolean).join(' · '), fDMA(d.emision), fDMA(d.vence), d.vigencia || vigFP(d.vence, ref), d.id]) : [['—', 'Sin documentos cargados', '', '', '', '']]);
+  if (!sn && F && (F.actividades || []).length) {
+    y += 4; tit('MANTENCIONES E INSPECCIONES REALIZADAS (ÚLTIMAS)');
+    tabla([['Fecha', 22], ['Actividad', 34], ['Tablero', 40], ['Ubicación', 70], ['Ítems NO', 20]], F.actividades.slice(0, 25).map(a => [fDMA(a.fAct), a.tipo, a.id, [a.ubic, a.nivel].filter(Boolean).join(' · '), String(a.itemsNo || 0)]));
+  }
+  const n = doc.getNumberOfPages();
+  for (let i = 1; i <= n; i++) { doc.setPage(i); doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); doc.setTextColor(...GRIS);
+    doc.text(`Generado por GEO ELEC · ${new Date().toLocaleString('es-CL')} · ${(F && F.consultado) ? 'datos al ' + F.consultado : ''}`, M, 297 - 7); doc.text(`${i} de ${n}`, W - M, 297 - 7, { align: 'right' }); }
+  return doc;
+}
 
 // ===================== FIRMA DIGITAL =====================
 // Cada persona registra su firma (dibujada o foto). Se aplica a un documento solo al confirmar con su contraseña;
@@ -1593,7 +1870,7 @@ async function firmarDocumentoRegistro(registro, titulo) {
 }
 
 // ===================== NAVEGACIÓN =====================
-const VISTAS = ['inicio', 'firma', 'aprobar', 'planos', 'plano-ed', 'uni-nuevo', 'uni-ed', 'enlaces', 'enlace', 'login', 'clave', 'persona', 'cred', 'chk', 'hist', 'admin', 'admin-form', 'tableros', 'envios', 'etiquetas', 'actividad', 'rf01', 'pregunta', 'etiqueta', 'ficha', 'unilineal', 'form', 'scan', 'docs', 'subir'];
+const VISTAS = ['inicio', 'fichap', 'firma', 'aprobar', 'planos', 'plano-ed', 'uni-nuevo', 'uni-ed', 'enlaces', 'enlace', 'login', 'clave', 'persona', 'cred', 'chk', 'hist', 'admin', 'admin-form', 'tableros', 'envios', 'etiquetas', 'actividad', 'rf01', 'pregunta', 'etiqueta', 'ficha', 'unilineal', 'form', 'scan', 'docs', 'subir'];
 // Botón / gesto "atrás" del teléfono: cada pantalla abierta queda en el historial del navegador,
 // así "atrás" vuelve a la pantalla anterior en vez de salir de la app.
 const pila = [];                 // pantallas abiertas sobre "inicio": { v, id, alInicio }
@@ -2002,6 +2279,7 @@ function filaHist(h, t, adm) {
       ${lim && (esM || esInsp(h)) ? `<small style="display:block">Fecha límite siguiente: ${esc(lim)}</small>` : ''}${h.corregido ? '<span class="tag-corr">CORREGIDO</span>' : ''}</div>
       <span class="badge ${h.itemsNo ? 'no' : 'ok'}">${h.itemsNo ? h.itemsNo + ' NO' : 'OK'}</span>
       ${h.chkPdf || h.chkLocal ? `<div class="acc-adm"><button type="button" class="btn-pdf" data-chkpdf="${(t.hist || []).indexOf(h)}">📄 Ver ficha${h.chkRev ? ' · Rev. ' + h.chkRev : ''}</button><button type="button" class="btn-pdf" data-chkdesc="${(t.hist || []).indexOf(h)}">⤓ Descargar</button>${h.chkPend ? '<span class="tag-corr">Actualización pendiente</span>' : ''}</div>` : ''}
+      ${esM && (h.ficha || h.usuario) ? `<div class="acc-adm"><button type="button" class="btn-pdf" data-hficha="${(t.hist || []).indexOf(h)}">📇 Ficha del mantenedor${h.ficha && h.ficha.estado ? ' · ' + esc(h.ficha.estado.toLowerCase()) : ''}</button></div>` : ''}
       ${adm && h.uuid ? `<div class="acc-adm"><button type="button" data-corregir="${esc(h.uuid)}">✏️ Corregir</button><button type="button" data-anular="${esc(h.uuid)}">⛔ Anular</button></div>` : ''}</li>`;
 }
 // Historial completo de mantenciones o inspecciones de un tablero, agrupado por año (nada se borra)
@@ -2572,6 +2850,11 @@ $('#f').addEventListener('submit', async (e) => {
   // Mantención o inspección: checklist en PDF (formato GEOVITA) generado en el teléfono
   let chkPdf = null;
   if (estado.actividad !== 'MANT' && estado.actividad !== 'INSP' && registro.firma) delete registro.firma.img;
+  if (estado.actividad === 'MANT') {
+    registro.fichaPers = fichaParaInforme(registro);
+    const ac = registro.fichaPers.acred.estado;
+    if (!registro.fichaPers.sinDatos && /VENCIDA|SIN ACRED/.test(ac) && !confirm(`Tu ficha de personal autorizado indica: ${ac}.\n\nEl informe de mantención quedará con esa información en su anexo. ¿Continuar?`)) { delete registro.fichaPers; return; }
+  }
   if (estado.actividad === 'MANT' || estado.actividad === 'INSP') {
     try {
       if (!window.jspdf) throw new Error('el generador de PDF aún está cargando');
@@ -2581,9 +2864,10 @@ $('#f').addEventListener('submit', async (e) => {
       fotos.push({ campo: 'checklist_pdf', mime: 'application/pdf', blob, nombre: chkPdf.nombre });
       registro.chkPdf = true;
     } catch (err) {
-      if (!confirm('No se pudo generar el checklist PDF (' + err.message + '). ¿Guardar el registro igual? El PDF no quedará en el sistema.')) return;
+      if (!confirm('No se pudo generar el checklist PDF (' + err.message + '). ¿Guardar el registro igual? El PDF no quedará en el sistema.')) { delete registro.fichaPers; return; }
     }
   }
+  delete registro.fichaPers;   // el servidor registra su propia copia de la ficha (la oficial) junto al registro
   const total = fotos.reduce((s, x) => s + x.blob.size, 0);
   if (total > MAX_REGISTRO) {
     $('#f-error').textContent = `Los archivos adjuntos suman ${tamTxt(total)}; el máximo por registro es 35 MB. Quita o reduce algún documento.`; return;
@@ -2874,10 +3158,32 @@ let sincronizando = false;
 const blobAB64 = (blob) => new Promise((res, rej) => {
   const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = () => rej(r.error); r.readAsDataURL(blob);
 });
+// Si Google responde una página (HTML) en vez de datos, se reintenta 2 veces y luego se explica la causa probable
+function diagServidor(txt, r) {
+  const tit = ((txt.match(/<title>([^<]*)<\/title>/i) || [])[1] || '').trim(), url = (r && r.url) || '', todo = txt + ' ' + url;
+  let host = ''; try { host = new URL(url).hostname; } catch {}
+  let causa;
+  if (/accounts\.google|ServiceLogin|iniciar sesi|sign in to/i.test(todo)) causa = 'Google pidió iniciar sesión: en Apps Script → Implementar → Administrar implementaciones → editar, deja "Ejecutar como: Yo" y "Quién tiene acceso: Cualquier persona".';
+  else if (/unusual traffic|tr[aá]fico inusual|\/sorry\//i.test(todo)) causa = 'Google bloqueó por un rato esta red ("tráfico inusual"). Cambia de red (wifi ↔ datos móviles) o espera unos minutos.';
+  else if (/script function not found|funci[oó]n de script no encontrada/i.test(todo)) causa = 'La versión publicada del servidor no corresponde al Codigo.gs actual: publica una "Nueva versión" en la implementación existente.';
+  else if (/no se puede abrir|unable to open|lo sentimos|sorry/i.test(todo)) causa = 'Google no pudo abrir el servidor en este momento. Reintenta en un minuto; si sigue, cambia de red (wifi ↔ datos móviles).';
+  else causa = 'Suele ser la red (wifi con filtro o portal de acceso): prueba con datos móviles.';
+  const msg = `El servidor respondió una página de Google en vez de datos${tit ? ' («' + tit.slice(0, 70) + '»)' : ''}${host ? ' desde ' + host : ''}. ${causa}`;
+  try { ls.set('ultimoErrorServidor', { fecha: new Date().toLocaleString('es-CL'), msg, inicio: txt.slice(0, 300) }); } catch {}
+  return msg;
+}
 async function fetchT(url, opt = {}, ms = 90000) {
-  const ac = new AbortController(); const t = setTimeout(() => ac.abort(), ms);
-  try { return await fetch(url, Object.assign({}, opt, { signal: ac.signal, redirect: 'follow', credentials: 'omit', cache: 'no-store' })); }
-  finally { clearTimeout(t); }
+  const alServidor = !!(CONFIG.SCRIPT_URL && String(url).startsWith(CONFIG.SCRIPT_URL));
+  for (let intento = 0; ; intento++) {
+    const ac = new AbortController(); const t = setTimeout(() => ac.abort(), ms);
+    let r;
+    try { r = await fetch(url, Object.assign({}, opt, { signal: ac.signal, redirect: 'follow', credentials: 'omit', cache: 'no-store' })); }
+    finally { clearTimeout(t); }
+    if (!alServidor || !/text\/html/i.test(r.headers.get('content-type') || '')) return r;
+    const txt = await r.text();
+    if (intento < 2) { await new Promise(res => setTimeout(res, 1500 * (intento + 1))); continue; }
+    throw new Error(diagServidor(txt, r));
+  }
 }
 
 async function sincronizar(manual = false) {
@@ -2919,7 +3225,7 @@ async function sincronizar(manual = false) {
         break; // se reintenta luego, en orden
       }
     }
-    if (!error) { await actualizarTableros(); cargarDocs(); cargarEnlaces(); cargarUni(manual); cargarPlanos(manual); if (esAdmin()) regenerarChecklists('', true); }
+    if (!error) { await actualizarTableros(); cargarDocs(); cargarEnlaces(); cargarUni(manual); cargarPlanos(manual); refrescarFichaPropia(); if (esAdmin()) regenerarChecklists('', true); }
   } catch (err) { error = err.message; }
   sincronizando = false; $('#btn-sync').disabled = false;
   const quedan = (await DB.all().catch(() => [])).length;
@@ -4827,7 +5133,7 @@ async function renderPlanos() {
       ${pa ? `<button type="button" class="btn-pdf" data-aprpl-ver="${h.id}">Revisión por aprobar</button>` : ''}</div></li>`;
   }).join('') + (hs.length ? '' : '<li><div class="info"><small>Sin resultados.</small></div></li>')
     + `<li class="sub">Diagramas unilineales de cada tablero</li><li class="plano con-adm"><div class="info"><b>📐 Diagramas por tablero</b><small>Se confeccionan a partir del plano tipo y quedan asociados a cada tablero (ficha del tablero). El registro se irá completando a medida que se emitan.</small></div>
-      ${adm ? '<div class="acc-adm"><button type="button" data-ir="uni-nuevo">📐 Confeccionar diagrama de un tablero</button></div>' : ''}</li>`;
+      </li>${adm ? '<li><div class="acc-adm" style="margin:0"><button type="button" data-ir="uni-nuevo">📐 Confeccionar diagrama de un tablero</button></div></li>' : ''}`;
   $('#pl-info').textContent = adm ? 'Para editar: ✏️ Editar plano. El esquema (componentes) se ajusta en su panel; los símbolos, textos, conductores y puntos de bloqueo con las herramientas del editor.' : 'Para descargar el plano en PDF: 📄 Ver plano.';
 }
 $('#pl-buscar').addEventListener('input', () => renderPlanos());
@@ -5926,9 +6232,10 @@ function renderPersonal() {
   const todos = ls.get('personal', []), q = $('#pers-buscar').value.trim().toLocaleUpperCase('es-CL');
   const lista = todos.filter(p => !q || [p.nombre, p.rut, rutFmt(p.rut), p.usuario].join(' ').toLocaleUpperCase('es-CL').includes(q));
   const fila = (p) => `<li class="pers${p.estado === 'ACTIVO' ? '' : ' inactivo'}"><div class="info"><b>${esc(p.nombre)}</b>
-      <small>${esc(p.cargo)} · RUT ${esc(rutFmt(p.rut))} · usuario <span style="font-weight:800;color:var(--tinta)">${esc(p.usuario)}</span>${p.ultimo ? ' · último ingreso ' + esc(p.ultimo) : ''}</small></div>
+      <small>${esc(p.cargo)} · RUT ${esc(rutFmt(p.rut))} · usuario <span style="font-weight:800;color:var(--tinta)">${esc(p.usuario)}</span>${p.ultimo ? ' · último ingreso ' + esc(p.ultimo) : ''}</small>
+      ${p.acred ? `<small style="display:block;font-weight:800;color:${/^ACREDITADO/.test(p.acred.estado) ? '#135C2A' : /POR VENCER/.test(p.acred.estado) ? '#7A4F00' : '#8A1C24'}">${esc(p.acred.estado)}${p.acred.vence ? ' · vence ' + esc(fDMA(p.acred.vence)) : ''} · ${p.nDocs || 0} doc.</small>` : ''}</div>
       ${p.estado === 'ACTIVO' ? '' : '<span class="badge no">Inactivo</span>'}
-      <div class="acc-adm"><button type="button" data-pers-ed="${esc(p.usuario)}">✏️ Editar</button><button type="button" data-pers-clave="${esc(p.usuario)}">🔑 Nueva contraseña</button>
+      <div class="acc-adm"><button type="button" class="btn-pdf" data-pers-ficha="${esc(p.usuario)}">📇 Ficha</button><button type="button" data-pers-ed="${esc(p.usuario)}">✏️ Editar</button><button type="button" data-pers-clave="${esc(p.usuario)}">🔑 Nueva contraseña</button>
       <button type="button" data-pers-est="${esc(p.usuario)}">${p.estado === 'ACTIVO' ? '⛔ Desactivar' : '♻️ Activar'}</button></div></li>`;
   const orden = (a, b) => rango(a.cargo) - rango(b.cargo) || a.nombre.localeCompare(b.nombre);
   const activos = lista.filter(p => p.estado === 'ACTIVO');
@@ -5953,11 +6260,11 @@ function renderPeGrupo() {
 }
 function abrirPersona(p) {
   peEdita = p || null; peGrupo = p ? p.grupo : ''; peNivel = p && p.nivel !== 'Transversal' ? p.nivel : '';
-  $('#pe-titulo').textContent = p ? 'Editar datos de ' + p.usuario : 'Agregar persona';
-  $('#pe-info').textContent = p ? 'El usuario y la contraseña no cambian. Para una contraseña nueva usa "Nueva contraseña".' : 'Con estos datos la app genera el usuario y la contraseña.';
+  $('#pers-titulo').textContent = p ? 'Editar datos de ' + p.usuario : 'Agregar persona';
+  $('#pers-info').textContent = p ? 'El usuario y la contraseña no cambian. Para una contraseña nueva usa "Nueva contraseña".' : 'Con estos datos la app genera el usuario y la contraseña.';
   $('#pe-nombre').value = p ? p.nombre : ''; $('#pe-rut').value = p ? rutFmt(p.rut) : '';
   $('#pe-cargo').value = p ? (CARGOS_PERS.find(c => c.toLocaleUpperCase('es-CL') === p.cargo) || '') : '';
-  $('#pe-motivo').value = ''; $('#pe-box-motivo').hidden = !p; $('#pe-error').textContent = '';
+  $('#pe-motivo').value = ''; $('#pe-box-motivo').hidden = !p; $('#pers-error').textContent = '';
   $('#btn-pe-guardar').textContent = p ? 'Guardar cambios' : 'Crear usuario y contraseña';
   botonesSeg($('#pe-grupo'), GRUPOS_PERS, peGrupo, v => {
     peGrupo = v; renderPeGrupo();
@@ -5981,7 +6288,7 @@ $('#btn-pe-guardar').addEventListener('click', async () => {
   if (!peGrupo) faltan.push('grupo');
   if (peGrupo && !transv && !peNivel) faltan.push('nivel');
   if (peEdita && !$('#pe-motivo').value.trim()) faltan.push('motivo del cambio');
-  if (faltan.length) { $('#pe-error').textContent = 'Falta completar: ' + faltan.join(', ') + '.'; return; }
+  if (faltan.length) { $('#pers-error').textContent = 'Falta completar: ' + faltan.join(', ') + '.'; return; }
   const persona = { nombre, rut, cargo, grupo: peGrupo, nivel: transv ? 'Transversal' : peNivel };
   const btn = $('#btn-pe-guardar'); btn.disabled = true;
   try {
@@ -5993,7 +6300,7 @@ $('#btn-pe-guardar').addEventListener('click', async () => {
       ls.set('personal', j.personal);
       mostrarCredenciales(j, 'Usuario creado ✔');
     }
-  } catch (err) { $('#pe-error').textContent = 'No se pudo guardar: ' + err.message; }
+  } catch (err) { $('#pers-error').textContent = 'No se pudo guardar: ' + err.message; }
   finally { btn.disabled = false; }
 });
 let credActual = null;
@@ -6013,6 +6320,7 @@ $('#btn-cr-copiar').addEventListener('click', async () => {
 $('#btn-cr-compartir').addEventListener('click', () => navigator.share && navigator.share({ title: 'Acceso GEO ELEC', text: textoCred() }).catch(() => {}));
 $('#btn-cr-listo').addEventListener('click', () => { credActual = null; $('#cr-pass').textContent = ''; ir('admin'); });
 document.addEventListener('click', async (e) => {
+  const fi = e.target.closest('[data-pers-ficha]'); if (fi) { abrirFichaPers({ usuario: fi.dataset.persFicha }); return; }
   const ed = e.target.closest('[data-pers-ed]'), cl = e.target.closest('[data-pers-clave]'), es = e.target.closest('[data-pers-est]');
   if (!ed && !cl && !es) return;
   const u = (ed || cl || es).dataset[ed ? 'persEd' : cl ? 'persClave' : 'persEst'];
@@ -6318,6 +6626,12 @@ async function obtenerArchivo(d) {
   const g = await ArchDB.get(d.fileId).catch(() => null);
   if (g && g.blob) return g.blob;
   if (!navigator.onLine || !configurado()) throw new Error('Sin señal y este documento no está guardado en el teléfono.');
+  if (d.remotoPers) {
+    const j = await getFichaServ({ accion: 'archivoPersonal', id: d.remotoPers }, 180000);
+    const blob = await (await fetch('data:' + (j.mime || d.mime) + ';base64,' + j.data)).blob();
+    await ArchDB.put({ fileId: d.fileId, blob, mime: j.mime || d.mime, nombre: j.nombre || d.nombre }).catch(() => {});
+    return blob;
+  }
   const r = await fetchT(CONFIG.SCRIPT_URL + (d.remoto ? '?accion=archivoRegistro' : '?accion=archivo') + '&clave=' + encodeURIComponent(CONFIG.CLAVE)
     + '&id=' + encodeURIComponent(d.remoto || d.fileId), {}, 180000);
   const j = await r.json();
@@ -6601,6 +6915,40 @@ function crearPdfChecklist(r) {
     doc.setDrawColor(...BORDE); doc.setFillColor(217, 242, 224); doc.rect(M, y, AN, hr, 'FD');
     doc.setTextColor(...TINTA); doc.text(lr, M + 2, y + 4.5);
     y += hr + 3;
+  }
+
+  // ---- Anexo: ficha del personal autorizado que realizó la mantención (trazabilidad) ----
+  if (r.fichaPers) {
+    const F = r.fichaPers, ref = r.fActividad ? new Date(r.fActividad + 'T12:00') : new Date();
+    doc.addPage(); y = encabezado();
+    titulo('ANEXO · FICHA DEL PERSONAL AUTORIZADO (MANTENEDOR)');
+    grilla([['Nombre', F.nombre || r.realizadoPor], ['RUT', F.rut || r.rut], ['Cargo', F.cargo || r.cargo], ['Grupo / nivel', [F.grupo, F.nivel].filter(Boolean).join(' · ') || '—'],
+      ['Acreditación', (F.acred.estado || '—') + (F.acred.vence ? ' · vence ' + fDMA(F.acred.vence) : '')], ['Ficha al', F.actualizado || '—']]);
+    y += 2;
+    const cols = [['Tipo', 34], ['Documento / procedimiento', 70], ['Emisión', 19], ['Vence', 19], ['Estado al día de la actividad', 30], ['ID', 18]];
+    const fila = (vals, cab) => {
+      doc.setFontSize(cab ? 7 : 7.4);
+      const ls_ = vals.map((v, i) => doc.splitTextToSize(String(v || '—'), cols[i][1] - 3));
+      const h = Math.max(...ls_.map(l => l.length)) * 3.3 + 2.6; salto(h);
+      let x = M;
+      ls_.forEach((l, i) => {
+        doc.setDrawColor(...BORDE); caja(x, y, cols[i][1], h, cab ? FONDO : null);
+        doc.setFont('helvetica', cab || i === 4 ? 'bold' : 'normal');
+        const v = vals[i];
+        doc.setTextColor(...(cab ? GRIS : i === 4 && /VENCIDO/.test(v) ? ROJO : i === 4 && /POR VENCER/.test(v) ? [138, 90, 0] : TINTA));
+        doc.text(l, x + 1.5, y + 3.6); x += cols[i][1];
+      });
+      y += h;
+    };
+    fila(cols.map(c => c[0]), true);
+    const docs = (F.docs || []).slice().sort((a, b) => ORDEN_FP.indexOf(a.tipo) - ORDEN_FP.indexOf(b.tipo));
+    if (docs.length) docs.forEach(d => fila([TIPOS_FP[d.tipo] || d.tipo, [d.titulo, d.codigo, d.resultado].filter(Boolean).join(' · '), fDMA(d.emision), fDMA(d.vence), vigFP(d.vence, ref), d.id]));
+    else fila(['—', F.sinDatos ? 'La ficha no estaba guardada en el teléfono (ingresa con señal para descargarla). La ficha oficial queda registrada en el servidor junto a este informe.' : 'Sin documentos cargados en la ficha.', '', '', '', '']);
+    y += 3;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7.2); doc.setTextColor(...GRIS);
+    const nota = doc.splitTextToSize('Los documentos de respaldo (acreditación de personal autorizado, difusiones y evaluaciones de procedimientos) están en GEO ELEC > Ficha del personal. '
+      + 'La ficha vigente el día de la actividad queda asociada a este registro (ID ' + (r.uuid || '') + ') para su trazabilidad.', AN);
+    salto(nota.length * 3.2 + 2); doc.text(nota, M, y + 3); y += nota.length * 3.2 + 3;
   }
 
   // ---- Pie de página en todas las hojas ----
