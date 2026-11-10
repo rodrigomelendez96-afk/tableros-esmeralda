@@ -268,7 +268,10 @@
   .ue-sal { border: 1px solid var(--borde); border-radius: 10px; padding: 8px 12px 12px; margin: 12px 0 0; background: #FAFBFC; }
   .ue-sal-h { display: flex; justify-content: space-between; align-items: center; }
   .ue-sal-h button { min-height: 36px; padding: 4px 12px; margin-left: 6px; }
-  #ue-prev .ue-svg { width: 100%; height: auto; border: 1px solid var(--borde); border-radius: 8px; background: #fff; display: block; margin-top: 8px; cursor: zoom-in; }
+  #ue-prev .ue-svg { width: 100%; height: 100%; display: block; user-select: none; -webkit-user-select: none; }
+  .ue-lienzo { cursor: grab; } .ue-lienzo.arrastra { cursor: grabbing; }
+  .ue-lienzo.sin-zonas .ue-zona { fill: transparent; stroke: none; }
+  #ue-form details.ue-sec { margin: 0 0 8px; }
   #ue-prev .ue-zona { fill: rgba(0, 119, 168, 0.06); stroke: rgba(0, 119, 168, 0.55); stroke-width: 0.35; stroke-dasharray: 1.6 1.2; cursor: pointer; }
   #ue-prev .ue-zona:hover { fill: rgba(0, 119, 168, 0.16); }
   .ue-flash { box-shadow: 0 0 0 3px #0077A8; border-radius: 10px; transition: box-shadow .3s; }
@@ -348,6 +351,7 @@
   .cd-items .cd-sec td { background: #4FC3F7; font-weight: 800; font-size: 12px; } .cd-items .cd-sec .cd-op-h { text-align: center; }
   .cd-items .cd-obs-h { width: 28%; } .cd-items .cd-obs-c input { min-height: 34px; font-size: 13px; }
   .cd-items .cd-resp { width: 92px; font-size: 11px; text-align: center; }
+  .rojo-btn { color: #8A1C24 !important; border-color: #E6B3B8 !important; background: #FFF5F5 !important; }
   .cd-obs-in { margin-top: 6px !important; border-color: #D9822B !important; }
   #cdf-hoja input:not([type=checkbox]), #cdf-hoja textarea { text-transform: uppercase; }
   #cdf-hoja input::placeholder, #cdf-hoja textarea::placeholder { text-transform: none; }
@@ -360,6 +364,9 @@
   .ue-circ-g { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; margin-top: 6px; }
   .ue-circ-f { display: grid; grid-template-columns: 26px 1fr 84px; grid-template-rows: auto auto; gap: 4px; align-items: center; border: 1px solid var(--borde, #DADDE1); border-radius: 8px; padding: 6px; }
   .ue-circ-f b { grid-row: 1 / span 2; }
+  .ue-circ-d { grid-column: 2 / span 2; grid-row: 3; display: flex; flex-wrap: wrap; gap: 4px; }
+  .ue-circ-d select { flex: 1 1 30%; min-width: 92px; min-height: 36px; font-size: 13px; padding: 4px 6px; }
+  .ue-circ-d select.val-falta { border-color: #D9822B; background: #FFF8EC; }
   .ue-circ-f textarea { grid-column: 2 / span 2; grid-row: 2; min-height: 52px; font-size: 14px; padding: 6px 8px; resize: vertical; }
   .ue-circ-f input:nth-of-type(2) { grid-column: 3; grid-row: 1; }
     .ue-circ-f.sel span { grid-column: 2 / span 2; grid-row: 2; }
@@ -610,19 +617,30 @@
       <p class="muted" id="ue-sub" style="margin:4px 0 0"></p>
       <div class="aviso" id="ue-aviso" hidden style="margin:12px 0 0"></div>
     </div>
-    <div id="ue-form"></div>
-    <div class="card" id="ue-val-card">
-      <h3>Revisión de seguridad</h3>
-      <div id="ue-val"></div>
-    </div>
-    <div class="card">
-      <h3>Vista previa</h3>
-      <p class="muted">Se actualiza con cada cambio. Toca el plano para verlo en grande.</p>
-      <div id="ue-prev"></div>
-      <div class="grid2" style="margin-top:12px">
-        <button class="big" id="btn-ue-pdf">⤓ PDF</button>
-        <button class="big" id="btn-ue-dxf">⤓ DXF (AutoCAD)</button>
+    <div class="pe-wrap"><div class="pe-main">
+      <div class="pe-barra" id="ue-barra">
+        <button type="button" data-uev="ver"><span>⤢</span><small>Ver todo</small></button>
+        <button type="button" data-uev="mas"><span>＋</span><small>Acercar</small></button>
+        <button type="button" data-uev="menos"><span>－</span><small>Alejar</small></button>
+        <button type="button" data-uev="p0" class="on"><span>🗎</span><small>Hoja 1</small></button>
+        <button type="button" data-uev="p1" hidden><span>🗐</span><small>Hoja 2</small></button>
+        <button type="button" data-uev="zonas" class="toggle on"><span>▦</span><small>Componentes</small></button>
+        <button type="button" data-uev="pdf"><span>📄</span><small>Vista PDF</small></button>
       </div>
+      <div class="pe-lienzo ue-lienzo" id="ue-lienzo"><div id="ue-prev" style="width:100%;height:100%"></div></div>
+      <p class="muted" style="margin:6px 2px 10px">El plano se redibuja solo con cada dato. Arrastra para mover, usa la rueda o pellizca para acercar. Toca un componente (recuadro azul) para ir a sus datos en el panel.</p>
+    </div><div class="pe-side">
+      <div class="card"><h3>🧩 Esquema del tablero (componentes)</h3>
+        <p class="muted" style="margin:4px 0 8px">Mismos datos que el plano tipo: alimentación y circuitos del origen, protecciones, diferenciales, transformadores, barras, salidas y puntos de bloqueo.</p>
+        <div id="ue-form"></div></div>
+      <div class="card" id="ue-val-card">
+        <h3>Revisión de seguridad</h3>
+        <div id="ue-val"></div>
+      </div>
+    </div></div>
+    <div class="grid2" style="margin-bottom:12px">
+      <button class="big" id="btn-ue-pdf">📄 Descargar PDF</button>
+      <button class="big" id="btn-ue-dxf">⤓ DXF (AutoCAD)</button>
     </div>
     <div class="card adm" id="ue-emitir-card">
       <h3>Firmar y enviar a aprobación</h3>
@@ -777,7 +795,7 @@
       <div class="g2"><div><label for="rc-desde">Desde</label><input type="date" id="rc-desde"></div><div><label for="rc-hasta">Hasta</label><input type="date" id="rc-hasta"></div></div>
       <label for="rc-pers">Persona</label><select id="rc-pers"><option value="">Todo el personal</option></select>
       <div class="g2"><div><label for="rc-cod">Checklist</label><select id="rc-cod"></select></div>
-        <div><label for="rc-est">Estado</label><select id="rc-est"><option value="REVISADO">Validados por supervisor</option><option value="PENDIENTE">Pendientes de firma</option><option value="RECHAZADO">Rechazados</option><option value="TODOS">Todos</option></select></div></div>
+        <div><label for="rc-est">Estado</label><select id="rc-est"><option value="REVISADO">Validados por supervisor</option><option value="PENDIENTE">Pendientes de firma</option><option value="RECHAZADO">Rechazados</option><option value="ANULADO">Borrados</option><option value="TODOS">Todos</option></select></div></div>
       <button class="big primary" id="btn-rc-buscar" style="margin-top:12px">🔎 Buscar</button>
       <p class="muted" id="rc-msg" style="margin:8px 0 0"></p>
     </div>
@@ -1375,7 +1393,7 @@ const CONFIG = {
 };
 
 // Versión visible al pie de la pantalla de inicio (sirve para confirmar que el teléfono tiene la última)
-const VERSION_APP = 'v37 · 10-11-2026';
+const VERSION_APP = 'v39 · 10-11-2026';
 const NIVELES = ['UCL', 'Producción', 'Acarreo', 'SNV'];
 const SEN = 'Cuadro de señalética (riesgo eléctrico, potencia, nivel de tensión, punto de bloqueo, maniobra RCP, logo empresa, personal autorizado, diagrama unilineal, carga de fuego, programa de mantenimiento)';
 const BASE_TD = ['Orden y aseo en el sector', 'Iluminación', 'Número de TAG', 'Soporte o anclaje del tablero en buen estado',
@@ -1738,7 +1756,7 @@ function guardarChkdLocal(u, r) {
 }
 const chkdHoy = () => { const s = sesion(); return s ? (chkdLocal(s.usuario)[diaISO()] || {}) : {}; };
 // Un checklist queda VALIDADO cuando lo firma el supervisor asignado. Solo con los 4 validados se puede iniciar la actividad.
-const estadoChkd = (r) => !r ? 'FALTA' : r.revision === 'REVISADO' ? 'VALIDADO' : r.revision === 'RECHAZADO' ? 'RECHAZADO' : ls.get('chkdCola', []).some(x => x.id === r.id) ? 'SIN ENVIAR' : 'PENDIENTE';
+const estadoChkd = (r) => !r ? 'FALTA' : r.revision === 'REVISADO' ? 'VALIDADO' : r.revision === 'RECHAZADO' || r.revision === 'ANULADO' ? 'RECHAZADO' : ls.get('chkdCola', []).some(x => x.id === r.id) ? 'SIN ENVIAR' : 'PENDIENTE';
 const chkDiarioFirmado = () => CHKD_ORDEN.every(k => chkdHoy()[k] && estadoChkd(chkdHoy()[k]) !== 'RECHAZADO');
 const chkDiarioListo = () => CHKD_ORDEN.every(k => estadoChkd(chkdHoy()[k]) === 'VALIDADO');
 const supervisoresChkd = () => (ls.get('supervisores', []) || []).filter(x => x.usuario !== (sesion() || {}).usuario);
@@ -1795,12 +1813,12 @@ function renderChkd() {
   $('#cd-lista').innerHTML = CHKD_ORDEN.map((k, i) => {
     const C = CHKD[k], r = hoy[k], e = est[i];
     const linea = !r ? '' : e === 'VALIDADO' ? `✔ Validado por ${esc(r.reviso || 'supervisor')} · ${esc(r.fRev || '')}`
-      : e === 'RECHAZADO' ? `✖ Rechazado por ${esc(r.reviso || 'supervisor')}: ${esc(r.motivo || '')}. Debes rehacerlo.`
+      : e === 'RECHAZADO' ? (r.revision === 'ANULADO' ? `🗑 Borrado por ${esc(r.reviso || 'supervisor')}: ${esc(r.motivo || '')}. Debes realizarlo nuevamente.` : `✖ Rechazado por ${esc(r.reviso || 'supervisor')}: ${esc(r.motivo || '')}. Debes rehacerlo.`)
       : `Firmado por ti ${esc(r.hora)} · ${e === 'SIN ENVIAR' ? 'se enviará al tener señal' : 'esperando la firma de ' + esc(r.supervisor || 'tu supervisor')}`;
     return `<li class="con-adm"><div class="info"><b>${C.icono} ${esc(C.corto)}</b><small>${esc(C.codigo)} · Rev. ${esc(C.rev)}${r && r.nObs ? ' · ⚠ ' + r.nObs + ' con observación' : ''}</small>
       ${r ? `<small style="display:block;font-weight:700;color:${e === 'VALIDADO' ? '#135C2A' : e === 'RECHAZADO' ? '#8A1C24' : '#8A5A00'}">${linea}</small>` : ''}</div>
-      <span class="badge ${ETQ[e][0]}">${ETQ[e][1]}</span>
-      <div class="acc-adm">${r ? `<button type="button" class="btn-pdf" data-cd-pdf="${k}">📄 Ver PDF</button>` : ''}${!r || e === 'RECHAZADO' ? `<button type="button" class="primary" data-cd-abrir="${k}">✍ ${r ? 'Rehacer' : 'Completar'}</button>` : ''}</div></li>`;
+      <span class="badge ${ETQ[e][0]}">${r && r.revision === 'ANULADO' ? 'borrado' : ETQ[e][1]}</span>
+      <div class="acc-adm">${r && r.revision !== 'ANULADO' ? `<button type="button" class="btn-pdf" data-cd-pdf="${k}">📄 Ver PDF</button>` : ''}${!r || e === 'RECHAZADO' ? `<button type="button" class="primary" data-cd-abrir="${k}">✍ ${r ? 'Rehacer' : 'Completar'}</button>` : ''}</div></li>`;
   }).join('');
   const listo = nVal === CHKD_ORDEN.length, firmados = chkDiarioFirmado();
   $('#cd-continuar').hidden = !listo || !chkdSiguiente;
@@ -2313,16 +2331,16 @@ function renderFichaPers() {
   $('#btn-fp-pdf').hidden = !F && !sn;
 }
 // ---- Checklists diarios en la ficha: los del día y los últimos 31 días (del servidor; los propios también desde el teléfono) ----
-const EST_CHK = { REVISADO: ['ok', 'validado ✔'], VALIDADO: ['ok', 'validado ✔'], PENDIENTE: ['warn', 'espera firma supervisor'], 'SIN ENVIAR': ['warn', 'sin enviar'], RECHAZADO: ['no', 'rechazado'], FALTA: ['no', 'no realizado'] };
+const EST_CHK = { ANULADO: ['no', 'borrado 🗑'], REVISADO: ['ok', 'validado ✔'], VALIDADO: ['ok', 'validado ✔'], PENDIENTE: ['warn', 'espera firma supervisor'], 'SIN ENVIAR': ['warn', 'sin enviar'], RECHAZADO: ['no', 'rechazado'], FALTA: ['no', 'no realizado'] };
 const lineaChk = (x) => x.revision === 'REVISADO' ? `Validado por ${x.reviso || 'supervisor'}${x.fRev ? ' · ' + x.fRev : ''}`
-  : x.revision === 'RECHAZADO' ? `Rechazado por ${x.reviso || 'supervisor'}: ${x.motivo || ''}` : `Firmado ${x.hora || ''} · espera la firma de ${x.supervisor || 'su supervisor'}`;
+  : x.revision === 'RECHAZADO' ? `Rechazado por ${x.reviso || 'supervisor'}: ${x.motivo || ''}` : x.revision === 'ANULADO' ? `Borrado por ${x.reviso || 'supervisor'}${x.fRev ? ' · ' + x.fRev : ''}: ${x.motivo || ''}` : `Firmado ${x.hora || ''} · espera la firma de ${x.supervisor || 'su supervisor'}`;
 function chkDeFicha(F, usuario) {
   const lista = ((F && F.chkd) || []).slice();
   if (sesionActiva() && sesion().usuario === usuario) {   // lo guardado en el teléfono completa lo que aún no llega al servidor
     const t = chkdLocal(usuario);
     Object.entries(t).forEach(([f, dia]) => Object.values(dia).forEach(r => { if (!lista.some(x => x.id === r.id)) {
       const e = estadoChkd(r); lista.push({ id: r.id, fecha: f, hora: r.hora, usuario, nombre: r.nombre, codigo: r.codigo, titulo: r.titulo, nObs: r.nObs || 0, supervisor: r.supervisor,
-        revision: e === 'VALIDADO' ? 'REVISADO' : e === 'RECHAZADO' ? 'RECHAZADO' : 'PENDIENTE', reviso: r.reviso || '', fRev: r.fRev || '', motivo: r.motivo || '', local: true, pdf: false }); } }));
+        revision: e === 'VALIDADO' ? 'REVISADO' : r.revision === 'ANULADO' ? 'ANULADO' : e === 'RECHAZADO' ? 'RECHAZADO' : 'PENDIENTE', reviso: r.reviso || '', fRev: r.fRev || '', motivo: r.motivo || '', local: true, pdf: false }); } }));
   }
   return lista.sort((a, b) => (b.fecha + b.hora).localeCompare(a.fecha + a.hora));
 }
@@ -2336,11 +2354,11 @@ function renderChkFicha(F, sn) {
   $('#fp-chk-hoy').innerHTML = CHKD_ORDEN.map((k, i) => { const x = est[i], C = CHKD[k], e = x ? x.revision : 'FALTA';
     return `<li class="con-adm"><div class="info"><b>${C.icono} ${esc(C.corto)}</b><small>${esc(C.codigo)}${x && x.nObs ? ' · ⚠ ' + x.nObs + ' con observación' : ''}</small>
       ${x ? `<small style="display:block;font-weight:700">${esc(lineaChk(x))}</small>` : '<small style="display:block">No realizado hoy.</small>'}</div>
-      <span class="badge ${EST_CHK[e][0]}">${EST_CHK[e][1]}</span>${x ? `<div class="acc-adm"><button type="button" class="btn-pdf" data-fp-chk="${esc(x.id)}">📄 PDF</button></div>` : ''}</li>`; }).join('');
+      <span class="badge ${EST_CHK[e][0]}">${EST_CHK[e][1]}</span>${x ? `<div class="acc-adm"><button type="button" class="btn-pdf" data-fp-chk="${esc(x.id)}">📄 PDF</button>${puedeRepoChk() && !x.local && x.revision !== 'ANULADO' && (esAdmin() || usr !== sesion().usuario) ? `<button type="button" class="rojo-btn" data-fp-chkdel="${esc(x.id)}">🗑 Borrar</button>` : ''}</div>` : ''}</li>`; }).join('');
   const dias = [...new Set(lista.map(x => x.fecha).filter(f => f !== hoy))];
   $('#fp-chk-hist').innerHTML = dias.length ? dias.map(f => { const del = CHKD_ORDEN.map(k => ultimo(f, k)), v = del.filter(x => x && x.revision === 'REVISADO').length;
     return `<li class="con-adm"><div class="info"><b>${esc(NOMBRE_DIA[diaSemana(f)])} ${esc(fDMA(f))}</b><small>${v} de ${CHKD_ORDEN.length} validados</small></div>
-      <div class="acc-adm">${del.map((x, i) => x ? `<button type="button" class="btn-pdf" data-fp-chk="${esc(x.id)}" title="${esc(CHKD[CHKD_ORDEN[i]].corto)}">${CHKD[CHKD_ORDEN[i]].icono}${x.revision === 'REVISADO' ? '✔' : x.revision === 'RECHAZADO' ? '✖' : '⏳'}</button>` : '').join('')}</div></li>`; }).join('')
+      <div class="acc-adm">${del.map((x, i) => x ? `<button type="button" class="btn-pdf" data-fp-chk="${esc(x.id)}" title="${esc(CHKD[CHKD_ORDEN[i]].corto)}">${CHKD[CHKD_ORDEN[i]].icono}${x.revision === 'REVISADO' ? '✔' : x.revision === 'ANULADO' ? '🗑' : x.revision === 'RECHAZADO' ? '✖' : '⏳'}</button>` : '').join('')}</div></li>`; }).join('')
     : '<li><div class="info"><small>Sin checklists en los últimos días.</small></div></li>';
   $('#btn-fp-chk-repo').hidden = !puedeRepoChk();
 }
@@ -2408,7 +2426,7 @@ function renderRepoChk() {
     const C = CHKD[x.codigo] || { icono: '📋', corto: x.titulo, codigo: x.codigo };
     return `<li class="con-adm"><div class="info"><b>${C.icono} ${esc(x.nombre)} · ${esc(C.corto)}</b><small>${esc([C.codigo, x.hora, x.cargo, x.area, x.equipo].filter(Boolean).join(' · '))}${x.nObs ? ' · ⚠ ' + x.nObs + ' con observación' : ''}</small>
       <small style="display:block;font-weight:700">${esc(lineaChk(x))}</small></div><span class="badge ${(EST_CHK[x.revision] || EST_CHK.PENDIENTE)[0]}">${(EST_CHK[x.revision] || EST_CHK.PENDIENTE)[1]}</span>
-      <div class="acc-adm"><button type="button" class="btn-pdf" data-rc-pdf="${esc(x.id)}">📄 PDF</button><button type="button" data-rc-ficha="${esc(x.usuario)}">📇 Ficha</button></div></li>`;
+      <div class="acc-adm"><button type="button" class="btn-pdf" data-rc-pdf="${esc(x.id)}">📄 PDF</button><button type="button" data-rc-ficha="${esc(x.usuario)}">📇 Ficha</button>${x.revision !== 'ANULADO' && x.usuario !== (sesionActiva() && !esAdmin() ? sesion().usuario : '') ? `<button type="button" class="rojo-btn" data-rc-del="${esc(x.id)}">🗑 Borrar</button>` : ''}</div></li>`;
   }).join('') + '</ul>').join('');
 }
 function csvRepoChk() {
@@ -2435,8 +2453,25 @@ $('#btn-rc-csv').addEventListener('click', csvRepoChk);
 $('#btn-rc-volver').addEventListener('click', () => history.back());
 $('#rc-res').addEventListener('click', (e) => {
   const p = e.target.closest('[data-rc-pdf]'); if (p) { const x = RC.lista.find(z => z.id === p.dataset.rcPdf); if (x) verChkRegistro(x); return; }
-  const f = e.target.closest('[data-rc-ficha]'); if (f) abrirFichaPers({ usuario: f.dataset.rcFicha });
+  const f = e.target.closest('[data-rc-ficha]'); if (f) { abrirFichaPers({ usuario: f.dataset.rcFicha }); return; }
+  const d = e.target.closest('[data-rc-del]'); if (d) borrarChk(RC.lista.find(z => z.id === d.dataset.rcDel), buscarRepoChk);
 });
+// Borrar (anular) un checklist: la persona debe realizarlo nuevamente. Queda en la planilla como BORRADO con motivo (trazabilidad).
+async function borrarChk(x, luego) {
+  if (!x) return;
+  const C = CHKD[x.codigo] || { corto: x.titulo };
+  const motivo = pedirMotivo(`¿Borrar el checklist "${C.corto}" de ${x.nombre} del ${fDMA(x.fecha)}?\n\nQueda registrado como BORRADO (no se pierde el documento) y ${x.nombre} deberá realizarlo nuevamente${x.fecha === diaISO() ? ' antes de mantener o inspeccionar hoy' : ''}.`);
+  if (!motivo) return;
+  if (!navigator.onLine) { toast('Se necesita señal para borrar el checklist.'); return; }
+  try {
+    const cuerpo = { accion: 'anularChkDiario', id: x.id, motivo };
+    if (esAdmin()) cuerpo.claveAdmin = ls.get('claveAdmin', ''); else cuerpo.token = sesion().token;
+    await postPersonal(cuerpo, 60000);
+    toast(`Checklist borrado ✔ · ${x.nombre} debe realizarlo nuevamente.`, 4500);
+    ArchDB.del && ArchDB.del('chk-' + x.id + '-REVISADO').catch(() => {});
+    if (luego) luego();
+  } catch (e) { toast('No se pudo borrar: ' + e.message, 6000); }
+}
 $('#btn-cd-repo').addEventListener('click', () => abrirRepoChk());
 $('#btn-adm-repo').addEventListener('click', () => abrirRepoChk());
 $('#btn-fp-chk-repo').addEventListener('click', () => { const u = (FPV && ((FPV.F && FPV.F.persona && FPV.F.persona.usuario) || FPV.usuario)) || ''; abrirRepoChk({ usuario: u, estado: 'TODOS' }); });
@@ -2479,6 +2514,8 @@ $('#btn-fp-subir').addEventListener('click', async () => {
 });
 async function cargarPersonalSilencioso() { try { const r = await fetchT(CONFIG.SCRIPT_URL + '?accion=personal&clave=' + encodeURIComponent(CONFIG.CLAVE) + '&claveAdmin=' + encodeURIComponent(ls.get('claveAdmin', '')), {}, 20000); const j = await r.json(); if (j.ok) ls.set('personal', j.personal); } catch (e) {} }
 $('#v-fichap').addEventListener('click', async (e) => {
+  const cd = e.target.closest('[data-fp-chkdel]');
+  if (cd) { const usr = (FPV.F && FPV.F.persona && FPV.F.persona.usuario) || FPV.usuario, x = chkDeFicha(FPV.F, usr).find(z => z.id === cd.dataset.fpChkdel); borrarChk(x, () => abrirFichaPers({ usuario: usr })); return; }
   const ck = e.target.closest('[data-fp-chk]');
   if (ck) { const usr = (FPV.F && FPV.F.persona && FPV.F.persona.usuario) || FPV.usuario, x = chkDeFicha(FPV.F, usr).find(z => z.id === ck.dataset.fpChk); if (x) verChkRegistro(x); return; }
   const v = e.target.closest('[data-fp-ver]');
@@ -2746,7 +2783,7 @@ function ir(vista, opt = {}) {
   // Quien abre la app escaneando el QR de un tablero (sin ingresar) solo ve la ficha técnica
   if (vista === 'inicio' && modoQR()) { VISTAS.forEach(v => $('#v-' + v).hidden = v !== 'ficha'); window.scrollTo(0, 0); return; }
   VISTAS.forEach(v => $('#v-' + v).hidden = v !== vista);
-  document.body.classList.toggle('vista-ancha', vista === 'plano-ed');
+  document.body.classList.toggle('vista-ancha', vista === 'plano-ed' || vista === 'uni-ed');
   recordarVista(vista, opt);
   if (vista === 'chkd') { setTimeout(renderChkd, 0); if (navigator.onLine) setTimeout(() => refrescarEstadoChkd(), 300); }
   if (vista === 'inicio') {
@@ -4434,10 +4471,20 @@ const ajustes = (o) => (String(o.regulable || '').toUpperCase() === 'NO'
   : [o.calibre ? 'Calibre ' + o.calibre : '', o.in ? 'In ' + o.in : '', o.isd ? 'Isd ' + o.isd : '', o.disparo || ''])
   .concat([o.curva ? 'Curva ' + o.curva : '', o.icu ? 'Icu ' + o.icu : '']).filter(Boolean).join(' · ');
 // Circuitos del tablero de origen: cantidad, cuál alimenta a este tablero (PB-1) y el detalle opcional de los demás
+// Protección diferencial: sensibilidad, tipo (clase según la forma de onda de la fuga) y dispositivo
+const DIF_SENS = ['30 mA', '100 mA', '300 mA', '500 mA', '1 A', '3 A'];
+const DIF_CLASES = ['Tipo AC', 'Tipo A', 'Tipo F', 'Tipo B', 'Tipo B+'];
+const DIF_DISP = ['Interruptor diferencial (RCCB)', 'Disyuntor diferencial (RCBO)', 'Bloque diferencial (Vigi)', 'Relé diferencial con toroide (50G)'];
+const DIF_AYUDA = 'Tipo AC: solo fuga alterna (cargas resistivas). Tipo A: alterna + continua pulsante (enchufes, electrónica monofásica; mínimo recomendado). Tipo F: frecuencias mixtas (variadores monofásicos). Tipo B / B+: toda forma de onda, incluida continua lisa (variadores trifásicos, cargadores, UPS).';
+const difCls = (o) => String((o && (o.difTipo || o.clase)) || '').replace(/^Tipo\s*/i, '');
+const difDispCorto = (d) => (String(d || '').match(/\(([^)]+)\)/) || [, d || ''])[1];
+// Texto corto para el plano (30mA-A) y largo para tablas (Diferencial 30 mA tipo A · RCBO)
+const difCorto = (o) => o && o.dif ? String(o.dif).replace(/\s+/g, '') + (difCls(o) ? '-' + difCls(o) : '') : '';
+const difLargo = (o) => o && o.dif ? ['Diferencial ' + o.dif + (o.difTipo ? ' ' + o.difTipo.toLowerCase() : ''), difDispCorto(o.difDisp)].filter(Boolean).join(' · ') : '';
 function circuitosOrigen(m) {
   const a = m.alim || {}, n = Math.max(1, Math.min(48, parseInt(a.circuitos, 10) || 1)), pos = Math.max(0, Math.min(n - 1, (parseInt(a.posicion, 10) || 1) - 1));
   const det = Array.isArray(a.circs) ? a.circs : Object.values(a.circs || {});
-  return { n, pos, lista: Array.from({ length: n }, (_, k) => Object.assign({ id: '', destino: '', in: '' }, (a.circs || {})[k] || {}, { reserva: /RESERVA/i.test(((a.circs || {})[k] || {}).destino || '') })) };
+  return { n, pos, lista: Array.from({ length: n }, (_, k) => Object.assign({ id: '', destino: '', in: '', dif: '', difTipo: '', difDisp: '' }, (a.circs || {})[k] || {}, { reserva: /RESERVA/i.test(((a.circs || {})[k] || {}).destino || '') })) };
 }
 function origenUni(m) { const a = m.alim || {}; return [a.nombre, a.tension].filter(Boolean).join(' · ') || 'Origen sin definir'; }
 function bloqueosUni(m) {
@@ -4530,8 +4577,9 @@ function construirUni(m, cx = {}) {
     CO.lista.forEach((c, k) => {
       const xi = xs[k], esta = k === p, col = esta ? UC.N : UC.GR;
       L.linea(xi, yb0, xi, yb0 + 1.2, { w: esta ? 0.4 : 0.25, c: col }); simInterruptor(L, xi, yb0 + 1.2, esta ? 0.42 : 0.36);
+      if (c.dif) { const q = esta ? 1.7 : 1.4; L.rect(xi + 1.2, yb0 + 2.8, q, q, { w: 0.18, c: '#0077A8' }); L.linea(xi + 1.2, yb0 + 2.8 + q, xi + 1.2 + q, yb0 + 2.8, { w: 0.14, c: '#0077A8' }); }
       if (c.reserva && !esta) L.linea(xi - 1, yb0 + 7, xi + 1, yb0 + 7, { w: 0.25, c: UC.GR });
-      if (esta) { envolver((c.id || 'Circuito ' + (k + 1)) + ' (circuito ' + (k + 1) + ' de ' + CO.n + ') alimenta este tablero' + (c.in ? ' · ' + c.in : ''), cajaAR - xi - 8, 5.4, true, 2)
+      if (esta) { envolver((c.id || 'Circuito ' + (k + 1)) + ' (circuito ' + (k + 1) + ' de ' + CO.n + ') alimenta este tablero' + (c.in ? ' · ' + c.in : '') + (c.dif ? ' · ' + difLargo(c) : ''), cajaAR - xi - 8, 5.4, true, 2)
           .forEach((l, j) => L.texto(xi + 2, yb0 + 24.5 + j * 2.6, l, { pt: 5.4, b: 1 }));
         L.texto(xi, yb0 + 10.2, String(k + 1), { pt: 3.8, b: 1, al: 'center' }); return; }
       // identificación, a qué alimenta (hasta 3 líneas) y corriente, ajustados al ancho disponible
@@ -4540,11 +4588,12 @@ function construirUni(m, cx = {}) {
         let yy = yb0 + 10.2;
         envolver(c.id || String(k + 1), w, pt, true, 2).forEach(l => { L.texto(xi, yy, l, { pt, b: 1, al: 'center', c: UC.N }); yy += pt * 0.5; });
         if (c.destino) envolver(c.destino, w, pt - 0.3, false, 4).forEach(l => { L.texto(xi, yy, l, { pt: pt - 0.3, al: 'center', c: UC.GR }); yy += (pt - 0.3) * 0.5; });
-        if (c.in) L.texto(xi, yy, recortar(c.in, w, pt - 0.3), { pt: pt - 0.3, al: 'center', c: UC.GR });
+        if (c.in) { L.texto(xi, yy, recortar(c.in, w, pt - 0.3), { pt: pt - 0.3, al: 'center', c: UC.GR }); yy += (pt - 0.3) * 0.5; }
+        if (c.dif) L.texto(xi, yy, recortar(difCorto(c), w, pt - 0.3, true), { pt: pt - 0.3, b: 1, al: 'center', c: '#0077A8' });
       } else if (k % 2 === 0 || k === CO.n - 1) L.texto(xi, yb0 + 10.2, String(k + 1), { pt: 3.4, al: 'center', c: UC.GR });
     });
     L.linea(X, yb0 + 7.9, X, y + 60 + dy, { w: 0.4 });
-  } else L.linea(X, y + 31, X, y + 60 + dy, { w: 0.4 });
+  } else { L.linea(X, y + 31, X, y + 60 + dy, { w: 0.4 }); const c0 = CO.lista[0]; if (c0 && c0.dif) { L.rect(X + 1.6, y + 33.5, 2.2, 2.2, { w: 0.2, c: '#0077A8' }); L.linea(X + 1.6, y + 35.7, X + 3.8, y + 33.5, { w: 0.16, c: '#0077A8' }); L.texto(X + 5, y + 35.4, recortar(difLargo(c0), cajaAR - X - 9, 5.2, true), { pt: 5.2, b: 1, c: '#0077A8' }); } }
   zona(20, y, cajaAR - 20, 40 + dy, 'alim');
   // Cable
   const cab = m.cable || {};
@@ -4578,7 +4627,7 @@ function construirUni(m, cx = {}) {
     L.circ(X - 13, yy + 6, 3.4, { w: 0.35, c: '#0077A8' });
     L.linea(X - 9.6, yy + 6, X - 1.7, yy + 6, { w: 0.3, c: '#0077A8' });
     L.texto(X - 13, yy + 7, recortar(dif.cod || '50G', 6, 4.6, true), { pt: 4.6, b: 1, al: 'center', c: '#0077A8' });
-    lineasInfo(L, X + 6, yy + 5, [[dif.tipo || 'Protección diferencial', 1], [[dif.I ? 'I = ' + dif.I : '', dif.T ? 'T = ' + dif.T : ''].filter(Boolean).join(' · ')]], (otra ? X2 - 8 : 236) - X - 6);
+    lineasInfo(L, X + 6, yy + 5, [[dif.tipo || 'Protección diferencial', 1], [[dif.I ? 'I = ' + dif.I : '', dif.T ? 'T = ' + dif.T : '', dif.clase || ''].filter(Boolean).join(' · ')]], (otra ? X2 - 8 : 236) - X - 6);
     zona(X - 18, yy, 110, 12, 'dif');
     yy += 12;
   }
@@ -4637,7 +4686,7 @@ function construirUni(m, cx = {}) {
         simCarga(L, xi, yF + 14.5, o.carga);
         zona(xi - Math.max(5, w / 2), yF, Math.max(10, w), 36, pref + ':' + lista.indexOf(o));
         L.texto(xi, yF + 22.6, recortar(o.id || '—', w, 6.2, true), { pt: 6.2, b: 1, al: 'center' });
-        L.texto(xi, yF + 25.5, recortar([o.polos ? o.polos + 'x' : '', o.in].join('') + (o.dif ? ' ' + o.dif : ''), w, 5.2), { pt: 5.2, al: 'center' });
+        L.texto(xi, yF + 25.5, recortar([o.polos ? o.polos + 'x' : '', o.in].join('') + (o.dif ? ' ' + difCorto(o) : ''), w, 5.2), { pt: 5.2, al: 'center' });
         envolver(o.desc || '', w, 4.8, false, 2).forEach((l, j) => L.texto(xi, yF + 28.2 + j * 2.4, l, { pt: 4.8, al: 'center', c: UC.GR }));
         if (o.destino) L.texto(xi, yF + 33.4, recortar('› ' + o.destino, w, 4.8, true), { pt: 4.8, b: 1, al: 'center', c: UC.R });
         else if (o.cable || o.kw) L.texto(xi, yF + 33.4, recortar([o.kw, o.cable].filter(Boolean).join(' · '), w, 4.4), { pt: 4.4, al: 'center', c: UC.GR });
@@ -4673,7 +4722,7 @@ function construirUni(m, cx = {}) {
     if (siUni(d2.tiene)) {
       L.linea(xS, y2, xS, y2 + 10, { w: 0.4 }); L.circ(xS, y2 + 5, 1.5, { w: 0.35, c: '#0077A8' }); L.circ(xS - 12, y2 + 5, 3, { w: 0.35, c: '#0077A8' });
       L.linea(xS - 9, y2 + 5, xS - 1.5, y2 + 5, { w: 0.3, c: '#0077A8' }); L.texto(xS - 12, y2 + 5.9, recortar(d2.cod || '50G', 5.4, 4.2, true), { pt: 4.2, b: 1, al: 'center', c: '#0077A8' });
-      lineasInfo(L, xS + 6, y2 + 4.4, [[d2.tipo || 'Protección diferencial', 1], [[d2.I ? 'I = ' + d2.I : '', d2.T ? 'T = ' + d2.T : ''].filter(Boolean).join(' · ')]], 104);
+      lineasInfo(L, xS + 6, y2 + 4.4, [[d2.tipo || 'Protección diferencial', 1], [[d2.I ? 'I = ' + d2.I : '', d2.T ? 'T = ' + d2.T : '', d2.clase || ''].filter(Boolean).join(' · ')]], 104);
       y2 += 10;
     }
     L.linea(xS, y2, xS, y2 + 3, { w: 0.4 });
@@ -4688,14 +4737,14 @@ function construirUni(m, cx = {}) {
   zona(X - 52, 32, 22, 30, 'pb'); zona(X - 52, yT + 14, 22, 24, 'pb');
   const cargasUsadas = [['enchufe1', 'Enchufe hembra'], ['enchufeJ', 'Enchufe jumbo'], ['ilum', 'Iluminación'], ['motor', 'Motor / ventilador'], ['motorvdf', 'Motor con VDF'], ['motorps', 'Motor c/ partidor suave'],
     ['bomba', 'Bomba'], ['trafo', 'Transformador'], ['ups', 'UPS'], ['condensador', 'Condensadores'], ['spd', 'Supresor (SPD)'], ['medicion', 'Medición']].filter(([k]) => sal.concat(conSec ? sec.salidas || [] : []).some(o => o.carga === k || (k === 'enchufe1' && o.carga === 'enchufe3')));
-  const conDif = sal.concat(conSec ? sec.salidas || [] : []).some(o => o.dif), extra = cargasUsadas.length || conDif;
+  const conDif = sal.concat(conSec ? sec.salidas || [] : []).concat(CO.lista).some(o => o.dif), extra = cargasUsadas.length || conDif;
   if (yFin <= (extra ? 254 : 262)) {   // simbología (como en los planos del fabricante)
     const ys = extra ? 260 : 268; L.texto(20, ys - 3.5, 'SIMBOLOGÍA', { pt: 5.8, b: 1, c: UC.GR });
     L.rect(20, ys - 1.5, 220, extra ? 22 : 14, { w: 0.2, c: UC.CL });
     if (extra) { let xx = 26;
       const paso = Math.min(44, 212 / (cargasUsadas.length + (conDif ? 1.6 : 0)));
       cargasUsadas.forEach(([k, n]) => { simCarga(L, xx, ys + 12, k); L.texto(xx + 4.4, ys + 17.5, recortar(n, paso - 5.5, 5), { pt: 5 }); xx += paso; });
-      if (conDif) { L.rect(xx - 1.4, ys + 15.3, 2.8, 2.8, { w: 0.22 }); L.linea(xx - 1.4, ys + 18.1, xx + 1.4, ys + 15.3, { w: 0.18 }); L.texto(xx + 4, ys + 17.5, 'Diferencial 30 mA en la salida', { pt: 5 }); } }
+      if (conDif) { L.rect(xx - 1.4, ys + 15.3, 2.8, 2.8, { w: 0.22 }); L.linea(xx - 1.4, ys + 18.1, xx + 1.4, ys + 15.3, { w: 0.18 }); L.texto(xx + 4, ys + 16.2, 'Diferencial en el circuito', { pt: 5 }); L.texto(xx + 4, ys + 18.8, '30mA-A = 30 mA tipo A', { pt: 4.4, c: UC.GR }); } }
     simInterruptor(L, 26, ys, 0.62); L.texto(30, ys + 6, 'Interruptor (MCCB / MCB)', { pt: 5 });
     L.circ(70, ys + 5, 1.2, { w: 0.3, c: '#0077A8' }); L.circ(76, ys + 5, 2.6, { w: 0.3, c: '#0077A8' }); L.texto(76, ys + 5.8, '50G', { pt: 3.4, b: 1, al: 'center', c: '#0077A8' });
     L.texto(80.5, ys + 6, 'Toroide y relé diferencial', { pt: 5 });
@@ -4770,16 +4819,18 @@ function construirUni(m, cx = {}) {
   const comp = [];
   if (a.equipo || marcaModelo(a)) comp.push([a.equipo || 'Alim.', 'Interruptor alimentación (en ' + (a.nombre || 'origen') + ')', marcaModelo(a), ajustes(a)]);
   comp.push([gnl.equipo || 'Q0', 'Interruptor general' + (gnl.tipo ? ' ' + gnl.tipo : '') + (gnl.polos ? ' · ' + gnl.polos + ' polos' : '') + (gnl.bobina ? ' · ' + gnl.bobina : ''), marcaModelo(gnl), ajustes(gnl)]);
-  if (siUni(dif.tiene)) comp.push([dif.cod || 'RD', dif.tipo || 'Protección diferencial', [dif.marca, dif.modelo].filter(Boolean).join(' '), [dif.I, dif.T, String(dif.regulable || '').toUpperCase() === 'NO' ? 'fijo' : ''].filter(Boolean).join(' · ')]);
+  { const CO2 = circuitosOrigen(m), cf = CO2.lista[CO2.pos]; if (cf && (cf.dif || cf.id)) comp.push([cf.id || 'Circ. ' + (CO2.pos + 1), 'Circuito del tablero de origen que alimenta este tablero (' + (CO2.pos + 1) + ' de ' + CO2.n + ')', '', [cf.in, difLargo(cf)].filter(Boolean).join(' · ')]);
+    const otros = CO2.lista.filter((c, k) => k !== CO2.pos && c.dif); if (otros.length) comp.push(['Origen', 'Otros circuitos del tablero de origen con diferencial', '', otros.map(c => (c.id || '?') + ' ' + difCorto(c)).join(' · ')]); }
+  if (siUni(dif.tiene)) comp.push([dif.cod || 'RD', dif.tipo || 'Protección diferencial', [dif.marca, dif.modelo].filter(Boolean).join(' '), [dif.I, dif.T, dif.clase, String(dif.regulable || '').toUpperCase() === 'NO' ? 'fijo' : ''].filter(Boolean).join(' · ')]);
   if (siUni(tr.tiene)) comp.push(['T1', tr.tipo || 'Transformador', '', [tr.kva, tr.relacion, tr.grupo].filter(Boolean).join(' · ')]);
   if (siUni((m.trafoCtl || {}).tiene)) { const tc2 = m.trafoCtl; comp.push(['TC', 'Transformador de control' + (tc2.alimenta ? ' (' + tc2.alimenta + ')' : ''), tc2.marca || '', [tc2.relacion, tc2.va, tc2.prot].filter(Boolean).join(' · ')]); }
-  sal.forEach(o => comp.push([o.id || '—', [o.tipo, nombreCarga(o.carga), o.desc, o.kw, o.cable ? 'cable ' + o.cable : '', o.destino ? '› ' + o.destino : ''].filter(Boolean).join(' · '), [o.marca, o.modelo].filter(Boolean).join(' '), [o.polos ? o.polos + ' polos' : '', o.in, o.curva ? 'curva ' + o.curva : '', o.dif].filter(Boolean).join(' · ')]));
+  sal.forEach(o => comp.push([o.id || '—', [o.tipo, nombreCarga(o.carga), o.desc, o.kw, o.cable ? 'cable ' + o.cable : '', o.destino ? '› ' + o.destino : ''].filter(Boolean).join(' · '), [o.marca, o.modelo].filter(Boolean).join(' '), [o.polos ? o.polos + ' polos' : '', o.in, o.curva ? 'curva ' + o.curva : '', difLargo(o)].filter(Boolean).join(' · ')]));
   if (siUni((m.sec || {}).tiene)) {
     const sc = m.sec, g2 = sc.general || {}, d2 = sc.dif || {};
     comp.push([(sc.qt || {}).equipo || 'Q-T1', 'Interruptor alimentación transformador T1', '', (sc.qt || {}).calibre || '']);
     comp.push([g2.equipo || 'Q0-B', 'Interruptor general ' + (sc.nombre || 'TDF 400 V'), marcaModelo(g2), ajustes(g2)]);
-    if (siUni(d2.tiene)) comp.push([d2.cod || 'RD', (d2.tipo || 'Protección diferencial') + ' (' + (sc.nombre || 'TDF 400 V') + ')', '', [d2.I, d2.T].filter(Boolean).join(' · ')]);
-    (sc.salidas || []).forEach(o => comp.push([o.id || '—', [o.tipo, nombreCarga(o.carga), o.desc, o.kw, o.cable ? 'cable ' + o.cable : ''].filter(Boolean).join(' · '), [o.marca, o.modelo].filter(Boolean).join(' '), [o.polos ? o.polos + ' polos' : '', o.in, o.curva ? 'curva ' + o.curva : '', o.dif].filter(Boolean).join(' · ')]));
+    if (siUni(d2.tiene)) comp.push([d2.cod || 'RD', (d2.tipo || 'Protección diferencial') + ' (' + (sc.nombre || 'TDF 400 V') + ')', '', [d2.I, d2.T, d2.clase].filter(Boolean).join(' · ')]);
+    (sc.salidas || []).forEach(o => comp.push([o.id || '—', [o.tipo, nombreCarga(o.carga), o.desc, o.kw, o.cable ? 'cable ' + o.cable : ''].filter(Boolean).join(' · '), [o.marca, o.modelo].filter(Boolean).join(' '), [o.polos ? o.polos + ' polos' : '', o.in, o.curva ? 'curva ' + o.curva : '', difLargo(o)].filter(Boolean).join(' · ')]));
   }
   if (siUni((m.tp || {}).tiene)) comp.push(['TP', 'Puesta a tierra', '', (m.tp || {}).desc || '']);
   if (siUni(of.tiene)) comp.push([of.equipo || 'PB-3', 'Otra fuente: ' + (of.desc || ''), '', of.ubicacion || '']);
@@ -4901,9 +4952,9 @@ const AT_INT = ['Identificación', 'Corriente / polos', 'Marca y modelo', 'Ajust
 const SIMB = {
   int: { n: 'Interruptor termomagnético', ext: [-1.5, -7, 3.6, 7], b: [[0, -7], [0, 7]], at: AT_INT,
     d(g) { g.l(0, -7, 0, -3.5); g.a(0, 0, 3.5, -90, 90); g.l(-1.2, -3.5, 1.2, -3.5); g.l(0, 3.5, 0, 7); } },
-  dif: { n: 'Interruptor diferencial', ext: [-1.5, -7, 9.2, 7], b: [[0, -7], [0, 7]], at: ['Identificación', 'Corriente / polos', 'Sensibilidad (mA)', 'Marca y modelo'],
+  dif: { n: 'Interruptor diferencial', ext: [-1.5, -7, 9.2, 7], b: [[0, -7], [0, 7]], at: ['Identificación', 'Corriente / polos', 'Sensibilidad y tipo (30 mA · A)', 'Marca y modelo'],
     d(g) { SIMB.int.d(g); g.p([[4.4, -2.4], [9.2, -2.4], [9.2, 2.4], [4.4, 2.4]]); g.l(4.4, 2.4, 9.2, -2.4); g.t(5.6, -0.2, 'P', { pt: 3.8 }); g.t(8, 2, 'D', { pt: 3.8 }); } },
-  rd: { n: 'Toroide y relé diferencial 50G', ext: [-1.8, -5, 9.9, 5], b: [[0, -5], [0, 5]], at: ['Identificación', 'Sensibilidad', 'Tiempo', 'Marca y modelo'],
+  rd: { n: 'Toroide y relé diferencial 50G', ext: [-1.8, -5, 9.9, 5], b: [[0, -5], [0, 5]], at: ['Identificación', 'Sensibilidad y tipo', 'Tiempo', 'Marca y modelo'],
     d(g) { g.l(0, -5, 0, 5); g.c(0, 0, 1.6); g.l(1.6, 0, 4.2, 0, { dash: 1 }); g.c(7, 0, 2.8); g.t(7, 0.9, '50G', { pt: 3.6, b: 1 }); } },
   fus: { n: 'Fusible', ext: [-1.5, -6, 1.5, 6], b: [[0, -6], [0, 6]], at: ['Identificación', 'Corriente', 'Tipo (gG, aM…)', ''],
     d(g) { g.l(0, -6, 0, 6); g.p([[-1.4, -3.5], [1.4, -3.5], [1.4, 3.5], [-1.4, 3.5]]); } },
@@ -5947,14 +5998,15 @@ $('#pe-esq-form').addEventListener('input', (e) => {
 $('#pe-esq-form').addEventListener('change', (e) => {
   const k = e.target.dataset && e.target.dataset.k; if (!k || !PE) return;
   PE._editando = null;
-  if ((/\.(marca|tipo|tipoProt)$/.test(k) && !/^tablero\./.test(k)) || /^alim\.(circuitos|posicion)$/.test(k)) renderEsqPE();
+  if ((/\.(marca|tipo|tipoProt|dif)$/.test(k) && !/^tablero\./.test(k)) || /^alim\.(circuitos|posicion)$/.test(k)) renderEsqPE();
 });
 $('#pe-esq-form').addEventListener('focusout', () => { if (PE) PE._editando = null; });
 $('#pe-esq-form').addEventListener('click', (e) => {
   if (!PE || !PE.m.uni) return;
   const sg = e.target.closest('[data-seg] button');
   if (sg) { const k = sg.closest('[data-seg]').dataset.seg; cambioEsq(u => setP(u, k, sg.dataset.v), null, true); return; }
-  if (e.target.closest('#pe-btn-ue-sal2')) { cambioEsq(u => { const sc = u.sec = u.sec || {}; (sc.salidas = sc.salidas || []).push({ id: 'Q' + (sc.salidas.length + 11), carga: 'enchufe3', tipo: 'MCB (miniatura)', desc: '', polos: '3', in: '', dif: '30 mA', destino: '', destinoId: '' }); }, null, true); return; }
+  if (e.target.closest('#pe-btn-ue-sal2')) { cambioEsq(u => { const sc = u.sec = u.sec || {}; (sc.salidas = sc.salidas || []).push({ id: 'Q' + (sc.salidas.length + 11), carga: 'enchufe3', tipo: 'MCB (miniatura)', desc: '', polos: '3', in: '', dif: '30 mA', difTipo: 'Tipo A', difDisp: 'Disyuntor diferencial (RCBO)', destino: '', destinoId: '' }); }, null, true); return; }
+  if (e.target.closest('[data-dif-todos]')) { cambioEsq(u => difATodos(u), null, true); return; }
   if (e.target.closest('#pe-btn-ue-salN')) { cambioEsq(u => agregarVariasSal(u.salidas = u.salidas || []), null, true); return; }
   if (e.target.closest('#pe-btn-ue-sal')) { cambioEsq(u => { (u.salidas = u.salidas || []).push({ id: 'Q' + (u.salidas.length + 1), carga: 'tablero', tipo: 'MCCB (caja moldeada)', desc: '', polos: '3', in: '', dif: '', destino: '', destinoId: '' }); }, null, true); return; }
   const d = e.target.closest('[data-sal-del]');
@@ -6300,17 +6352,18 @@ const CARGAS = [['tablero', 'Alimentador a otro tablero'], ['enchufe3', 'Enchufe
   ['trafo', 'Transformador / autotransformador'], ['ups', 'UPS / respaldo'], ['condensador', 'Banco de condensadores'], ['spd', 'Supresor de transientes (SPD)'],
   ['medicion', 'Medición / instrumentos'], ['control', 'Circuito de control'], ['reserva', 'Reserva']];
 const nombreCarga = (k) => (CARGAS.find(c => c[0] === k) || [])[1] || '';
-const SAL = (id, carga, tipo, polos, inn, extra = {}) => Object.assign({ id, carga, tipo, polos, in: inn, curva: '', dif: '', marca: '', modelo: '', desc: '', destino: '', destinoId: '' }, extra);
+const SAL = (id, carga, tipo, polos, inn, extra = {}) => { const o = Object.assign({ id, carga, tipo, polos, in: inn, curva: '', dif: '', marca: '', modelo: '', desc: '', destino: '', destinoId: '' }, extra);
+  if (o.dif && !o.difTipo) Object.assign(o, { difTipo: 'Tipo A', difDisp: 'Disyuntor diferencial (RCBO)' }); return o; };
 const MCB = 'MCB (miniatura)', MCCB = 'MCCB (caja moldeada)', CTL_400 = { tiene: 'SI', relacion: '400/220 V', va: '100 VA', prot: 'Fusibles 2 A (prim.) + 2 A (sec.)', alimenta: 'Luces piloto, bobina de disparo, parada de emergencia' };
 const PLANTILLAS = {
   TDF600: { icono: '⚡', desc: 'Fuerza 600 V. Interruptor general MCCB con relé diferencial 50G y bobina de disparo; salidas trifásicas a tableros aguas abajo.',
     m: { tablero: { tension: '600 V' }, alim: { tension: '600 V' }, general: { tipo: MCCB, polos: '3', regulable: 'SI', calibre: '400 A', icu: '36 kA', bobina: 'Bobina MX + parada de emergencia' },
-      dif: { tiene: 'SI', tipo: 'Relé diferencial con toroide', cod: '50G', I: '100 mA', T: '60 ms', regulable: 'SI' }, trafo: { tiene: 'NO' },
+      dif: { tiene: 'SI', tipo: 'Relé diferencial con toroide', cod: '50G', clase: 'Tipo A', I: '100 mA', T: '60 ms', regulable: 'SI' }, trafo: { tiene: 'NO' },
       trafoCtl: Object.assign({}, CTL_400, { relacion: '600/120 V' }), barra: { tension: '600 V' }, tp: { tiene: 'SI', desc: 'Barra Cu a malla de tierra' },
       salidas: [SAL('Q1', 'tablero', MCCB, '3', '250 A', { desc: 'Alimentador TDF 400 V' }), SAL('Q2', 'tablero', MCCB, '3', '250 A', { desc: 'Alimentador tablero' }), SAL('Q3', 'reserva', MCCB, '3', '160 A', { desc: 'Reserva' })] } },
   TDF400: { icono: '🔌', desc: 'Fuerza 400 V. General MCCB con relé 50G; enchufes hembra trifásicos 5x32 A y monofásicos 3x16 A con diferencial 30 mA; iluminación.',
     m: { tablero: { tension: '400 V' }, alim: { tension: '400 V' }, general: { tipo: MCCB, polos: '3', regulable: 'SI', calibre: '250 A', icu: '25 kA', bobina: 'Bobina MX + parada de emergencia' },
-      dif: { tiene: 'SI', tipo: 'Relé diferencial con toroide', cod: '50G', I: '100 mA', T: '60 ms', regulable: 'SI' }, trafo: { tiene: 'NO' }, trafoCtl: CTL_400,
+      dif: { tiene: 'SI', tipo: 'Relé diferencial con toroide', cod: '50G', clase: 'Tipo A', I: '100 mA', T: '60 ms', regulable: 'SI' }, trafo: { tiene: 'NO' }, trafoCtl: CTL_400,
       barra: { tension: '400 V' }, tp: { tiene: 'SI', desc: 'Barra Cu a malla de tierra' },
       salidas: [SAL('Q1', 'enchufe3', MCB, '3', '32 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 5x32 A' }), SAL('Q2', 'enchufe3', MCB, '3', '32 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 5x32 A' }),
         SAL('Q3', 'enchufe1', MCB, '1', '16 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 3x16 A' }), SAL('Q4', 'enchufe1', MCB, '1', '16 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 3x16 A' }),
@@ -6324,20 +6377,20 @@ const PLANTILLAS = {
         SAL('Q5', 'enchufe3', MCB, '3', '32 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 5x32 A' })] } },
   CDD: { icono: '🏭', desc: 'Centro de distribución: TDF 600 V (general MCCB + relé 50G) con salidas a tableros, transformador T1 (100, 250, 300 o 500 kVA) y TDF 400 V de servicios con salidas trifásicas y monofásicas.',
     m: { tablero: { tension: '600 V' }, alim: { tension: '600 V' }, general: { tipo: MCCB, polos: '3', regulable: 'SI', calibre: '630 A', icu: '50 kA', bobina: 'Bobina MX' },
-      dif: { tiene: 'SI', tipo: 'Relé diferencial con toroide', cod: '50G', I: '300 mA', T: '150 ms', regulable: 'SI' },
+      dif: { tiene: 'SI', tipo: 'Relé diferencial con toroide', cod: '50G', clase: 'Tipo A', I: '300 mA', T: '150 ms', regulable: 'SI' },
       trafo: { tiene: 'SI', tipo: 'Transformador', kva: '300 kVA', relacion: '600/400-231 V', grupo: 'Dyn1' }, trafoCtl: { tiene: 'NO' }, barra: { tension: '600 V' },
       tp: { tiene: 'SI', desc: 'Malla de tierra del centro (2 chicotes)' },
       salidas: [SAL('Q1', 'tablero', MCCB, '3', '250 A', { desc: 'Alimentador TDF 600 V' }), SAL('Q2', 'tablero', MCCB, '3', '250 A', { desc: 'Alimentador TDF 600 V' }),
         SAL('Q3', 'tablero', MCCB, '3', '250 A', { desc: 'Alimentador TEJ (jumbo)' }), SAL('Q4', 'reserva', MCCB, '3', '160 A', { desc: 'Reserva' })],
       sec: { tiene: 'SI', nombre: 'TDF 400 V SERVICIOS', tension: '400-231 V', qt: { equipo: 'Q-T1', calibre: '400 A', tipoBloqueo: TIPOS_BLOQUEO[0] },
         general: { equipo: 'Q0-B', tipo: MCCB, polos: '4', regulable: 'SI', calibre: '400 A', icu: '36 kA' },
-        dif: { tiene: 'SI', tipo: 'Relé diferencial con toroide', cod: '50G', I: '300 mA', T: '150 ms' },
+        dif: { tiene: 'SI', tipo: 'Relé diferencial con toroide', cod: '50G', clase: 'Tipo A', I: '300 mA', T: '150 ms' },
         salidas: [SAL('Q11', 'enchufe3', MCB, '3', '32 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 5x32 A' }), SAL('Q12', 'enchufe3', MCB, '3', '32 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 5x32 A' }),
           SAL('Q13', 'enchufe1', MCB, '1', '16 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 3x16 A' }), SAL('Q14', 'enchufe1', MCB, '1', '16 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 3x16 A' }),
           SAL('Q15', 'ilum', MCB, '1', '10 A', { curva: 'C', dif: '30 mA', desc: 'Alumbrado del centro' }), SAL('Q16', 'tablero', MCB, '4', '40 A', { curva: 'C', desc: 'Alimentador TDA' })] } } },
   TEJ: { icono: '🚜', desc: 'Tablero eléctrico jumbo 600 V. General 3x250 A con 50G y parada de emergencia; enchufe hembra jumbo 225 A y enchufes con diferencial 30 mA.',
     m: { tablero: { tension: '600 V' }, alim: { tension: '600 V' }, general: { tipo: MCCB, polos: '3', regulable: 'SI', calibre: '250 A', icu: '36 kA', bobina: 'Bobina MX + parada de emergencia (P/E)' },
-      dif: { tiene: 'SI', tipo: 'Relé diferencial con toroide', cod: '50G', I: '100 mA', T: '60 ms', regulable: 'SI' }, trafo: { tiene: 'NO' },
+      dif: { tiene: 'SI', tipo: 'Relé diferencial con toroide', cod: '50G', clase: 'Tipo A', I: '100 mA', T: '60 ms', regulable: 'SI' }, trafo: { tiene: 'NO' },
       trafoCtl: Object.assign({}, CTL_400, { relacion: '600/220 V' }), barra: { tension: '600 V' }, tp: { tiene: 'SI', desc: 'Barra de tierra T.P.' },
       salidas: [SAL('Q1', 'enchufeJ', MCCB, '3', '225 A', { desc: 'Enchufe hembra jumbo 225 A' }), SAL('Q2', 'enchufe1', MCB, '1', '16 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 16 A' }),
         SAL('Q3', 'enchufe3', MCB, '3', '32 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 32 A' })] } },
@@ -6349,13 +6402,13 @@ const PLANTILLAS = {
         SAL('Q3', 'ilum', MCB, '1', '10 A', { curva: 'C', desc: 'Alumbrado' })] } },
   TDFYC: { icono: '⚙️', desc: 'Fuerza y control 400 V. General con 50G; partidores (guardamotor + contactor) para motores; circuito de control.',
     m: { tablero: { tension: '400 V' }, alim: { tension: '400 V' }, general: { tipo: MCCB, polos: '3', regulable: 'SI', calibre: '160 A', icu: '25 kA', bobina: 'Bobina MX + parada de emergencia' },
-      dif: { tiene: 'SI', tipo: 'Relé diferencial con toroide', cod: '50G', I: '100 mA', T: '60 ms', regulable: 'SI' }, trafo: { tiene: 'NO' },
+      dif: { tiene: 'SI', tipo: 'Relé diferencial con toroide', cod: '50G', clase: 'Tipo A', I: '100 mA', T: '60 ms', regulable: 'SI' }, trafo: { tiene: 'NO' },
       trafoCtl: Object.assign({}, CTL_400, { alimenta: 'Contactores, luces piloto, parada de emergencia' }), barra: { tension: '400 V' }, tp: { tiene: 'SI', desc: 'Barra de tierra' },
       salidas: [SAL('Q1', 'motor', 'Guardamotor', '3', '25 A', { desc: 'Motor 1 (partida directa)' }), SAL('Q2', 'motor', 'Guardamotor', '3', '25 A', { desc: 'Motor 2 (partida directa)' }),
         SAL('Q3', 'enchufe3', MCB, '3', '32 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 5x32 A' })] } },
   TPV: { icono: '🌀', desc: 'Partidor de ventilador. General MCCB; guardamotor y contactor del ventilador; circuito de control con piloto y parada de emergencia.',
     m: { tablero: { tension: '600 V' }, alim: { tension: '600 V' }, general: { tipo: MCCB, polos: '3', regulable: 'SI', calibre: '125 A', icu: '25 kA', bobina: 'Parada de emergencia' },
-      dif: { tiene: 'SI', tipo: 'Relé diferencial con toroide', cod: '50G', I: '100 mA', T: '60 ms', regulable: 'SI' }, trafo: { tiene: 'NO' },
+      dif: { tiene: 'SI', tipo: 'Relé diferencial con toroide', cod: '50G', clase: 'Tipo A', I: '100 mA', T: '60 ms', regulable: 'SI' }, trafo: { tiene: 'NO' },
       trafoCtl: Object.assign({}, CTL_400, { relacion: '600/220 V', alimenta: 'Contactor, luz piloto, parada de emergencia' }), barra: { tension: '600 V' }, tp: { tiene: 'SI', desc: 'Barra de tierra' },
       salidas: [SAL('Q1', 'motor', 'Guardamotor', '3', '63 A', { desc: 'Ventilador (partida directa)' })] } }
 };
@@ -6396,7 +6449,7 @@ function modeloNuevo(t) {
     alim: { tipo: 'externa', idTablero: '', nombre: t.alim || '', tension: '', equipo: t.bloqueo || '', marca: '', modelo: '', in: '', isd: '', tipoBloqueo: TIPOS_BLOQUEO[0] },
     cable: { seccion: t.calibre || '', largo: '' },
     general: { equipo: 'Q0', marca: '', modelo: '', calibre: '', in: '', isd: '', bobina: '', tipoBloqueo: TIPOS_BLOQUEO[0] },
-    dif: { tiene: '', tipo: 'Relé diferencial', cod: '50G', I: '', T: '' },
+    dif: { tiene: '', tipo: 'Relé diferencial', cod: '50G', clase: 'Tipo A', I: '', T: '' },
     trafo: { tiene: '', tipo: 'Autotransformador', kva: '', relacion: '', grupo: '' },
     trafoCtl: { tiene: '', relacion: '', va: '', prot: '', alimenta: '' },
     barra: { tension: '' }, salidas: [], tp: { tiene: 'SI', desc: '' },
@@ -6408,6 +6461,7 @@ function modeloNuevo(t) {
 }
 async function abrirEditorUni(id, opt = {}) {
   if (!esAdmin()) { toast('Solo el administrador confecciona y emite diagramas.'); return; }
+  UEV.vb = null; UEV.pag = 0;
   id = String(id).toUpperCase();
   const t = buscarCache(id) || fichaActual;
   if (!t) return;
@@ -6450,18 +6504,30 @@ function fUni(k, label, opt = {}) {
 }
 // Detalle de los demás circuitos del tablero de origen (opcional): identificación, destino y corriente
 // Agrega N salidas copiando la última (mismo tipo, polos, corriente y carga) con identificación correlativa
+function difATodos(u) {
+  const co = circuitosOrigen(u), base = co.lista[co.pos]; if (!base.dif) { toast('Primero indica el diferencial del circuito ' + (co.pos + 1) + ' (el que alimenta este tablero).'); return false; }
+  const a = u.alim = u.alim || {}; a.circs = a.circs || {};
+  co.lista.forEach((c, k) => { if (k === co.pos || c.reserva) return; const x = a.circs[k] = Object.assign({}, a.circs[k] || {}); Object.assign(x, { dif: base.dif, difTipo: base.difTipo || '', difDisp: base.difDisp || '' }); });
+  return true;
+}
 function agregarVariasSal(lista) {
   const n = parseInt(prompt('¿Cuántas salidas iguales a la última agregar? (1 a 24)', '4'), 10); if (!(n > 0)) return;
-  const base = lista[lista.length - 1] || { carga: 'enchufe3', tipo: 'MCB (miniatura)', polos: '3', in: '', dif: '30 mA' };
+  const base = lista[lista.length - 1] || { carga: 'enchufe3', tipo: 'MCB (miniatura)', polos: '3', in: '', dif: '30 mA', difTipo: 'Tipo A', difDisp: 'Disyuntor diferencial (RCBO)' };
   const pref = String(base.id || 'Q').replace(/\d+$/, '') || 'Q', num = Math.max(0, ...lista.map(x => parseInt(String(x.id || '').match(/(\d+)$/)?.[1] || 0, 10)));
   for (let i = 1; i <= Math.min(24, n); i++) lista.push(Object.assign({}, base, { id: pref + (num + i), destino: '', destinoId: '' }));
 }
+const difCirc = (k, c) => `<div class="ue-circ-d"><select data-k="alim.circs.${k}.dif" aria-label="Diferencial"><option value="">Sin diferencial</option>${opc(DIF_SENS, c.dif)}</select>${c.dif
+  ? `<select data-k="alim.circs.${k}.difTipo" aria-label="Tipo de diferencial" class="${c.difTipo ? '' : 'val-falta'}"><option value="">Tipo… *</option>${opc(DIF_CLASES, c.difTipo)}</select><select data-k="alim.circs.${k}.difDisp" aria-label="Dispositivo"><option value="">Dispositivo…</option>${opc(DIF_DISP, c.difDisp)}</select>` : ''}</div>`;
 function htmlCircOrigen(m) {
-  const co = circuitosOrigen(m); if (co.n < 2) return '';
-  return `<div class="ancho ue-circ"><label>Otros circuitos del tablero de origen (opcional: identificación, a qué alimenta y corriente; escribe RESERVA si está libre)</label>
+  const co = circuitosOrigen(m);
+  if (co.n < 2) { const c = co.lista[0]; return `<div class="ancho ue-circ"><label>Protección diferencial del circuito que alimenta este tablero (en el tablero de origen)</label>
+    <div class="ue-circ-g"><div class="ue-circ-f sel"><b>1</b><input data-k="alim.circs.0.id" value="${esc(c.id)}" placeholder="Q-A1"><span>→ alimenta ESTE TABLERO</span><input data-k="alim.circs.0.in" value="${esc(c.in)}" placeholder="In" list="dl-calibres">${difCirc(0, c)}</div></div>
+    <p class="muted" style="margin:4px 0 0">${esc(DIF_AYUDA)}</p></div>`; }
+  return `<div class="ancho ue-circ"><label>Circuitos del tablero de origen: identificación, a qué alimenta, corriente y protección diferencial (escribe RESERVA si está libre)</label>
+    <p class="muted" style="margin:2px 0 4px">${esc(DIF_AYUDA)}</p><button type="button" data-dif-todos="1" style="margin:0 0 6px">⇉ Aplicar el diferencial del circuito ${co.pos + 1} (este tablero) a todos los circuitos</button>
     <div class="ue-circ-g">${co.lista.map((c, k) => k === co.pos
-      ? `<div class="ue-circ-f sel"><b>${k + 1}</b><input data-k="alim.circs.${k}.id" value="${esc(c.id)}" placeholder="Q-A${k + 1}"><span>→ alimenta ESTE TABLERO</span><input data-k="alim.circs.${k}.in" value="${esc(c.in)}" placeholder="In" list="dl-calibres"></div>`
-      : `<div class="ue-circ-f"><b>${k + 1}</b><input data-k="alim.circs.${k}.id" value="${esc(c.id)}" placeholder="Q-A${k + 1}"><textarea data-k="alim.circs.${k}.destino" class="may" rows="2" placeholder="Alimenta a… (detalle del circuito)">${esc(c.destino)}</textarea><input data-k="alim.circs.${k}.in" value="${esc(c.in)}" placeholder="In" list="dl-calibres"></div>`).join('')}</div></div>`;
+      ? `<div class="ue-circ-f sel"><b>${k + 1}</b><input data-k="alim.circs.${k}.id" value="${esc(c.id)}" placeholder="Q-A${k + 1}"><span>→ alimenta ESTE TABLERO</span><input data-k="alim.circs.${k}.in" value="${esc(c.in)}" placeholder="In" list="dl-calibres">${difCirc(k, c)}</div>`
+      : `<div class="ue-circ-f"><b>${k + 1}</b><input data-k="alim.circs.${k}.id" value="${esc(c.id)}" placeholder="Q-A${k + 1}"><textarea data-k="alim.circs.${k}.destino" class="may" rows="2" placeholder="Alimenta a… (detalle del circuito)">${esc(c.destino)}</textarea><input data-k="alim.circs.${k}.in" value="${esc(c.in)}" placeholder="In" list="dl-calibres">${difCirc(k, c)}</div>`).join('')}</div></div>`;
 }
 const segU = (k, label, ops, req) => `<div class="ue-f ancho"><label>${esc(label)}${req ? ' *' : ''}</label><div class="seg" data-seg="${k}">${ops.map(([v, t]) =>
   `<button type="button" data-v="${v}" class="${String(getP(UE.m, k) || '') === v ? 'sel' : ''}">${esc(t)}</button>`).join('')}</div></div>`;
@@ -6521,7 +6587,7 @@ function htmlEditorUni() {
       <div class="ue-sal-h"><b>Salida ${i + 1}</b><span><button type="button" data-sal-up="${base}:${i}" aria-label="Subir">↑</button><button type="button" data-sal-del="${base}:${i}" aria-label="Quitar">✕</button></span></div>
       <div class="ue-g">${fUni(`${base}.${i}.id`, 'Identificación', { ph: 'Q1' })}${fUni(`${base}.${i}.carga`, 'Tipo de carga', { opciones: CARGAS.map(c => c[1]) })}${fUni(`${base}.${i}.tipo`, 'Protección', { opciones: ['MCB (miniatura)', 'MCCB (caja moldeada)', 'Diferencial (RCCB)', 'Guardamotor', 'Fusibles'] })}
       ${fUni(`${base}.${i}.in`, 'Corriente (In)', { lista: 'dl-calibres', ph: '32 A' })}${fUni(`${base}.${i}.polos`, 'Polos', { opciones: ['1', '2', '3', '4'] })}
-      ${/MCB/.test(s.tipo || '') ? fUni(`${base}.${i}.curva`, 'Curva', { opciones: ['B', 'C', 'D'] }) : ''}${fUni(`${base}.${i}.dif`, 'Diferencial', { opciones: ['30 mA', '100 mA', '300 mA'] })}
+      ${/MCB/.test(s.tipo || '') ? fUni(`${base}.${i}.curva`, 'Curva', { opciones: ['B', 'C', 'D'] }) : ''}${fUni(`${base}.${i}.dif`, 'Diferencial (sensibilidad)', { opciones: DIF_SENS })}${s.dif ? fUni(`${base}.${i}.difTipo`, 'Tipo de diferencial', { opciones: DIF_CLASES, req: 1 }) + fUni(`${base}.${i}.difDisp`, 'Dispositivo diferencial', { opciones: DIF_DISP }) : ''}
       ${datalistsProt(`${base}.${i}`, s)}${fUni(`${base}.${i}.marca`, 'Marca', { lista: 'dl-marcas' })}${fUni(`${base}.${i}.modelo`, 'Modelo', { lista: 'dl-mod-' + `${base}.${i}`.replace(/\W/g, '-') })}
       ${fUni(`${base}.${i}.desc`, 'Descripción / carga', { ph: 'Enchufe 32 A, alumbrado…', ancho: 1 })}
       ${fUni(`${base}.${i}.cable`, 'Cable de la salida', { ph: '4x6 mm² + T', lista: 'dl-cables' })}${fUni(`${base}.${i}.kw`, 'Potencia de la carga', { ph: '15 kW' })}
@@ -6568,12 +6634,13 @@ function htmlEditorUni() {
     ${fUni('general.bobina', 'Accesorios', { ph: 'Bobina MX, parada de emergencia', ancho: 1 })}
     ${fUni('general.tipoBloqueo', 'Tipo de bloqueo PB-2', { opciones: TIPOS_BLOQUEO, vacio: false, ancho: 1 })}</div></details>
   <details class="ue-sec"><summary>5 · Protección diferencial y transformadores</summary><div class="ue-g">
+    <p class="muted ancho" style="margin:0 0 4px">${esc(DIF_AYUDA)}</p>
     ${segU('dif.tiene', '¿Tiene protección diferencial general?', SINO)}
     ${m.dif.tiene === 'SI' ? `<datalist id="dl-dif">${((marcaCat(m.dif.marca) || {}).dif || []).map(x => `<option value="${esc(x)}">`).join('')}</datalist>`
       + fUni('dif.tipo', 'Tipo', { opciones: ['Relé diferencial con toroide', 'Bloque diferencial (Vigi)', 'Interruptor diferencial (RCCB)'] }) + fUni('dif.cod', 'Código', { ph: '50G' })
       + fUni('dif.marca', 'Marca', { lista: 'dl-marcas' }) + fUni('dif.modelo', 'Modelo', { lista: 'dl-dif', ph: 'Vigirex RH99M' })
       + segU('dif.regulable', '¿Sensibilidad y tiempo regulables?', [['SI', 'Sí, regulable'], ['NO', 'No, fijo']])
-      + fUni('dif.I', 'Sensibilidad', { opciones: ['30 mA', '100 mA', '200 mA', '300 mA', '500 mA', '1 A', '3 A'] }) + fUni('dif.T', 'Tiempo', { opciones: ['Instantáneo', '30 ms', '60 ms', '150 ms', '250 ms', '310 ms', '500 ms', '1 s'] }) : ''}
+      + fUni('dif.clase', 'Tipo de diferencial', { opciones: DIF_CLASES, req: 1 }) + fUni('dif.I', 'Sensibilidad', { opciones: ['30 mA', '100 mA', '200 mA', '300 mA', '500 mA', '1 A', '3 A'] }) + fUni('dif.T', 'Tiempo', { opciones: ['Instantáneo', '30 ms', '60 ms', '150 ms', '250 ms', '310 ms', '500 ms', '1 s'] }) : ''}
     <h4 class="ancho" style="margin:16px 0 0">Transformador de potencia</h4>
     ${segU('trafo.tiene', '¿Tiene transformador o autotransformador de potencia?', SINO)}
     ${m.trafo.tiene === 'SI' ? fUni('trafo.tipo', 'Tipo', { opciones: ['Autotransformador', 'Transformador', 'Transformador de aislación'] }) + fUni('trafo.kva', 'Potencia', { opciones: ['15 kVA', '30 kVA', '45 kVA', '75 kVA', '100 kVA', '112,5 kVA', '150 kVA', '225 kVA', '250 kVA', '300 kVA', '500 kVA', '750 kVA', '1000 kVA'] }) + fUni('trafo.relacion', 'Relación', { opciones: ['600/400-231 V', '600/400 V', '600/380-220 V', '400/231 V', '380/220 V', '1000/400 V'] }) + fUni('trafo.grupo', 'Grupo de conexión', { opciones: ['Dy1', 'Dyn1', 'Dyn5', 'Dyn11', 'Yy0', 'Monofásico'] }) : ''}
@@ -6596,7 +6663,7 @@ function htmlEditorUni() {
       + fUni('sec.general.equipo', 'Interruptor general (identificación)', { ph: 'Q0-B' }) + camposProt('sec.general', sc.general || {})
       + segU('sec.dif.tiene', '¿Tiene protección diferencial general?', SINO)
       + ((sc.dif || {}).tiene === 'SI' ? fUni('sec.dif.tipo', 'Tipo', { opciones: ['Relé diferencial con toroide', 'Bloque diferencial (Vigi)', 'Interruptor diferencial (RCCB)'] }) + fUni('sec.dif.cod', 'Código', { ph: '50G' })
-        + fUni('sec.dif.I', 'Sensibilidad', { opciones: ['30 mA', '100 mA', '300 mA', '500 mA', '1 A'] }) + fUni('sec.dif.T', 'Tiempo', { opciones: ['Instantáneo', '60 ms', '150 ms', '250 ms', '500 ms'] }) : '') : ''}</div>
+        + fUni('sec.dif.clase', 'Tipo de diferencial', { opciones: DIF_CLASES, req: 1 }) + fUni('sec.dif.I', 'Sensibilidad', { opciones: ['30 mA', '100 mA', '300 mA', '500 mA', '1 A'] }) + fUni('sec.dif.T', 'Tiempo', { opciones: ['Instantáneo', '60 ms', '150 ms', '250 ms', '500 ms'] }) : '') : ''}</div>
     ${siUni(sc.tiene) ? sal2 + '<button type="button" class="big" id="btn-ue-sal2">＋ Agregar salida al tablero de servicios</button>' : ''}</details>
   <details class="ue-sec"><summary>7 · Puesta a tierra</summary><div class="ue-g">
     ${segU('tp.tiene', '¿Tiene puesta a tierra?', SINO)}${fUni('tp.desc', 'Descripción', { ph: 'Barra Cu a malla del CCDD', ancho: 1 })}</div></details>
@@ -6641,6 +6708,14 @@ function validarUni(m) {
   const dup = ids.filter((v, i) => ids.indexOf(v) !== i);
   if (dup.length) err.push('Salidas con identificación repetida: ' + [...new Set(dup)].join(', ') + '.');
   (m.salidas || []).forEach((s, i) => { if (!s.id || !s.in) av.push(`Salida ${i + 1}: falta identificación o corriente.`); });
+  // Toda protección diferencial debe indicar a qué tipo corresponde (AC, A, F, B, B+)
+  const sinTipo = [];
+  (m.salidas || []).forEach((s, i) => { if (s.dif && !s.difTipo) sinTipo.push('salida ' + (s.id || i + 1)); });
+  if (siUni((m.sec || {}).tiene)) ((m.sec || {}).salidas || []).forEach((s, i) => { if (s.dif && !s.difTipo) sinTipo.push('salida ' + (s.id || i + 1) + ' (servicios)'); });
+  circuitosOrigen(m).lista.forEach((c, k) => { if (c.dif && !c.difTipo) sinTipo.push('circuito ' + (k + 1) + ' del tablero de origen'); });
+  if (siUni((m.dif || {}).tiene) && !(m.dif || {}).clase) sinTipo.push('diferencial general');
+  if (siUni((m.sec || {}).tiene) && siUni(((m.sec || {}).dif || {}).tiene) && !m.sec.dif.clase) sinTipo.push('diferencial general de servicios');
+  if (sinTipo.length) err.push('Indica el tipo de protección diferencial (AC, A, F, B o B+) en: ' + sinTipo.join(', ') + '.');
   if (!sesionActiva()) err.push('Ingresa como personal autorizado: quien confecciona firma como elaboró y revisó.');
   const num = (v) => parseFloat(String(v || '').replace(',', '.'));
   if (num(g.in) && num(g.calibre) && num(g.in) > num(g.calibre)) av.push('La regulación In del interruptor general es mayor que su calibre.');
@@ -6671,8 +6746,8 @@ function actualizarUni(soloPrev) {
   ueTimer = setTimeout(() => {
     try {
       const L = construirUni(Object.assign({}, m, { firmas: firmasPrevia() }), contextoUni(m, true));
-      const zonas = L.zonas.map(z => `<rect class="ue-zona" data-zona="${z.z}" x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="1.5"/>`).join('');
-      $('#ue-prev').innerHTML = L.pags.map((p, i) => i ? uniASvg(p, { clase: 'ue-svg' }) : uniASvg(p, { clase: 'ue-svg' }).replace('</svg>', zonas + '</svg>')).join('');
+      UEV.pags = L.pags; UEV.zonas = L.zonas.map(z => `<rect class="ue-zona" data-zona="${z.z}" x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="1.5"/>`).join('');
+      dibujarVistaUni();
     } catch (err) { $('#ue-prev').innerHTML = `<p class="error">No se pudo dibujar: ${esc(err.message)}</p>`; }
   }, 250);
 }
@@ -6700,7 +6775,7 @@ $('#ue-form').addEventListener('change', (e) => {
   const el = e.target;
   if (el.id === 'ue-ref-hoja') { UE.m.ref = el.value ? { hoja: el.value, i: null } : null; guardarLocalUni(); renderEditorUni(); return; }
   const k = el.dataset && el.dataset.k; if (!k || !UE) return;
-  if ((/\.(marca|tipo|tipoProt)$/.test(k) && !/^tablero\./.test(k)) || /^alim\.(circuitos|posicion)$/.test(k)) { guardarLocalUni(); renderEditorUni(); return; }
+  if ((/\.(marca|tipo|tipoProt|dif)$/.test(k) && !/^tablero\./.test(k)) || /^alim\.(circuitos|posicion)$/.test(k)) { guardarLocalUni(); renderEditorUni(); return; }
   if (k === 'alim.idTablero') {
     const id = el.value, e2 = uniEmitido(id), t2 = buscarCache(id);
     UE.m.alim.nombre = e2 ? e2.modelo.tablero.nombre : nombreTab(t2);
@@ -6718,7 +6793,8 @@ $('#ue-form').addEventListener('click', (e) => {
   if (sg) { setP(UE.m, sg.closest('[data-seg]').dataset.seg, sg.dataset.v); guardarLocalUni(); renderEditorUni(); return; }
   const r = e.target.closest('[data-ref-i]');
   if (r) { const i = +r.dataset.refI; UE.m.ref = { hoja: REF.tableros[i].hoja, i }; guardarLocalUni(); renderEditorUni(); return; }
-  if (e.target.closest('#btn-ue-sal2')) { const sc = UE.m.sec = UE.m.sec || {}; const n = (sc.salidas || []).length + 11; (sc.salidas = sc.salidas || []).push({ id: 'Q' + n, carga: 'enchufe3', tipo: 'MCB (miniatura)', desc: '', polos: '3', in: '', dif: '30 mA', destino: '', destinoId: '' }); guardarLocalUni(); renderEditorUni(); return; }
+  if (e.target.closest('#btn-ue-sal2')) { const sc = UE.m.sec = UE.m.sec || {}; const n = (sc.salidas || []).length + 11; (sc.salidas = sc.salidas || []).push({ id: 'Q' + n, carga: 'enchufe3', tipo: 'MCB (miniatura)', desc: '', polos: '3', in: '', dif: '30 mA', difTipo: 'Tipo A', difDisp: 'Disyuntor diferencial (RCBO)', destino: '', destinoId: '' }); guardarLocalUni(); renderEditorUni(); return; }
+  if (e.target.closest('[data-dif-todos]')) { if (difATodos(UE.m)) { guardarLocalUni(); renderEditorUni(); toast('Diferencial aplicado a los circuitos del tablero de origen ✔'); } return; }
   if (e.target.closest('#btn-ue-salN')) { const lista = UE.m.salidas = UE.m.salidas || []; agregarVariasSal(lista); guardarLocalUni(); renderEditorUni(); return; }
   if (e.target.closest('#btn-ue-sal')) { const n = (UE.m.salidas || []).length + 1; (UE.m.salidas = UE.m.salidas || []).push({ id: 'Q' + n, carga: 'enchufe3', tipo: 'MCB (miniatura)', desc: '', polos: '3', in: '', dif: '', destino: '', destinoId: '' }); guardarLocalUni(); renderEditorUni(); return; }
   const d = e.target.closest('[data-sal-del]');
@@ -6773,12 +6849,55 @@ function irAZonaUni(z, raiz = '#ue-form') {
   destino.classList.add('ue-flash'); setTimeout(() => destino.classList.remove('ue-flash'), 1600);
   return true;
 }
-$('#ue-prev').addEventListener('click', async (ev) => {
-  if (!UE) return;
+// ---- Lienzo del diagrama (igual que el editor de planos tipo): mover, acercar, hojas y componentes tocables ----
+const UEV = { pag: 0, vb: null, pags: [], zonas: '', ptrs: new Map(), mov: 0 };
+function dibujarVistaUni() {
+  const box = $('#ue-prev'); if (!box) return;
+  if (UEV.pag >= UEV.pags.length) UEV.pag = 0;
+  const vb = UEV.vb || [0, 0, UNI_HOJA.W, UNI_HOJA.H], p = UEV.pags[UEV.pag]; if (!p) { box.innerHTML = ''; return; }
+  let svg = uniASvg(p, { clase: 'ue-svg', viewBox: vb.map(v => Math.round(v * 100) / 100).join(' ') });
+  if (UEV.pag === 0) svg = svg.replace('</svg>', UEV.zonas + '</svg>');
+  box.innerHTML = svg;
+  const b1 = $('#ue-barra [data-uev="p1"]'); if (b1) b1.hidden = UEV.pags.length < 2;
+  document.querySelectorAll('#ue-barra [data-uev^="p"]').forEach(b => b.classList.toggle('on', b.dataset.uev === 'p' + UEV.pag));
+}
+const escalaUEV = () => { const r = $('#ue-lienzo').getBoundingClientRect(), vb = UEV.vb || [0, 0, UNI_HOJA.W, UNI_HOJA.H], s = Math.max(vb[2] / r.width, vb[3] / r.height); return { r, vb, s, ox: (r.width - vb[2] / s) / 2, oy: (r.height - vb[3] / s) / 2 }; };
+function zoomUEV(f, cx, cy) {
+  const { r, vb, s, ox, oy } = escalaUEV();
+  if (cx == null) { cx = r.left + r.width / 2; cy = r.top + r.height / 2; }
+  const px = vb[0] + (cx - r.left - ox) * s, py = vb[1] + (cy - r.top - oy) * s;
+  const w = Math.max(25, Math.min(UNI_HOJA.W * 1.6, vb[2] / f)), h = w * vb[3] / vb[2];
+  UEV.vb = [px - (px - vb[0]) * w / vb[2], py - (py - vb[1]) * h / vb[3], w, h]; dibujarVistaUni();
+}
+$('#ue-barra').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-uev]'); if (!b || !UE) return; const a = b.dataset.uev;
+  if (a === 'ver') { UEV.vb = null; dibujarVistaUni(); }
+  else if (a === 'mas') zoomUEV(1.4); else if (a === 'menos') zoomUEV(1 / 1.4);
+  else if (a === 'p0' || a === 'p1') { UEV.pag = +a.slice(1); UEV.vb = null; dibujarVistaUni(); }
+  else if (a === 'zonas') { b.classList.toggle('on'); $('#ue-lienzo').classList.toggle('sin-zonas', !b.classList.contains('on')); }
+  else if (a === 'pdf') { try { const doc = await pdfUni(UE.m, true); verDocumento({ titulo: 'Vista previa (borrador)', codigo: CODIGO_UNI(UE.m.id) + ' · Rev. ' + UE.m.rev, blobLocal: doc.output('blob'), mime: 'application/pdf', nombre: nombreArchUni(UE.m, 'pdf', 1) }); } catch (err) { toast(err.message, 5000); } }
+});
+const lzU = $('#ue-lienzo');
+lzU.addEventListener('wheel', (e) => { if (!UE) return; e.preventDefault(); zoomUEV(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX, e.clientY); }, { passive: false });
+lzU.addEventListener('pointerdown', (e) => { UEV.ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); UEV.mov = 0; if (UEV.ptrs.size === 2) UEV.dist = null; });
+lzU.addEventListener('pointermove', (e) => {
+  const p0 = UEV.ptrs.get(e.pointerId); if (!p0) return;
+  if (UEV.ptrs.size === 1) {
+    const dx = e.clientX - p0.x, dy = e.clientY - p0.y; UEV.mov += Math.abs(dx) + Math.abs(dy);
+    if (UEV.mov > 6) { lzU.classList.add('arrastra'); try { lzU.setPointerCapture(e.pointerId); } catch (er) {} const { vb, s } = escalaUEV(); UEV.vb = [vb[0] - dx * s, vb[1] - dy * s, vb[2], vb[3]]; dibujarVistaUni(); }
+  } else if (UEV.ptrs.size === 2) {
+    const [a, b] = [...UEV.ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y); UEV.mov = 99;
+    if (UEV.dist) zoomUEV(Math.hypot((p0 === a ? e.clientX : a.x) - (p0 === b ? e.clientX : b.x), (p0 === a ? e.clientY : a.y) - (p0 === b ? e.clientY : b.y)) / UEV.dist, (a.x + b.x) / 2, (a.y + b.y) / 2);
+    UEV.dist = d;
+  }
+  UEV.ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+});
+const finPtrU = (e) => { UEV.ptrs.delete(e.pointerId); if (!UEV.ptrs.size) lzU.classList.remove('arrastra'); UEV.dist = null; };
+lzU.addEventListener('pointerup', finPtrU); lzU.addEventListener('pointercancel', finPtrU);
+$('#ue-prev').addEventListener('click', (ev) => {
+  if (!UE || UEV.mov > 6) return;
   const zn = ev.target.closest && ev.target.closest('[data-zona]');
-  if (zn && irAZonaUni(zn.dataset.zona)) return;
-  try { const doc = await pdfUni(UE.m, true); verDocumento({ titulo: 'Vista previa (borrador)', codigo: CODIGO_UNI(UE.m.id) + ' · Rev. ' + UE.m.rev, blobLocal: doc.output('blob'), mime: 'application/pdf', nombre: nombreArchUni(UE.m, 'pdf', 1) }); }
-  catch (err) { toast(err.message, 5000); }
+  if (zn && irAZonaUni(zn.dataset.zona)) toast('Datos del componente abiertos en "Esquema del tablero".', 2200);
 });
 $('#btn-ue-pdf').addEventListener('click', async () => { if (UE) try { descargarBlob((await pdfUni(UE.m, true)).output('blob'), nombreArchUni(UE.m, 'pdf', 1)); } catch (err) { toast(err.message, 5000); } });
 $('#btn-ue-dxf').addEventListener('click', () => { if (UE) descargarBlob(dxfABlob(uniADxf(construirUni(UE.m, contextoUni(UE.m, true)))), nombreArchUni(UE.m, 'dxf', 1)); });
