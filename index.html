@@ -349,13 +349,21 @@
   .cd-items .cd-obs-h { width: 28%; } .cd-items .cd-obs-c input { min-height: 34px; font-size: 13px; }
   .cd-items .cd-resp { width: 92px; font-size: 11px; text-align: center; }
   .cd-obs-in { margin-top: 6px !important; border-color: #D9822B !important; }
+  #cdf-hoja input:not([type=checkbox]), #cdf-hoja textarea { text-transform: uppercase; }
+  #cdf-hoja input::placeholder, #cdf-hoja textarea::placeholder { text-transform: none; }
+  .cd-man { margin-top: 6px !important; border-color: #1F5FA8 !important; }
   .cd-inv { color: #8A5A00; font-weight: 700; }
   .cd-na { text-align: center; font-weight: 800; margin: 4px 0; font-size: 12px; }
   .cd-firmas td { vertical-align: top; width: 50%; } .cd-firmas small { display: block; color: #666; font-size: 10.5px; margin-top: 4px; } .cd-firmas .cd-ph { color: #888; font-size: 12px; }
   .cd-retiro { margin: 8px 6px; font-size: 14px; }
   @media (max-width: 699px) { .cd-items .cd-resp { display: none; } .cd-items .cd-op, .cd-items .cd-op-h { width: 44px; } .cd-hoja { font-size: 12.5px; } .cd-cab .cd-cod { font-size: 10px; } .cd-items .cd-obs-h, .cd-items .cd-obs-c { width: 30%; } }
-  .ue-circ-g { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px; margin-top: 6px; }
-  .ue-circ-f { display: grid; grid-template-columns: 26px 1fr 1.4fr 58px; gap: 4px; align-items: center; }
+  .ue-circ-g { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; margin-top: 6px; }
+  .ue-circ-f { display: grid; grid-template-columns: 26px 1fr 84px; grid-template-rows: auto auto; gap: 4px; align-items: center; border: 1px solid var(--borde, #DADDE1); border-radius: 8px; padding: 6px; }
+  .ue-circ-f b { grid-row: 1 / span 2; }
+  .ue-circ-f textarea { grid-column: 2 / span 2; grid-row: 2; min-height: 52px; font-size: 14px; padding: 6px 8px; resize: vertical; }
+  .ue-circ-f input:nth-of-type(2) { grid-column: 3; grid-row: 1; }
+    .ue-circ-f.sel span { grid-column: 2 / span 2; grid-row: 2; }
+  .ue-circ-f.sel input:nth-of-type(2) { grid-column: 3; grid-row: 1; }
   .ue-circ-f b { text-align: center; font-size: 13px; color: var(--gris); }
   .ue-circ-f input { min-height: 38px; padding: 6px 8px; font-size: 14px; }
   .ue-circ-f.sel { background: #FDECEC; border-radius: 8px; padding: 4px; font-weight: 700; color: var(--rojo); font-size: 13px; }
@@ -472,6 +480,11 @@
       <input id="zip-id" class="may" placeholder="Vacío = todos los tableros">
       <button class="big primary" id="btn-zip" style="margin-top:12px">⤓ Descargar ZIP</button>
       <p class="muted" id="zip-msg" style="margin:6px 0 0"></p>
+    </div>
+    <div class="card">
+      <h3>📚 Repositorio de checklists diarios</h3>
+      <p class="muted">EPP, herramientas manuales, herramientas eléctricas e instrumento de medición de todo el personal, validados por su supervisor. Para auditorías: ver, descargar cada PDF o un ZIP con el registro.</p>
+      <button class="big primary" id="btn-adm-repo">Abrir repositorio</button>
     </div>
     <div class="card">
       <h3>Checklists por actualizar</h3>
@@ -736,6 +749,7 @@
       <h3>🖊 Revisión del supervisor</h3>
       <p class="muted" style="margin:0 0 8px">Checklists diarios del personal que te asignó como supervisor (últimos 10 días). Revisa el PDF y firma los seleccionados: con tu firma quedan validados y la persona puede iniciar su actividad. Si algo no corresponde, recházalo con el motivo y deberá rehacerlo.</p>
       <div id="cd-rev"><button type="button" class="big" id="btn-cd-rev">Ver checklists por revisar</button></div>
+      <button type="button" class="big" id="btn-cd-repo" style="margin-top:8px">📚 Repositorio de checklists validados (auditoría)</button>
     </div>
     <div class="card"><h3>Días anteriores (este teléfono)</h3><ul class="lista" id="cd-hist"></ul></div>
     <button class="big" data-ir="inicio">Volver al inicio</button>
@@ -753,6 +767,26 @@
     <p class="error" id="cdf-error" style="margin:10px 2px"></p>
     <button type="button" class="big primary" id="btn-cdf-guardar">✍ Firmar y guardar checklist del día</button>
     <button type="button" class="big" id="btn-cdf-cancelar">Cancelar</button>
+  </section>
+
+  <!-- ============ REPOSITORIO DE CHECKLISTS DIARIOS (auditoría) ============ -->
+  <section id="v-repochk" hidden>
+    <div class="card">
+      <h2>📚 Repositorio de checklists diarios</h2>
+      <p class="muted" style="margin:4px 0 8px">Documentación validada por el supervisor asignado, para auditorías y respaldo. Cada PDF lleva la firma de quien lo realizó y de quien lo validó. El ZIP incluye los PDF ordenados por persona y el registro en planilla.</p>
+      <div class="g2"><div><label for="rc-desde">Desde</label><input type="date" id="rc-desde"></div><div><label for="rc-hasta">Hasta</label><input type="date" id="rc-hasta"></div></div>
+      <label for="rc-pers">Persona</label><select id="rc-pers"><option value="">Todo el personal</option></select>
+      <div class="g2"><div><label for="rc-cod">Checklist</label><select id="rc-cod"></select></div>
+        <div><label for="rc-est">Estado</label><select id="rc-est"><option value="REVISADO">Validados por supervisor</option><option value="PENDIENTE">Pendientes de firma</option><option value="RECHAZADO">Rechazados</option><option value="TODOS">Todos</option></select></div></div>
+      <button class="big primary" id="btn-rc-buscar" style="margin-top:12px">🔎 Buscar</button>
+      <p class="muted" id="rc-msg" style="margin:8px 0 0"></p>
+    </div>
+    <div class="card" id="rc-card" hidden>
+      <div id="rc-res"></div>
+      <button class="big primary" id="btn-rc-zip" style="margin-top:10px">🗜 Descargar ZIP (PDF + registro)</button>
+      <button class="big" id="btn-rc-csv">📊 Descargar registro (planilla)</button>
+    </div>
+    <button class="big" id="btn-rc-volver">Volver</button>
   </section>
 
   <!-- ============ FICHA DEL PERSONAL AUTORIZADO ============ -->
@@ -787,6 +821,12 @@
       <button class="big primary" id="btn-fp-subir">Subir a la ficha</button>
     </div>
     <div class="card"><h3>📇 Documentos de la ficha</h3><div id="fp-docs"></div></div>
+    <div class="card" id="fp-chk-card" hidden><h3>✅ Checklists diarios</h3>
+      <p class="muted" style="margin:0 0 6px" id="fp-chk-sub"></p>
+      <ul class="lista" id="fp-chk-hoy"></ul>
+      <details id="fp-chk-ant" style="margin-top:8px"><summary style="font-weight:700;cursor:pointer">Días anteriores (últimos 31 días)</summary><ul class="lista" id="fp-chk-hist"></ul></details>
+      <button class="big" id="btn-fp-chk-repo" hidden>📚 Ver sus checklists en el repositorio</button>
+    </div>
     <div class="card" id="fp-act-card"><h3>🔧 Mantenciones e inspecciones realizadas</h3>
       <p class="muted" style="margin:0 0 6px">Cada informe de mantención lleva anexa la ficha que tenía la persona ese día.</p><ul class="lista" id="fp-act"></ul></div>
     <div class="card" id="fp-hist-card" hidden><h3>Documentos reemplazados o retirados</h3><ul class="lista" id="fp-hist"></ul></div>
@@ -1335,7 +1375,7 @@ const CONFIG = {
 };
 
 // Versión visible al pie de la pantalla de inicio (sirve para confirmar que el teléfono tiene la última)
-const VERSION_APP = 'v34 · 10-11-2026';
+const VERSION_APP = 'v37 · 10-11-2026';
 const NIVELES = ['UCL', 'Producción', 'Acarreo', 'SNV'];
 const SEN = 'Cuadro de señalética (riesgo eléctrico, potencia, nivel de tensión, punto de bloqueo, maniobra RCP, logo empresa, personal autorizado, diagrama unilineal, carga de fuego, programa de mantenimiento)';
 const BASE_TD = ['Orden y aseo en el sector', 'Iluminación', 'Número de TAG', 'Soporte o anclaje del tablero en buen estado',
@@ -1618,8 +1658,8 @@ const CHKD = {
   'ELEC-009': { codigo: 'RE-4600030339-ELEC-009', rev: '0', fechaDoc: '26-11-2025', corto: 'Instrumento de medición (multímetro)', icono: '📟', multi: true,
     titulo: ['REGISTRO DE INSPECCION Y MANTENIMIENTO', 'DE EQUIPOS DE MEDICIÓN'], obra: 'OBRA ESMERALDA CENTRAL - CONTRATO N°4600030339',
     ops: ['ACEPTABLE', 'REPARABLE', 'N/A'], obsCol: true,
-    cab: [['marca', 'MARCA', 'Fluke'], ['modelo', 'MODELO', '376 FC'], ['rangoI', 'RANGO DE CORRIENTE AC', '0 – 1000 A'], ['rangoV', 'RANGO DE VOLTAJE AC', '0 – 1000 V'],
-      ['continuidad', 'CONTINUIDAD', 'Sí, con señal sonora'], ['instrumento', 'INSTRUMENTO DE MEDICIÓN', 'Multímetro / pinza amperimétrica'], ['tag', 'N° DE TAG DEL EQUIPO', 'TAG-ELE-015']],
+    cab: [['marca', 'MARCA', 'FLUKE'], ['modelo', 'MODELO', '376 FC'], ['instrumento', 'INSTRUMENTO DE MEDICIÓN', 'PINZA AMPERIMÉTRICA AC/DC TRUE RMS'], ['rangoI', 'RANGO DE CORRIENTE AC', '0 – 1000 A'], ['rangoV', 'RANGO DE VOLTAJE AC', '0 – 1000 V'],
+      ['continuidad', 'CONTINUIDAD', 'SÍ, CON SEÑAL SONORA'], ['tag', 'N° DE TAG DEL EQUIPO', 'TAG-ELE-015']],
     secciones: [{ items: ['Verificar estado y N° de TAG del equipo', 'Revisar estado de funda protectora', 'Verificar condiciones de almacenamiento',
       'Verificar limpieza general del equipo y sus partes', 'Revisar integridad de carcasa', 'Revisar estado de la pantalla', 'Revisar retroiluminación de pantalla (si aplica)',
       'Revisar estado de selector rotativo', 'Verificar funcionamiento de botón HOLD', 'Revisar estado de pulsadores', 'Revisar estado de la pinza amperimétrica',
@@ -1638,6 +1678,49 @@ const CHKD = {
       { n: '6', t: 'BALACLAVA IGNÍFUGA', items: [{ n: '6.1', t: 'Las costuras presentan desgaste o rajadura.', inv: 1 }] }] }
 };
 const CHKD_ORDEN = ['ELEC-023', 'OOCC-001', 'ELEC-001', 'ELEC-009'];
+// ---- Catálogo de instrumentos de medición (referencia de fichas técnicas del fabricante; verificar contra la placa / manual del equipo) ----
+const T_MUL = 'MULTÍMETRO DIGITAL TRUE RMS', T_PAC = 'PINZA AMPERIMÉTRICA AC TRUE RMS', T_PDC = 'PINZA AMPERIMÉTRICA AC/DC TRUE RMS', T_TES = 'PROBADOR ELÉCTRICO (TESTER) SIN CONTACTO DE HORQUILLA';
+const SONORA = 'SÍ, CON SEÑAL SONORA';
+const INSTR_CAT = [
+  // FLUKE · multímetros
+  ['FLUKE', '87V', T_MUL, '0 – 10 A (20 A POR 30 S)', '0 – 1000 V'], ['FLUKE', '87V MAX', T_MUL, '0 – 10 A (20 A POR 30 S)', '0 – 1000 V'],
+  ['FLUKE', '179', T_MUL, '0 – 10 A', '0 – 1000 V'], ['FLUKE', '177', T_MUL, '0 – 10 A', '0 – 1000 V'], ['FLUKE', '175', T_MUL, '0 – 10 A', '0 – 1000 V'],
+  ['FLUKE', '117', T_MUL, '0 – 10 A', '0 – 600 V'], ['FLUKE', '115', T_MUL, '0 – 10 A', '0 – 600 V'], ['FLUKE', '107', T_MUL, '0 – 10 A', '0 – 600 V'],
+  ['FLUKE', '287', T_MUL, '0 – 10 A', '0 – 1000 V'], ['FLUKE', '289', T_MUL, '0 – 10 A', '0 – 1000 V'],
+  // FLUKE · pinzas amperimétricas
+  ['FLUKE', '376 FC', T_PDC, '0 – 1000 A (2500 A CON IFLEX)', '0 – 1000 V'], ['FLUKE', '375 FC', T_PDC, '0 – 600 A (2500 A CON IFLEX)', '0 – 1000 V'],
+  ['FLUKE', '374 FC', T_PDC, '0 – 600 A (2500 A CON IFLEX)', '0 – 1000 V'], ['FLUKE', '381', T_PDC, '0 – 1000 A (2500 A CON IFLEX)', '0 – 1000 V'],
+  ['FLUKE', '373', T_PAC, '0 – 600 A', '0 – 600 V'], ['FLUKE', '365', T_PDC, '0 – 200 A', '0 – 600 V'],
+  ['FLUKE', '323', T_PAC, '0 – 400 A', '0 – 600 V'], ['FLUKE', '324', T_PAC, '0 – 400 A', '0 – 600 V'], ['FLUKE', '325', T_PDC, '0 – 400 A', '0 – 600 V'],
+  ['FLUKE', '902 FC', T_PAC, '0 – 600 A', '0 – 600 V'],
+  ['FLUKE', 'T6-1000', T_TES, '0 – 200 A', '0 – 1000 V'], ['FLUKE', 'T6-600', T_TES, '0 – 200 A', '0 – 600 V'],
+  // HIOKI · multímetros
+  ['HIOKI', 'DT4252', T_MUL, '0 – 10 A', '0 – 1000 V'], ['HIOKI', 'DT4253', T_MUL, '0 – 2 A', '0 – 1000 V'],
+  ['HIOKI', 'DT4256', T_MUL, 'CON SENSOR DE PINZA OPCIONAL (HASTA 1000 A)', '0 – 1000 V'],
+  ['HIOKI', 'DT4281', T_MUL, '0 – 10 A', '0 – 1000 V'], ['HIOKI', 'DT4282', T_MUL, '0 – 10 A', '0 – 1000 V'],
+  // HIOKI · pinzas amperimétricas
+  ['HIOKI', 'CM4141', T_PAC, '0 – 2000 A', '0 – 1000 V'], ['HIOKI', 'CM4142', T_PAC, '0 – 2000 A', '0 – 1000 V'],
+  ['HIOKI', 'CM4371', T_PDC, '0 – 600 A', '0 – 1000 V'], ['HIOKI', 'CM4372', T_PDC, '0 – 600 A', '0 – 1000 V'],
+  ['HIOKI', 'CM4373', T_PDC, '0 – 2000 A', '0 – 1000 V'], ['HIOKI', 'CM4374', T_PDC, '0 – 2000 A', '0 – 1000 V'],
+  ['HIOKI', 'CM4375', T_PDC, '0 – 1000 A', '0 – 1000 V'], ['HIOKI', 'CM4376', T_PDC, '0 – 1000 A', '0 – 1000 V'],
+  ['HIOKI', 'CM3289', T_PAC, '0 – 1000 A', '0 – 600 V'], ['HIOKI', 'CM3281', T_PAC, '0 – 2000 A', '0 – 600 V'], ['HIOKI', '3280-10F', T_PAC, '0 – 1000 A', '0 – 600 V']
+].map(([marca, modelo, instrumento, rangoI, rangoV]) => ({ marca, modelo, instrumento, rangoI, rangoV, continuidad: SONORA }));
+const uniq = (a) => [...new Set(a.filter(Boolean))];
+// Opciones desplegables por campo de cabecera (con opción de ingreso manual)
+function opcionesCab(k, cab) {
+  const filt = INSTR_CAT.filter(x => !cab.marca || x.marca === cab.marca);
+  if (k === 'marca') return uniq(INSTR_CAT.map(x => x.marca).concat(['AMPROBE', 'EXTECH', 'KYORITSU', 'MEGGER', 'UNI-T']));
+  if (k === 'modelo') return filt.map(x => x.modelo);
+  if (k === 'instrumento') return [T_MUL, T_PAC, T_PDC, T_TES, 'MULTÍMETRO DIGITAL', 'PINZA AMPERIMÉTRICA'];
+  if (k === 'rangoI') return uniq(INSTR_CAT.map(x => x.rangoI)).sort((a, b) => parseFloat(a.replace(/^\D+/, '').split('–')[1] || 9e9) - parseFloat(b.replace(/^\D+/, '').split('–')[1] || 9e9));
+  if (k === 'rangoV') return uniq(INSTR_CAT.map(x => x.rangoV));
+  if (k === 'continuidad') return [SONORA, 'SÍ, SIN SEÑAL SONORA', 'NO TIENE'];
+  return null;
+}
+// Sugerencias (datalist) para campos de texto libre de los checklists
+const SUG_HERR_MAN = ['ALICATE UNIVERSAL AISLADO 1000 V', 'ALICATE CORTANTE AISLADO 1000 V', 'ALICATE PUNTA AISLADO 1000 V', 'DESTORNILLADOR PALETA AISLADO 1000 V', 'DESTORNILLADOR CRUZ AISLADO 1000 V', 'PELACABLES', 'CORTACABLES', 'CRIMPEADORA / PRENSATERMINALES', 'LLAVE PUNTA CORONA', 'LLAVE ALLEN', 'LLAVE FRANCESA', 'JUEGO DE DADOS AISLADOS', 'HUINCHA DE MEDIR', 'CUCHILLO ELECTRICISTA', 'MARTILLO', 'NIVEL'];
+const SUG_HERR_ELE = ['TALADRO PERCUTOR', 'TALADRO INALÁMBRICO', 'ATORNILLADOR INALÁMBRICO', 'ESMERIL ANGULAR 4½"', 'ESMERIL ANGULAR 7"', 'EXTENSIÓN ELÉCTRICA', 'CARGADOR DE BATERÍAS', 'LINTERNA RECARGABLE', 'PISTOLA DE CALOR', 'SIERRA SABLE', 'MEGÓHMETRO', 'TELURÓMETRO', 'DETECTOR DE TENSIÓN'];
+const SUG_OBS = ['SIN OBSERVACIONES', 'AISLACIÓN DAÑADA', 'MANGO / EMPUÑADURA DAÑADA', 'CARCASA TRIZADA', 'CABLE O ENCHUFE DAÑADO', 'PUNTAS DE PRUEBA DAÑADAS', 'BATERÍA BAJA', 'FUSIBLE QUEMADO', 'PANTALLA DAÑADA O ILEGIBLE', 'CERTIFICADO DE CALIBRACIÓN VENCIDO', 'SIN TAG O TAG ILEGIBLE', 'FALTA FUNDA PROTECTORA', 'SUCIEDAD / CONTAMINACIÓN', 'EPP CON DESGASTE, SE REEMPLAZA', 'RETIRADO DE USO Y REPORTADO AL SUPERVISOR'];
 const OBRA_CHKD = 'Obras PREMIN Mina central-sur N°4600030339';
 const diaISO = (d = new Date()) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 const diaSemana = (iso) => { const d = new Date(iso + 'T12:00'); return ((d.getDay() + 6) % 7) + 1; };   // lunes = 1 … domingo = 7
@@ -1747,13 +1830,31 @@ function renderTileChkd() {
 }
 // ---- Formulario con el formato original ----
 let CDF = null;   // { k, r (registro en edición) }
+const MAN = '__manual';
+function campoCab(r, k, ph) {
+  const ops = opcionesCab(k, r.cab), v = r.cab[k] || '';
+  if (!ops) return `<input data-cd-cab="${k}" value="${esc(v)}" placeholder="${esc(ph)}" autocapitalize="characters">`;
+  const man = (r.cabMan || {})[k] || (v && !ops.includes(v));
+  const sel = `<select data-cd-sel="${k}"><option value="">Seleccione…</option>${ops.map(o => `<option${o === v && !man ? ' selected' : ''}>${esc(o)}</option>`).join('')}<option value="${MAN}"${man ? ' selected' : ''}>✎ OTRO · INGRESO MANUAL</option></select>`;
+  return sel + (man ? `<input class="cd-man" data-cd-cab="${k}" value="${esc(v)}" placeholder="Escriba ${esc(k === 'modelo' ? 'el modelo' : k === 'marca' ? 'la marca' : 'el dato')} (ej.: ${esc(ph)})" autocapitalize="characters">` : '');
+}
+function elegirCab(k, val) {
+  const r = CDF.r; r.cabMan = r.cabMan || {};
+  if (val === MAN) { r.cabMan[k] = true; r.cab[k] = ''; return; }
+  r.cabMan[k] = false; r.cab[k] = val;
+  if (k === 'marca' && r.cab.modelo && !INSTR_CAT.some(x => x.marca === val && x.modelo === r.cab.modelo) && !r.cabMan.modelo) r.cab.modelo = '';
+  if (k === 'modelo') {
+    const it = INSTR_CAT.find(x => x.modelo === val && (!r.cab.marca || x.marca === r.cab.marca)) || INSTR_CAT.find(x => x.modelo === val);
+    if (it) ['marca', 'instrumento', 'rangoI', 'rangoV', 'continuidad'].forEach(c => { r.cab[c] = it[c]; r.cabMan[c] = false; });
+  }
+}
 function abrirChkdForm(k) {
   const s = sesion(), p = perfilSesion() || {}, C = CHKD[k], ult = ls.get('chkdUlt:' + s.usuario, {});
   const hoy = diaISO();
   CDF = { k, r: { id: 'CD-' + uuid().slice(0, 13), codigo: k, codDoc: C.codigo, titulo: C.titulo.filter(x => !/SISTEMA INTEGRADO|Geovita S\.A\./.test(x)).join(' '),
     fecha: hoy, hora: '', usuario: s.usuario, nombre: p.nombre, rut: p.rut, cargo: p.cargo, area: ult.area || (p.nivel && p.nivel !== 'Transversal' ? p.nivel : ''),
     supervisor: '', supervisorUsr: '', resp: {}, obs: {}, otros: Array.from({ length: C.otros || 0 }, () => ({ t: '', v: '', obs: '' })), obsGen: '',
-    cab: Object.assign({}, (ult.cab || {})), retiro: false } };
+    cab: Object.fromEntries(Object.entries(ult.cab || {}).map(([a, b]) => [a, String(b || '').toLocaleUpperCase('es-CL')])), cabMan: {}, retiro: false } };
   $('#cdf-titulo').textContent = C.icono + ' ' + C.corto;
   $('#cdf-sub').textContent = `${C.codigo} · ${NOMBRE_DIA[diaSemana(hoy)]} ${fDMA(hoy)}${C.semana ? ' · DÍA ' + diaSemana(hoy) + ' de la semana' : ''}`;
   $('#cdf-error').textContent = '';
@@ -1777,7 +1878,7 @@ function renderChkdForm() {
   let cuerpo = '';
   if (C.multi) {
     cuerpo = `<div class="cd-obra">${esc(C.obra)}</div>
-      <table class="cd-t cd-multi"><tbody>${C.cab.map(([k, l, ph]) => `<tr><th>${esc(l)}</th><td><input data-cd-cab="${k}" value="${esc(r.cab[k] || '')}" placeholder="${esc(ph)}"></td></tr>`).join('')}
+      <table class="cd-t cd-multi"><tbody>${C.cab.map(([k, l, ph]) => `<tr><th>${esc(l)}</th><td>${campoCab(r, k, ph)}</td></tr>`).join('')}
       <tr><th>SUPERVISOR DE TURNO</th><td>${sup}</td></tr><tr><th>MANTENCIÓN REALIZADA POR</th><td><b>${esc(r.nombre)}</b></td></tr>
       <tr><th>FECHA MANTENCIÓN</th><td><b>${esc(fDMA(r.fecha))}</b> · Mant. diaria previa a la actividad</td></tr><tr><th>ÁREA</th><td>${area}</td></tr></tbody></table>`;
   } else if (C.epp) {
@@ -1792,8 +1893,8 @@ function renderChkdForm() {
   const filaItem = (it, key) => {
     const v = r.resp[key] || '', mala = esMalaChkd(C, it, v);
     return `<tr class="${mala ? 'cd-mala' : ''}"><td class="cd-n">${esc(it.n)}</td><td class="cd-txt">${esc(it.t)}${it.inv ? ' <small class="cd-inv">(responder SI si presenta el problema)</small>' : ''}
-        ${mala ? `<input class="cd-obs-in" data-cd-obs="${key}" value="${esc(r.obs[key] || '')}" placeholder="Describe la observación (obligatorio)">` : ''}</td>${celOp(key, v, C.ops)}
-      ${C.obsCol ? `<td class="cd-obs-c">${C.obsCol && !mala ? `<input data-cd-obs="${key}" value="${esc(r.obs[key] || '')}" placeholder="—">` : ''}</td>` : C.resp ? `<td class="cd-resp">${v ? esc(abrev) : ''}</td><td class="cd-resp">${v ? esc(fDMA(r.fecha)) : ''}</td>` : ''}</tr>`;
+        ${mala ? `<input class="cd-obs-in" list="dl-cd-obs" data-cd-obs="${key}" value="${esc(r.obs[key] || '')}" placeholder="Describe la observación (obligatorio)">` : ''}</td>${celOp(key, v, C.ops)}
+      ${C.obsCol ? `<td class="cd-obs-c">${C.obsCol && !mala ? `<input data-cd-obs="${key}" list="dl-cd-obs" value="${esc(r.obs[key] || '')}" placeholder="—">` : ''}</td>` : C.resp ? `<td class="cd-resp">${v ? esc(abrev) : ''}</td><td class="cd-resp">${v ? esc(fDMA(r.fecha)) : ''}</td>` : ''}</tr>`;
   };
   let filas = '';
   C.secciones.forEach(sc => {
@@ -1802,8 +1903,8 @@ function renderChkdForm() {
   });
   (r.otros || []).forEach((o, i) => {
     const key = 'o' + i, v = o.v || '', mala = v === C.ops[1];
-    filas += `<tr class="${mala ? 'cd-mala' : ''}"><td class="cd-n">${i ? '' : '+'}</td><td class="cd-txt"><input data-cd-otro="${i}" value="${esc(o.t)}" placeholder="${i ? '' : 'Otros: '}otra herramienta o elemento (opcional)">
-        ${mala ? `<input class="cd-obs-in" data-cd-otroobs="${i}" value="${esc(o.obs || '')}" placeholder="Describe la observación (obligatorio)">` : ''}</td>${o.t ? celOp(key, v, C.ops) : C.ops.map(() => '<td class="cd-op dis"></td>').join('')}
+    filas += `<tr class="${mala ? 'cd-mala' : ''}"><td class="cd-n">${i ? '' : '+'}</td><td class="cd-txt"><input data-cd-otro="${i}" list="${CDF.k === 'ELEC-001' ? 'dl-cd-herrele' : 'dl-cd-herrman'}" value="${esc(o.t)}" placeholder="${i ? '' : 'Otros: '}otra herramienta o elemento (opcional)">
+        ${mala ? `<input class="cd-obs-in" list="dl-cd-obs" data-cd-otroobs="${i}" value="${esc(o.obs || '')}" placeholder="Describe la observación (obligatorio)">` : ''}</td>${o.t ? celOp(key, v, C.ops) : C.ops.map(() => '<td class="cd-op dis"></td>').join('')}
       ${C.resp ? `<td class="cd-resp">${v ? esc(abrev) : ''}</td><td class="cd-resp">${v ? esc(fDMA(r.fecha)) : ''}</td>` : ''}</tr>`;
   });
   const tabla = `<table class="cd-t cd-items"><thead><tr class="cd-h">${C.multi ? '<th class="cd-n">ITEM</th><th>DESCRIPCIÓN DE ACTIVIDAD</th>' : C.epp ? '<th class="cd-n"></th><th></th>' : '<th class="cd-n"></th><th>ELEMENTOS A INSPECCIONAR</th>'}
@@ -1817,7 +1918,8 @@ function renderChkdForm() {
     <table class="cd-t cd-firmas"><tbody><tr class="cd-h"><th>${C.epp ? 'TRABAJADOR' : 'REALIZÓ'}</th><th>${C.epp ? 'SUPERVISOR' : 'REVISÓ'}</th></tr>
       <tr><td><small>NOMBRE</small><b>${esc(r.nombre)}</b><small>CARGO</small><b>${esc(r.cargo)}</b><small>FIRMA · FECHA</small><span class="cd-ph">Se firma al guardar · ${esc(fDMA(r.fecha))}</span></td>
       <td><small>NOMBRE</small>${C.multi || !C.epp ? '<b>' + esc(r.supervisor || '—') + '</b>' : sup}<small>FIRMA · FECHA</small><span class="cd-ph">Pendiente: la firma el supervisor asignado en su app. Con su firma el checklist queda validado.</span></td></tr></tbody></table>`;
-  $('#cdf-hoja').innerHTML = `<div class="cd-hoja${C.horiz ? ' horiz' : ''}">${cabecera}${cuerpo}${tabla}${pie}</div>`;
+  const dl = (id, l) => `<datalist id="${id}">${l.map(x => `<option value="${esc(x)}">`).join('')}</datalist>`;
+  $('#cdf-hoja').innerHTML = `<div class="cd-hoja${C.horiz ? ' horiz' : ''}">${cabecera}${cuerpo}${tabla}${pie}</div>${dl('dl-cd-herrman', SUG_HERR_MAN)}${dl('dl-cd-herrele', SUG_HERR_ELE)}${dl('dl-cd-obs', SUG_OBS)}`;
   const total = itemsChkd(C).length + (r.otros || []).filter(o => o.t).length, hechos = itemsChkd(C).filter(it => r.resp[it.n]).length + (r.otros || []).filter(o => o.t && o.v).length;
   $('#cdf-prog').textContent = `${hechos} de ${total} respondidos${malas ? ' · ' + malas + ' con observación' : ''}`;
   $('#cdf-barra').style.width = (total ? hechos / total * 100 : 0) + '%';
@@ -1833,6 +1935,10 @@ $('#cdf-hoja').addEventListener('click', (e) => {
 $('#cdf-hoja').addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('[data-cd-k]')) { e.preventDefault(); e.target.click(); } });
 $('#cdf-hoja').addEventListener('input', (e) => {
   if (!CDF) return; const el = e.target, r = CDF.r;
+  if ((el.matches('textarea') || (el.matches('input') && !['checkbox', 'radio', 'date', 'file'].includes(el.type))) && !e.isComposing) {
+    const up = el.value.toLocaleUpperCase('es-CL');
+    if (up !== el.value) { const a = el.selectionStart, b = el.selectionEnd; el.value = up; try { el.setSelectionRange(a, b); } catch (er) {} }
+  }
   setTimeout(() => { try { if (CDF) { sessionStorage.setItem('chkdBorrador', JSON.stringify(CDF)); localStorage.setItem('chkdBorrador', JSON.stringify(CDF)); } } catch (er) {} }, 0);
   if (el.dataset.cdCampo) { r[el.dataset.cdCampo] = el.type === 'checkbox' ? el.checked : (el.classList.contains('may') ? el.value.toLocaleUpperCase('es-CL') : el.value); }
   else if (el.dataset.cdCab) r.cab[el.dataset.cdCab] = el.value;
@@ -1841,6 +1947,13 @@ $('#cdf-hoja').addEventListener('input', (e) => {
   else if (el.dataset.cdOtro) { const o = r.otros[+el.dataset.cdOtro], antes = !!o.t; o.t = el.value; if (antes !== !!o.t) { if (!o.t) o.v = ''; const pos = el.selectionStart; renderChkdForm(); const n = $(`[data-cd-otro="${el.dataset.cdOtro}"]`); if (n) { n.focus(); n.setSelectionRange(pos, pos); } } }
 });
 $('#cdf-hoja').addEventListener('input', (e) => { if (e.target.dataset.cdCab === 'instrumento' && $('#cd-instr')) $('#cd-instr').textContent = e.target.value; });
+$('#cdf-hoja').addEventListener('change', (e) => {
+  const sk = e.target.dataset.cdSel; if (!sk || !CDF) return;
+  elegirCab(sk, e.target.value);
+  try { sessionStorage.setItem('chkdBorrador', JSON.stringify(CDF)); localStorage.setItem('chkdBorrador', JSON.stringify(CDF)); } catch (er) {}
+  renderChkdForm();
+  if (e.target.value === MAN) { const n = $(`[data-cd-cab="${sk}"]`); if (n) n.focus(); }
+});
 $('#cdf-hoja').addEventListener('change', (e) => {
   if (!e.target.dataset.cdSup || !CDF) return;
   const x = supervisoresChkd().find(z => z.usuario === e.target.value);
@@ -2130,13 +2243,14 @@ async function refrescarFichaPropia() {
     guardarFichaPropia(sesion().usuario, { actualizado: j.consultado, acred: j.acred, docs: j.docs.map(d => ({ id: d.id, tipo: d.tipo, titulo: d.titulo, codigo: d.codigo, emision: d.emision, vence: d.vence, resultado: d.resultado })) });
   } catch (e) {}
 }
-const fichaCompleta = (j) => ({ persona: j.persona, acred: j.acred, docs: j.docs || [], historico: j.historico || [], actividades: j.actividades || [], consultado: j.consultado });
+const fichaCompleta = (j) => ({ persona: j.persona, acred: j.acred, docs: j.docs || [], historico: j.historico || [], actividades: j.actividades || [], chkd: j.chkd || [], consultado: j.consultado });
 // Ficha que va anexa al informe de mantención (copia guardada en el teléfono: funciona sin señal en la mina)
 function fichaParaInforme(r) {
   const p = perfilSesion() || {}, F = ls.get('fichaPropia', null), mia = F && F.usuario === (sesion() || {}).usuario ? F : null;
   const ref = r.fActividad ? new Date(r.fActividad + 'T12:00') : new Date(), docs = mia ? mia.docs || [] : [];
   return { usuario: (sesion() || {}).usuario || '', nombre: r.realizadoPor || p.nombre || '', rut: r.rut || p.rut || '', cargo: r.cargo || p.cargo || '',
-    grupo: p.grupo || '', nivel: p.nivel || '', actualizado: mia ? mia.actualizado : '', sinDatos: !mia, acred: acredFP(docs, ref), docs };
+    grupo: p.grupo || '', nivel: p.nivel || '', actualizado: mia ? mia.actualizado : '', sinDatos: !mia, acred: acredFP(docs, ref), docs,
+    chkd: sesionActiva() ? CHKD_ORDEN.map(k => { const x = chkdHoy()[k]; return { codigo: k, codDoc: CHKD[k].codigo, corto: CHKD[k].corto, fecha: diaISO(), hora: x ? x.hora : '', estado: estadoChkd(x), reviso: x ? x.reviso || '' : '', fRev: x ? x.fRev || '' : '', nObs: x ? x.nObs || 0 : 0, id: x ? x.id : '' }; }) : [] };
 }
 // ---- Vista ----
 let FPV = null;   // { usuario, F (ficha completa) | snap (ficha al momento de una mantención) }
@@ -2190,6 +2304,7 @@ function renderFichaPers() {
   $('#fp-act').innerHTML = act.length ? act.map(a => `<li><div class="info"><b>${esc(fDMA(a.fAct))} · ${esc(a.tipo || 'Actividad')}</b><small>${esc([a.id, a.ubic, a.nivel].filter(Boolean).join(' · '))}</small></div>
       <span class="badge ${a.itemsNo ? 'no' : 'ok'}">${a.itemsNo ? a.itemsNo + ' NO' : 'OK'}</span><button type="button" class="btn-pdf" data-fp-tab="${esc(a.id)}">Tablero</button></li>`).join('')
     : '<li><div class="info"><small>Sin actividades registradas.</small></div></li>';
+  renderChkFicha(F, sn);
   const hist = (F && F.historico) || [];
   $('#fp-hist-card').hidden = !!sn || !hist.length;
   $('#fp-hist').innerHTML = hist.map(d => `<li class="con-adm"><div class="info"><b>${esc(TIPOS_FP[d.tipo] || d.tipo)}: ${esc(d.titulo)}</b><small>${esc([d.estado, d.retiro, d.motivo].filter(Boolean).join(' · '))}</small></div>
@@ -2197,6 +2312,134 @@ function renderFichaPers() {
   $('#btn-fp-actual').hidden = !sn || !FPV.usuario || !(sesionActiva() || adm);
   $('#btn-fp-pdf').hidden = !F && !sn;
 }
+// ---- Checklists diarios en la ficha: los del día y los últimos 31 días (del servidor; los propios también desde el teléfono) ----
+const EST_CHK = { REVISADO: ['ok', 'validado ✔'], VALIDADO: ['ok', 'validado ✔'], PENDIENTE: ['warn', 'espera firma supervisor'], 'SIN ENVIAR': ['warn', 'sin enviar'], RECHAZADO: ['no', 'rechazado'], FALTA: ['no', 'no realizado'] };
+const lineaChk = (x) => x.revision === 'REVISADO' ? `Validado por ${x.reviso || 'supervisor'}${x.fRev ? ' · ' + x.fRev : ''}`
+  : x.revision === 'RECHAZADO' ? `Rechazado por ${x.reviso || 'supervisor'}: ${x.motivo || ''}` : `Firmado ${x.hora || ''} · espera la firma de ${x.supervisor || 'su supervisor'}`;
+function chkDeFicha(F, usuario) {
+  const lista = ((F && F.chkd) || []).slice();
+  if (sesionActiva() && sesion().usuario === usuario) {   // lo guardado en el teléfono completa lo que aún no llega al servidor
+    const t = chkdLocal(usuario);
+    Object.entries(t).forEach(([f, dia]) => Object.values(dia).forEach(r => { if (!lista.some(x => x.id === r.id)) {
+      const e = estadoChkd(r); lista.push({ id: r.id, fecha: f, hora: r.hora, usuario, nombre: r.nombre, codigo: r.codigo, titulo: r.titulo, nObs: r.nObs || 0, supervisor: r.supervisor,
+        revision: e === 'VALIDADO' ? 'REVISADO' : e === 'RECHAZADO' ? 'RECHAZADO' : 'PENDIENTE', reviso: r.reviso || '', fRev: r.fRev || '', motivo: r.motivo || '', local: true, pdf: false }); } }));
+  }
+  return lista.sort((a, b) => (b.fecha + b.hora).localeCompare(a.fecha + a.hora));
+}
+function renderChkFicha(F, sn) {
+  const card = $('#fp-chk-card'); card.hidden = !!sn || !F;
+  if (card.hidden) return;
+  const usr = (F.persona && F.persona.usuario) || FPV.usuario, lista = chkDeFicha(F, usr), hoy = diaISO();
+  const ultimo = (f, k) => lista.find(x => x.fecha === f && x.codigo === k);
+  const est = CHKD_ORDEN.map(k => ultimo(hoy, k)), nVal = est.filter(x => x && x.revision === 'REVISADO').length;
+  $('#fp-chk-sub').innerHTML = `<b>Hoy ${esc(NOMBRE_DIA[diaSemana(hoy)])} ${esc(fDMA(hoy))}:</b> ${nVal} de ${CHKD_ORDEN.length} validados por el supervisor${nVal === CHKD_ORDEN.length ? ' · <b style="color:#135C2A">habilitado para mantener e inspeccionar hoy</b>' : ' · <b style="color:#8A1C24">no habilitado aún</b>'}${F.consultado ? ` <small>(datos al ${esc(F.consultado)})</small>` : ''}`;
+  $('#fp-chk-hoy').innerHTML = CHKD_ORDEN.map((k, i) => { const x = est[i], C = CHKD[k], e = x ? x.revision : 'FALTA';
+    return `<li class="con-adm"><div class="info"><b>${C.icono} ${esc(C.corto)}</b><small>${esc(C.codigo)}${x && x.nObs ? ' · ⚠ ' + x.nObs + ' con observación' : ''}</small>
+      ${x ? `<small style="display:block;font-weight:700">${esc(lineaChk(x))}</small>` : '<small style="display:block">No realizado hoy.</small>'}</div>
+      <span class="badge ${EST_CHK[e][0]}">${EST_CHK[e][1]}</span>${x ? `<div class="acc-adm"><button type="button" class="btn-pdf" data-fp-chk="${esc(x.id)}">📄 PDF</button></div>` : ''}</li>`; }).join('');
+  const dias = [...new Set(lista.map(x => x.fecha).filter(f => f !== hoy))];
+  $('#fp-chk-hist').innerHTML = dias.length ? dias.map(f => { const del = CHKD_ORDEN.map(k => ultimo(f, k)), v = del.filter(x => x && x.revision === 'REVISADO').length;
+    return `<li class="con-adm"><div class="info"><b>${esc(NOMBRE_DIA[diaSemana(f)])} ${esc(fDMA(f))}</b><small>${v} de ${CHKD_ORDEN.length} validados</small></div>
+      <div class="acc-adm">${del.map((x, i) => x ? `<button type="button" class="btn-pdf" data-fp-chk="${esc(x.id)}" title="${esc(CHKD[CHKD_ORDEN[i]].corto)}">${CHKD[CHKD_ORDEN[i]].icono}${x.revision === 'REVISADO' ? '✔' : x.revision === 'RECHAZADO' ? '✖' : '⏳'}</button>` : '').join('')}</div></li>`; }).join('')
+    : '<li><div class="info"><small>Sin checklists en los últimos días.</small></div></li>';
+  $('#btn-fp-chk-repo').hidden = !puedeRepoChk();
+}
+function verChkRegistro(x) {
+  const C = CHKD[x.codigo] || { corto: x.titulo || x.codigo, codigo: x.codigo };
+  if (x.local) {   // aún solo en este teléfono
+    const r = Object.values(chkdLocal(x.usuario)).map(d => Object.values(d)).flat().find(z => z.id === x.id); if (!r) return;
+    if (!window.jspdf) { toast('El generador de PDF aún está cargando.'); return; }
+    verDocumento({ titulo: C.corto, codigo: C.codigo + ' · ' + fDMA(r.fecha), blobLocal: pdfChkDiario(r).output('blob'), mime: 'application/pdf', nombre: nombreChkd(r) }); return;
+  }
+  verDocumento({ titulo: C.corto + ' · ' + (x.nombre || ''), codigo: [C.codigo, fDMA(x.fecha), EST_CHK[x.revision] ? EST_CHK[x.revision][1] : x.revision].join(' · '),
+    fileId: 'chk-' + x.id + '-' + x.revision, remotoChk: x, mime: 'application/pdf', nombre: `${x.codigo}_${x.fecha}_${x.usuario}${x.revision === 'REVISADO' ? '_VALIDADO' : ''}.pdf`, estado: 'CHK' });
+}
+async function blobChkServ(d) {
+  const x = d.remotoChk, j = await getFichaServ({ accion: 'archivoChk', id: x.id }, 180000);
+  let blob;
+  if (j.data) blob = await (await fetch('data:application/pdf;base64,' + j.data)).blob();
+  else {
+    if (!window.jspdf) throw new Error('El generador de PDF aún está cargando.');
+    const r = j.datos, g = j.registro || x, rev = g.revision === 'REVISADO' ? { nombre: g.reviso, cargo: g.revCargo || '', fecha: g.fRev || '', codigo: j.revCod || '', img: j.firmaRev || '' } : null;
+    const opt = { semana: { [r.fecha]: r } }; if (rev) opt.reviso = rev;
+    blob = pdfChkDiario0(r, opt).output('blob');
+  }
+  if (x.revision === 'REVISADO') await ArchDB.put({ fileId: d.fileId, blob, mime: 'application/pdf', nombre: d.nombre }).catch(() => {});   // el validado queda para ver sin señal
+  return blob;
+}
+// ---- Repositorio de checklists diarios (supervisor / jefe / prevención / administrador) ----
+const puedeRepoChk = () => esAdmin() || (sesionActiva() && CARGOS_REVISAN.test((perfilSesion() || {}).cargo || ''));
+const RC = { lista: [], personas: [], filtro: null };
+function abrirRepoChk(f = {}) {
+  if (!puedeRepoChk()) { toast('El repositorio es para supervisores, jefes, prevención de riesgos y el administrador.'); return; }
+  const hoy = diaISO(), d30 = new Date(); d30.setDate(d30.getDate() - 30);
+  if (!$('#rc-desde').value || f.usuario !== undefined) $('#rc-desde').value = f.desde || diaISO(d30);
+  if (!$('#rc-hasta').value || f.usuario !== undefined) $('#rc-hasta').value = f.hasta || hoy;
+  $('#rc-cod').innerHTML = '<option value="">Los 4 checklists</option>' + CHKD_ORDEN.map(k => `<option value="${k}">${CHKD[k].icono} ${esc(CHKD[k].corto)}</option>`).join('');
+  RC.usuarioIni = f.usuario || '';
+  $('#rc-est').value = f.estado || (f.usuario !== undefined ? 'TODOS' : $('#rc-est').value || 'REVISADO');
+  renderPersRC();
+  ir('repochk');
+  buscarRepoChk();
+}
+function renderPersRC() {
+  const v = RC.usuarioIni !== undefined && RC.usuarioIni !== null ? RC.usuarioIni : $('#rc-pers').value;
+  const pers = RC.personas.slice(); if (v && !pers.some(p => p.usuario === v)) pers.push({ usuario: v, nombre: v });
+  $('#rc-pers').innerHTML = '<option value="">Todo el personal</option>' + pers.map(p => `<option value="${esc(p.usuario)}"${p.usuario === v ? ' selected' : ''}>${esc(p.nombre)}</option>`).join('');
+  RC.usuarioIni = null;
+}
+const filtroRC = () => ({ desde: $('#rc-desde').value, hasta: $('#rc-hasta').value, usuario: $('#rc-pers').value, codigo: $('#rc-cod').value, estado: $('#rc-est').value });
+async function buscarRepoChk() {
+  const msg = $('#rc-msg'), f = filtroRC();
+  if (!navigator.onLine) { msg.textContent = 'Se necesita señal para consultar el repositorio.'; return; }
+  const b = $('#btn-rc-buscar'); b.disabled = true; msg.textContent = 'Consultando…';
+  try {
+    const j = await getFichaServ(Object.assign({ accion: 'repoChk' }, f), 60000);
+    RC.lista = j.lista || []; RC.personas = j.personas || []; RC.filtro = f; RC.total = j.total || RC.lista.length;
+    renderPersRC(); renderRepoChk();
+    msg.textContent = `${RC.total} checklist(s) encontrados${RC.total > RC.lista.length ? ' (se muestran los ' + RC.lista.length + ' más recientes; el ZIP incluye todos)' : ''}.`;
+  } catch (e) { msg.textContent = 'No se pudo consultar: ' + e.message; }
+  finally { b.disabled = false; }
+}
+function renderRepoChk() {
+  $('#rc-card').hidden = !RC.lista.length;
+  const dias = [...new Set(RC.lista.map(x => x.fecha))];
+  $('#rc-res').innerHTML = dias.map(f => `<div class="fp-tipo">${esc(NOMBRE_DIA[diaSemana(f)])} ${esc(fDMA(f))}</div><ul class="lista">` + RC.lista.filter(x => x.fecha === f).map(x => {
+    const C = CHKD[x.codigo] || { icono: '📋', corto: x.titulo, codigo: x.codigo };
+    return `<li class="con-adm"><div class="info"><b>${C.icono} ${esc(x.nombre)} · ${esc(C.corto)}</b><small>${esc([C.codigo, x.hora, x.cargo, x.area, x.equipo].filter(Boolean).join(' · '))}${x.nObs ? ' · ⚠ ' + x.nObs + ' con observación' : ''}</small>
+      <small style="display:block;font-weight:700">${esc(lineaChk(x))}</small></div><span class="badge ${(EST_CHK[x.revision] || EST_CHK.PENDIENTE)[0]}">${(EST_CHK[x.revision] || EST_CHK.PENDIENTE)[1]}</span>
+      <div class="acc-adm"><button type="button" class="btn-pdf" data-rc-pdf="${esc(x.id)}">📄 PDF</button><button type="button" data-rc-ficha="${esc(x.usuario)}">📇 Ficha</button></div></li>`;
+  }).join('') + '</ul>').join('');
+}
+function csvRepoChk() {
+  const cols = [['fecha', 'Fecha'], ['hora', 'Hora'], ['usuario', 'Usuario'], ['nombre', 'Nombre'], ['rut', 'RUT'], ['cargo', 'Cargo'], ['area', 'Área'], ['codigo', 'Código'], ['titulo', 'Checklist'],
+    ['resultado', 'Resultado'], ['nObs', 'Ítems con observación'], ['equipo', 'Equipo / instrumento'], ['supervisor', 'Supervisor asignado'], ['revision', 'Revisión'], ['reviso', 'Revisó'], ['revCargo', 'Cargo revisó'], ['fRev', 'Fecha revisión'], ['motivo', 'Motivo rechazo'], ['id', 'ID']];
+  const q = (v) => { v = String(v === undefined || v === null ? '' : v); return /[;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+  const txt = '﻿' + [cols.map(c => c[1]).join(';')].concat(RC.lista.map(x => cols.map(c => q(x[c[0]])).join(';'))).join('\r\n');
+  const f = RC.filtro || filtroRC();
+  descargarBlob(new Blob([txt], { type: 'text/csv;charset=utf-8' }), `Registro_checklists_${f.desde || ''}_a_${f.hasta || ''}.csv`);
+}
+async function zipRepoChk() {
+  if (!navigator.onLine) { toast('Se necesita señal para descargar el ZIP.'); return; }
+  const btn = $('#btn-rc-zip'), txt = btn.textContent; btn.disabled = true; btn.textContent = 'Preparando ZIP… (puede tardar)';
+  try {
+    const j = await getFichaServ(Object.assign({ accion: 'zipChk' }, RC.filtro || filtroRC()), 300000);
+    descargarBlob(await (await fetch('data:application/zip;base64,' + j.data)).blob(), j.nombre);
+    toast(`ZIP con ${j.nPdf} PDF y el registro de ${j.n} checklist(s) descargado ✔`, 4500);
+  } catch (e) { toast('No se pudo descargar: ' + (e.name === 'AbortError' ? 'tiempo agotado; prueba con un período más corto' : e.message), 6000); }
+  finally { btn.disabled = false; btn.textContent = txt; }
+}
+$('#btn-rc-buscar').addEventListener('click', buscarRepoChk);
+$('#btn-rc-zip').addEventListener('click', zipRepoChk);
+$('#btn-rc-csv').addEventListener('click', csvRepoChk);
+$('#btn-rc-volver').addEventListener('click', () => history.back());
+$('#rc-res').addEventListener('click', (e) => {
+  const p = e.target.closest('[data-rc-pdf]'); if (p) { const x = RC.lista.find(z => z.id === p.dataset.rcPdf); if (x) verChkRegistro(x); return; }
+  const f = e.target.closest('[data-rc-ficha]'); if (f) abrirFichaPers({ usuario: f.dataset.rcFicha });
+});
+$('#btn-cd-repo').addEventListener('click', () => abrirRepoChk());
+$('#btn-adm-repo').addEventListener('click', () => abrirRepoChk());
+$('#btn-fp-chk-repo').addEventListener('click', () => { const u = (FPV && ((FPV.F && FPV.F.persona && FPV.F.persona.usuario) || FPV.usuario)) || ''; abrirRepoChk({ usuario: u, estado: 'TODOS' }); });
 function renderFPForm() { $('#fp-box-res').hidden = $('#fp-tipo').value !== 'EVALUACION'; }
 $('#fp-tipo').addEventListener('change', renderFPForm);
 $('#fp-reemplaza').addEventListener('change', () => {
@@ -2236,6 +2479,8 @@ $('#btn-fp-subir').addEventListener('click', async () => {
 });
 async function cargarPersonalSilencioso() { try { const r = await fetchT(CONFIG.SCRIPT_URL + '?accion=personal&clave=' + encodeURIComponent(CONFIG.CLAVE) + '&claveAdmin=' + encodeURIComponent(ls.get('claveAdmin', '')), {}, 20000); const j = await r.json(); if (j.ok) ls.set('personal', j.personal); } catch (e) {} }
 $('#v-fichap').addEventListener('click', async (e) => {
+  const ck = e.target.closest('[data-fp-chk]');
+  if (ck) { const usr = (FPV.F && FPV.F.persona && FPV.F.persona.usuario) || FPV.usuario, x = chkDeFicha(FPV.F, usr).find(z => z.id === ck.dataset.fpChk); if (x) verChkRegistro(x); return; }
   const v = e.target.closest('[data-fp-ver]');
   if (v) {
     const lista = FPV.snap ? FPV.snap.docs || [] : (FPV.F.docs || []).concat(FPV.F.historico || []), d = lista.find(x => x.id === v.dataset.fpVer); if (!d) return;
@@ -2304,6 +2549,15 @@ function pdfFichaPers(V) {
   const docs = ((sn ? sn.docs : F && F.docs) || []).slice().sort((a, b) => ORDEN_FP.indexOf(a.tipo) - ORDEN_FP.indexOf(b.tipo));
   tabla([['Tipo', 36], ['Documento / procedimiento', 66], ['Emisión', 19], ['Vence', 19], ['Estado', 28], ['ID', 18]],
     docs.length ? docs.map(d => [TIPOS_FP[d.tipo] || d.tipo, [d.titulo, d.codigo, d.resultado].filter(Boolean).join(' · '), fDMA(d.emision), fDMA(d.vence), d.vigencia || vigFP(d.vence, ref), d.id]) : [['—', 'Sin documentos cargados', '', '', '', '']]);
+  if (!sn && F) {
+    const usr = (F.persona && F.persona.usuario) || V.usuario, lista = chkDeFicha(F, usr), hoy = diaISO();
+    y += 4; tit('CHECKLISTS DIARIOS DE HOY ' + fDMA(hoy) + ' (PREVIOS A LA ACTIVIDAD)');
+    tabla([['Checklist', 62], ['Código', 42], ['Firmado', 16], ['Estado', 30], ['Validado por', 36]], CHKD_ORDEN.map(k => { const x = lista.find(z => z.fecha === hoy && z.codigo === k);
+      return [CHKD[k].corto, CHKD[k].codigo, x ? x.hora : '—', x ? (x.revision === 'REVISADO' ? 'VALIDADO' : x.revision) : 'NO REALIZADO', x && x.revision !== 'PENDIENTE' ? [x.reviso, x.fRev].filter(Boolean).join(' · ') : '—']; }));
+    const ant = lista.filter(x => x.fecha !== hoy && x.revision === 'REVISADO');
+    if (ant.length) { y += 3; tit('CHECKLISTS DIARIOS VALIDADOS · DÍAS ANTERIORES (ÚLTIMOS 31 DÍAS)');
+      tabla([['Fecha', 22], ['Checklist', 62], ['Código', 42], ['Validado por', 60]], ant.slice(0, 60).map(x => [fDMA(x.fecha), (CHKD[x.codigo] || {}).corto || x.titulo, x.codigo ? (CHKD[x.codigo] || {}).codigo || x.codigo : '', [x.reviso, x.fRev].filter(Boolean).join(' · ')])); }
+  }
   if (!sn && F && (F.actividades || []).length) {
     y += 4; tit('MANTENCIONES E INSPECCIONES REALIZADAS (ÚLTIMAS)');
     tabla([['Fecha', 22], ['Actividad', 34], ['Tablero', 40], ['Ubicación', 70], ['Ítems NO', 20]], F.actividades.slice(0, 25).map(a => [fDMA(a.fAct), a.tipo, a.id, [a.ubic, a.nivel].filter(Boolean).join(' · '), String(a.itemsNo || 0)]));
@@ -2445,7 +2699,7 @@ async function firmarDocumentoRegistro(registro, titulo) {
 // ===================== NAVEGACIÓN =====================
 // Pantalla actual (para volver a ella si la app se recarga o se actualiza)
 let VISTA_GUARDADA = null; try { VISTA_GUARDADA = sessionStorage.getItem('vistaActual') || localStorage.getItem('vistaActual'); } catch (e) {}
-const VISTAS_RESTAURABLES = ['chkd', 'chkdf', 'fichap', 'planos', 'plano-ed', 'uni-nuevo', 'uni-ed', 'ficha', 'admin', 'docs', 'aprobar', 'envios', 'tableros', 'etiquetas', 'enlaces'];
+const VISTAS_RESTAURABLES = ['chkd', 'chkdf', 'fichap', 'repochk', 'planos', 'plano-ed', 'uni-nuevo', 'uni-ed', 'ficha', 'admin', 'docs', 'aprobar', 'envios', 'tableros', 'etiquetas', 'enlaces'];
 function recordarVista(vista, opt = {}) {
   try {
     if (VISTA_GUARDADA) return;   // al abrir, no se pisa la pantalla guardada antes de restaurarla
@@ -2471,6 +2725,7 @@ function restaurarVista() {
           $('#cdf-sub').textContent = `${CHKD[d.k].codigo} · ${NOMBRE_DIA[diaSemana(d.r.fecha)]} ${fDMA(d.r.fecha)}`; ir('chkdf'); renderChkdForm(); toast('Se recuperó el checklist que estabas llenando.'); return true; }
         exigirChkDiario(null); return true; }
       case 'fichap': if (!c.id) return false; abrirFichaPers({ usuario: c.id }); return true;
+      case 'repochk': if (!puedeRepoChk()) return false; abrirRepoChk(); return true;
       case 'plano-ed': if (!c.id || !esAdmin()) return false; abrirEditorPlano(c.id); return true;
       case 'uni-ed': if (!c.id || !esAdmin()) return false; abrirEditorUni(c.id); return true;
       case 'ficha': if (!c.id) return false; abrirFicha(c.id); return true;
@@ -2480,7 +2735,7 @@ function restaurarVista() {
     }
   } catch (e) { return false; }
 }
-const VISTAS = ['inicio', 'chkd', 'chkdf', 'fichap', 'firma', 'aprobar', 'planos', 'plano-ed', 'uni-nuevo', 'uni-ed', 'enlaces', 'enlace', 'login', 'clave', 'persona', 'cred', 'chk', 'hist', 'admin', 'admin-form', 'tableros', 'envios', 'etiquetas', 'actividad', 'rf01', 'pregunta', 'etiqueta', 'ficha', 'unilineal', 'form', 'scan', 'docs', 'subir'];
+const VISTAS = ['inicio', 'chkd', 'chkdf', 'fichap', 'repochk', 'firma', 'aprobar', 'planos', 'plano-ed', 'uni-nuevo', 'uni-ed', 'enlaces', 'enlace', 'login', 'clave', 'persona', 'cred', 'chk', 'hist', 'admin', 'admin-form', 'tableros', 'envios', 'etiquetas', 'actividad', 'rf01', 'pregunta', 'etiqueta', 'ficha', 'unilineal', 'form', 'scan', 'docs', 'subir'];
 // Botón / gesto "atrás" del teléfono: cada pantalla abierta queda en el historial del navegador,
 // así "atrás" vuelve a la pantalla anterior en vez de salir de la app.
 const pila = [];                 // pantallas abiertas sobre "inicio": { v, id, alInicio }
@@ -4255,36 +4510,41 @@ function construirUni(m, cx = {}) {
   let y = 32;
   const cajaAR = otra ? 160 : 240;
   // Alimentación aguas arriba (con la composición de circuitos del tablero de origen, si se indicó)
-  const CO = circuitosOrigen(m), dy = CO.n > 1 ? 16 : 0;
+  const CO = circuitosOrigen(m), dy = CO.n > 1 ? 26 : 0;
   L.rect(20, y, cajaAR - 20, 40 + dy, { dash: 1, w: 0.3 });
   L.texto(23, y + 4.6, 'ALIMENTACIÓN AGUAS ARRIBA' + (CO.n > 1 ? ` · TABLERO DE ORIGEN CON ${CO.n} CIRCUITOS` : ''), { pt: 5.8, b: 1, c: UC.GR });
   L.texto(23, y + 9.4, recortar(origenUni(m), cajaAR - 26, 8.2, true), { pt: 8.2, b: 1 });
   // PB-1: dispositivo que se bloquea, con el mismo detalle que el interruptor general (PB-2)
-  L.linea(X, y + 11.5, X, y + 13, { w: 0.4 });
-  const ym1 = simInterruptor(L, X, y + 13);
-  lineasInfo(L, X + 6, y + 16.5, [[(a.equipo || 'Dispositivo sin identificar'), 1], [[a.tipoProt, a.polos ? a.polos + ' polos' : ''].filter(Boolean).join(' · ')], [marcaModelo(a)], [ajustes(a)], [a.accesorios || '']], cajaAR - X - 9);
+  L.linea(X, y + 11.5, X, y + 15, { w: 0.4 });
+  const ym1 = simInterruptor(L, X, y + 15);
+  lineasInfo(L, X + 6, y + 18.5, [[(a.equipo || 'Dispositivo sin identificar'), 1], [[a.tipoProt, a.polos ? a.polos + ' polos' : ''].filter(Boolean).join(' · ')], [marcaModelo(a)], [ajustes(a)], [a.accesorios || '']], cajaAR - X - 9);
   simBloqueo(L, 'PB-1', X - 40, ym1, X - 4.6);
   if (CO.n > 1) {
     // barra del tablero de origen bajo el PB-1 y sus circuitos; el que alimenta este tablero sigue hacia abajo, destacado
-    const p = CO.pos, izq = p, der = CO.n - 1 - p, yb0 = y + 33;
-    let sp = Math.min(11, izq ? (X - 26) / izq : 99, der ? (cajaAR - 6 - X) / der : 99); sp = Math.max(2.4, sp);
+    const p = CO.pos, izq = p, der = CO.n - 1 - p, yb0 = y + 35;
+    let sp = Math.min(28, izq ? (X - 30) / izq : 99, der ? (cajaAR - 8 - X) / der : 99); sp = Math.max(2.4, sp);
     const xs = CO.lista.map((c, k) => X + (k - p) * sp);
-    L.linea(X, y + 29, X, yb0, { w: 0.4 });
+    L.linea(X, y + 31, X, yb0, { w: 0.4 });
     L.linea(Math.min(...xs) - 2.5, yb0, Math.max(...xs) + 2.5, yb0, { w: 0.9 });
     L.texto(Math.min(...xs) - 3.5, yb0 + 0.9, recortar('Barra ' + (a.barraTension || a.tension || ''), 30, 4.4), { pt: 4.4, c: UC.GR, al: 'right' });
     CO.lista.forEach((c, k) => {
       const xi = xs[k], esta = k === p, col = esta ? UC.N : UC.GR;
       L.linea(xi, yb0, xi, yb0 + 1.2, { w: esta ? 0.4 : 0.25, c: col }); simInterruptor(L, xi, yb0 + 1.2, esta ? 0.42 : 0.36);
       if (c.reserva && !esta) L.linea(xi - 1, yb0 + 7, xi + 1, yb0 + 7, { w: 0.25, c: UC.GR });
-      if (esta) { L.texto(xi + 2, yb0 + 16, recortar((c.id || 'Circuito ' + (k + 1)) + ' (circuito ' + (k + 1) + ') alimenta este tablero' + (c.in ? ' · ' + c.in : ''), cajaAR - xi - 6, 5.4, true), { pt: 5.4, b: 1 });
-        L.texto(xi, yb0 + 10.4, String(k + 1), { pt: 3.8, b: 1, al: 'center' }); return; }
+      if (esta) { envolver((c.id || 'Circuito ' + (k + 1)) + ' (circuito ' + (k + 1) + ' de ' + CO.n + ') alimenta este tablero' + (c.in ? ' · ' + c.in : ''), cajaAR - xi - 8, 5.4, true, 2)
+          .forEach((l, j) => L.texto(xi + 2, yb0 + 24.5 + j * 2.6, l, { pt: 5.4, b: 1 }));
+        L.texto(xi, yb0 + 10.2, String(k + 1), { pt: 3.8, b: 1, al: 'center' }); return; }
+      // identificación, a qué alimenta (hasta 3 líneas) y corriente, ajustados al ancho disponible
+      const w = Math.max(2, sp - 1), pt = sp >= 14 ? 4.4 : sp >= 8 ? 3.8 : 3.4;
       if (sp >= 5) {
-        L.texto(xi, yb0 + 10.4, recortar(c.id || String(k + 1), sp - 0.6, 3.8, true), { pt: 3.8, b: 1, al: 'center', c: UC.GR });
-        if (sp >= 7 && (c.destino || c.in)) L.texto(xi, yb0 + 12.4, recortar(c.destino || c.in, sp - 0.6, 3.4), { pt: 3.4, al: 'center', c: UC.GR });
-      } else if (k % 2 === 0 || k === CO.n - 1) L.texto(xi, yb0 + 10.4, String(k + 1), { pt: 3.4, al: 'center', c: UC.GR });
+        let yy = yb0 + 10.2;
+        envolver(c.id || String(k + 1), w, pt, true, 2).forEach(l => { L.texto(xi, yy, l, { pt, b: 1, al: 'center', c: UC.N }); yy += pt * 0.5; });
+        if (c.destino) envolver(c.destino, w, pt - 0.3, false, 4).forEach(l => { L.texto(xi, yy, l, { pt: pt - 0.3, al: 'center', c: UC.GR }); yy += (pt - 0.3) * 0.5; });
+        if (c.in) L.texto(xi, yy, recortar(c.in, w, pt - 0.3), { pt: pt - 0.3, al: 'center', c: UC.GR });
+      } else if (k % 2 === 0 || k === CO.n - 1) L.texto(xi, yb0 + 10.2, String(k + 1), { pt: 3.4, al: 'center', c: UC.GR });
     });
     L.linea(X, yb0 + 7.9, X, y + 60 + dy, { w: 0.4 });
-  } else L.linea(X, y + 29, X, y + 60 + dy, { w: 0.4 });
+  } else L.linea(X, y + 31, X, y + 60 + dy, { w: 0.4 });
   zona(20, y, cajaAR - 20, 40 + dy, 'alim');
   // Cable
   const cab = m.cable || {};
@@ -6201,7 +6461,7 @@ function htmlCircOrigen(m) {
   return `<div class="ancho ue-circ"><label>Otros circuitos del tablero de origen (opcional: identificación, a qué alimenta y corriente; escribe RESERVA si está libre)</label>
     <div class="ue-circ-g">${co.lista.map((c, k) => k === co.pos
       ? `<div class="ue-circ-f sel"><b>${k + 1}</b><input data-k="alim.circs.${k}.id" value="${esc(c.id)}" placeholder="Q-A${k + 1}"><span>→ alimenta ESTE TABLERO</span><input data-k="alim.circs.${k}.in" value="${esc(c.in)}" placeholder="In" list="dl-calibres"></div>`
-      : `<div class="ue-circ-f"><b>${k + 1}</b><input data-k="alim.circs.${k}.id" value="${esc(c.id)}" placeholder="Q-A${k + 1}"><input data-k="alim.circs.${k}.destino" class="may" value="${esc(c.destino)}" placeholder="Alimenta a…"><input data-k="alim.circs.${k}.in" value="${esc(c.in)}" placeholder="In" list="dl-calibres"></div>`).join('')}</div></div>`;
+      : `<div class="ue-circ-f"><b>${k + 1}</b><input data-k="alim.circs.${k}.id" value="${esc(c.id)}" placeholder="Q-A${k + 1}"><textarea data-k="alim.circs.${k}.destino" class="may" rows="2" placeholder="Alimenta a… (detalle del circuito)">${esc(c.destino)}</textarea><input data-k="alim.circs.${k}.in" value="${esc(c.in)}" placeholder="In" list="dl-calibres"></div>`).join('')}</div></div>`;
 }
 const segU = (k, label, ops, req) => `<div class="ue-f ancho"><label>${esc(label)}${req ? ' *' : ''}</label><div class="seg" data-seg="${k}">${ops.map(([v, t]) =>
   `<button type="button" data-v="${v}" class="${String(getP(UE.m, k) || '') === v ? 'sel' : ''}">${esc(t)}</button>`).join('')}</div></div>`;
@@ -7373,6 +7633,7 @@ async function obtenerArchivo(d) {
   const g = await ArchDB.get(d.fileId).catch(() => null);
   if (g && g.blob) return g.blob;
   if (!navigator.onLine || !configurado()) throw new Error('Sin señal y este documento no está guardado en el teléfono.');
+  if (d.remotoChk) return blobChkServ(d);
   if (d.remotoPers) {
     const j = await getFichaServ({ accion: 'archivoPersonal', id: d.remotoPers }, 180000);
     const blob = await (await fetch('data:' + (j.mime || d.mime) + ';base64,' + j.data)).blob();
@@ -7691,6 +7952,16 @@ function crearPdfChecklist(r) {
     const docs = (F.docs || []).slice().sort((a, b) => ORDEN_FP.indexOf(a.tipo) - ORDEN_FP.indexOf(b.tipo));
     if (docs.length) docs.forEach(d => fila([TIPOS_FP[d.tipo] || d.tipo, [d.titulo, d.codigo, d.resultado].filter(Boolean).join(' · '), fDMA(d.emision), fDMA(d.vence), vigFP(d.vence, ref), d.id]));
     else fila(['—', F.sinDatos ? 'La ficha no estaba guardada en el teléfono (ingresa con señal para descargarla). La ficha oficial queda registrada en el servidor junto a este informe.' : 'Sin documentos cargados en la ficha.', '', '', '', '']);
+    if ((F.chkd || []).length) {
+      y += 3; salto(10); doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(...TINTA);
+      doc.text('CHECKLISTS DIARIOS PREVIOS A LA ACTIVIDAD · ' + fDMA(F.chkd[0].fecha), M, y + 3.5); y += 5.5;
+      const c2 = [['Checklist', 58], ['Código', 44], ['Firmado', 16], ['Estado', 30], ['Validado por', 42]], f2 = (vals, cab) => {
+        doc.setFontSize(cab ? 7 : 7.4); const ls_ = vals.map((v, i) => doc.splitTextToSize(String(v || '—'), c2[i][1] - 3)), h = Math.max(...ls_.map(l => l.length)) * 3.3 + 2.6; salto(h); let x = M;
+        ls_.forEach((l, i) => { doc.setDrawColor(...BORDE); caja(x, y, c2[i][1], h, cab ? FONDO : null); doc.setFont('helvetica', cab || i === 3 ? 'bold' : 'normal');
+          doc.setTextColor(...(cab ? GRIS : i === 3 && vals[i] !== 'VALIDADO' ? ROJO : TINTA)); doc.text(l, x + 1.5, y + 3.6); x += c2[i][1]; }); y += h; };
+      f2(c2.map(c => c[0]), true);
+      F.chkd.forEach(x => f2([x.corto, x.codDoc, x.hora || '—', x.estado === 'FALTA' ? 'NO REALIZADO' : x.estado, [x.reviso, x.fRev].filter(Boolean).join(' · ') || '—']));
+    }
     y += 3;
     doc.setFont('helvetica', 'normal'); doc.setFontSize(7.2); doc.setTextColor(...GRIS);
     const nota = doc.splitTextToSize('Los documentos de respaldo (acreditación de personal autorizado, difusiones y evaluaciones de procedimientos) están en GEO ELEC > Ficha del personal. '
