@@ -295,6 +295,22 @@
   .pe-paleta button.on { background: #FFE9E6; border-color: var(--rojo); box-shadow: inset 0 0 0 2px var(--rojo); }
   svg.pe-ico { width: 26px; height: 26px; vertical-align: middle; }
   .pe-acc button { min-height: 40px; padding: 4px 12px; font-size: 14px; }
+  .pe-barra .sep { display: none; }
+  .pe-barra button.toggle.on { background: #E6F2FF; border-color: #0050B3; box-shadow: inset 0 0 0 2px #0050B3; }
+  .pe-barra button:disabled { opacity: .4; }
+  #pe-esq-form details.ue-sec { margin: 0 0 8px; }
+  @media (max-width: 999px) {
+    .pe-barra { display: flex; overflow-x: auto; gap: 6px; padding-bottom: 4px; scrollbar-width: thin; position: sticky; top: 0; z-index: 5; background: var(--fondo, #F4F6F8); }
+    .pe-barra button { flex: 0 0 66px; }
+  }
+  body.vista-ancha main { max-width: 1560px; }
+  @media (min-width: 1000px) {
+    .pe-wrap { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 14px; align-items: start; }
+    .pe-main { position: sticky; top: 8px; }
+    .pe-side { max-height: calc(100vh - 16px); overflow: auto; position: sticky; top: 8px; padding-right: 2px; }
+    .pe-lienzo { height: calc(100vh - 200px); }
+    .pe-barra { grid-template-columns: repeat(auto-fill, minmax(74px, 1fr)); }
+  }
   button.peligro { color: var(--no, #B00020); border-color: #E7B1B8; }
   .pl-est { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 1px 7px; border-radius: 999px; margin-top: 3px; }
   .pl-est.vig { background: #E3F4E8; color: #0A7A2A; } .pl-est.imp { background: #EEF1F4; color: #5B6470; }
@@ -459,9 +475,9 @@
   <section id="v-planos" hidden>
     <div class="card">
       <h2>📐 Planos eléctricos</h2>
-      <p class="muted" style="margin:4px 0 0">Planos ELEC de Producción y Acarreo con formato GEOVITA y puntos de bloqueo. Cada plano tiene su revisión vigente; las modificaciones se emiten como nueva revisión con firma y aprobación del Jefe de terreno o Jefe de departamento.</p>
-      <div class="tabs tabs-in" id="pl-niveles"></div>
-      <input id="pl-buscar" type="search" placeholder="Buscar plano, CCDD o tablero (ej.: TDF 94)" style="margin-top:12px">
+      <p class="muted" style="margin:4px 0 0">Planos tipo GEOVITA: un esquema estándar por tipo de tablero, listo para usar y editable (componentes, símbolos, textos, conductores y puntos de bloqueo). Cada cambio se emite como nueva revisión con firma y aprobación del Jefe de terreno o Jefe de departamento.</p>
+      <div class="tabs tabs-in" id="pl-niveles" hidden></div>
+      <input id="pl-buscar" type="search" placeholder="Buscar tipo de tablero (ej.: CDD, TDF 400)" style="margin-top:12px">
       <ul class="lista" id="pl-lista"></ul>
       <p class="muted" id="pl-info" style="margin:10px 0 0"></p>
     </div>
@@ -495,11 +511,17 @@
       <p class="muted" id="pe-sub" style="margin:4px 0 0"></p>
       <div class="aviso" id="pe-aviso" hidden style="margin:12px 0 0"></div>
     </div>
+    <div class="pe-wrap"><div class="pe-main">
     <div class="pe-barra" id="pe-barra"></div>
     <div class="pe-lienzo" id="pe-lienzo"><div id="pe-svg" style="width:100%;height:100%"></div></div>
     <p class="muted" id="pe-ayuda" style="margin:6px 2px 10px"></p>
+    </div><div class="pe-side">
     <div class="card" id="pe-panel"></div>
+    <div class="card" id="pe-esq" hidden><h3>🧩 Esquema del tablero (componentes)</h3>
+      <p class="muted" style="margin:4px 0 8px">Protecciones, diferencial, transformadores, barras y salidas del plano tipo. Al cambiar un dato el plano se redibuja solo. También puedes tocar un componente en el plano para ir a sus datos.</p>
+      <div id="pe-esq-form" class="ue"></div></div>
     <div class="card"><h3>⚠ Puntos de bloqueo de este plano</h3><ul class="lista" id="pe-pbs"></ul></div>
+    </div></div>
     <div class="card" id="pe-caj"><h3>🗂 Recuadro del plano</h3>
       <p class="muted" style="margin:4px 0 0">Datos del rótulo (formato GEOVITA, RIC N°18). Vienen del rótulo original del DWG y se pueden corregir. Las firmas, la revisión y la fecha las completa la app.</p>
       <div class="ue-g" id="pe-caj-campos"></div></div>
@@ -1189,7 +1211,7 @@ const CONFIG = {
 };
 
 // Versión visible al pie de la pantalla de inicio (sirve para confirmar que el teléfono tiene la última)
-const VERSION_APP = 'v27 · 09-11-2026';
+const VERSION_APP = 'v28 · 09-11-2026';
 const NIVELES = ['UCL', 'Producción', 'Acarreo', 'SNV'];
 const SEN = 'Cuadro de señalética (riesgo eléctrico, potencia, nivel de tensión, punto de bloqueo, maniobra RCP, logo empresa, personal autorizado, diagrama unilineal, carga de fuego, programa de mantenimiento)';
 const BASE_TD = ['Orden y aseo en el sector', 'Iluminación', 'Número de TAG', 'Soporte o anclaje del tablero en buen estado',
@@ -1582,6 +1604,7 @@ function ir(vista, opt = {}) {
   // Quien abre la app escaneando el QR de un tablero (sin ingresar) solo ve la ficha técnica
   if (vista === 'inicio' && modoQR()) { VISTAS.forEach(v => $('#v-' + v).hidden = v !== 'ficha'); window.scrollTo(0, 0); return; }
   VISTAS.forEach(v => $('#v-' + v).hidden = v !== vista);
+  document.body.classList.toggle('vista-ancha', vista === 'plano-ed');
   if (vista === 'inicio') {
     if (pila.length && !opt.desdeHist) {
       const n = pila.length;
@@ -3224,7 +3247,9 @@ function bloqueosUni(m) {
   const a = m.alim || {}, gnl = m.general || {}, of = m.otraFuente || {}, b = [];
   b.push({ id: 'PB-1', rol: 'Alimentación aguas arriba', equipo: a.equipo || '', ubicacion: a.nombre || '', tipo: a.tipoBloqueo || 'Candado + tarjeta' });
   b.push({ id: 'PB-2', rol: 'Interruptor general', equipo: [gnl.equipo || 'Q0', 'Interruptor general'].join(' '), ubicacion: (m.tablero || {}).nombre || '', tipo: gnl.tipoBloqueo || 'Candado + tarjeta' });
-  if (siUni(of.tiene)) b.push({ id: 'PB-3', rol: 'Otra fuente de energía', equipo: of.equipo || '', ubicacion: of.ubicacion || of.desc || '', tipo: of.tipoBloqueo || 'Candado + tarjeta' });
+  const sc = m.sec || {};
+  if (siUni(sc.tiene)) b.push({ id: 'PB-' + (b.length + 1), rol: 'Alimentación transformador T1', equipo: ((sc.qt || {}).equipo || 'Q-T1') + ' (aísla T1 y ' + (sc.nombre || 'TDF 400 V') + ')', ubicacion: (m.tablero || {}).nombre || '', tipo: (sc.qt || {}).tipoBloqueo || TIPOS_BLOQUEO[0] });
+  if (siUni(of.tiene)) b.push({ id: 'PB-' + (b.length + 1), rol: 'Otra fuente de energía', equipo: of.equipo || '', ubicacion: of.ubicacion || of.desc || '', tipo: of.tipoBloqueo || 'Candado + tarjeta' });
   (m.pbExtra || []).filter(x => x.equipo || x.ubicacion).forEach(x => b.push({ id: 'PB-' + (b.length + 1), rol: 'Adicional', equipo: x.equipo || '', ubicacion: x.ubicacion || '', tipo: x.tipo || 'Candado + tarjeta' }));
   return b;
 }
@@ -3253,7 +3278,7 @@ function construirUni(m, cx = {}) {
     envolver('DIAGRAMA UNILINEAL ' + (t.nombre || m.id) + (t.ubic ? ' – ' + t.ubic : ''), w - 50, 7, true, 2)
       .forEach((l, i) => L.texto(x + 47, y + 14 + i * 3.2, l, { pt: 7, b: 1 }));
     L.linea(x, y + 21, x + w, y + 21, { w: 0.25, capa: 'CAJETIN' });
-    const celdas = [['Código', CODIGO_UNI(m.id), 66], ['Rev.', String(m.rev ?? 0), 12], ['Fecha', m.fechaEmision ? m.fechaEmision.split('-').reverse().join('-') : (cx.borrador ? 'BORRADOR' : ''), 22], ['Hoja · Escala', hoja + '/' + nPag.total + ' · S/E', 54]];
+    const celdas = [['Código', cx.codigo || CODIGO_UNI(m.id), 66], ['Rev.', String(m.rev ?? 0), 12], ['Fecha', m.fechaEmision ? m.fechaEmision.split('-').reverse().join('-') : (cx.borrador ? 'BORRADOR' : ''), 22], ['Hoja · Escala', hoja + '/' + nPag.total + ' · S/E', 54]];
     let xx = x;
     celdas.forEach(([k, v, cw], i) => {
       L.texto(xx + 1.5, y + 24.2, k, { pt: 5, c: UC.GR }); L.texto(xx + 1.5, y + 28.4, recortar(v, cw - 2.5, 6.6, true), { pt: 6.6, b: 1 });
@@ -3330,7 +3355,7 @@ function construirUni(m, cx = {}) {
     zona(X - 18, yy, 110, 12, 'dif');
     yy += 12;
   }
-  if (siUni(tr.tiene)) {
+  if (siUni(tr.tiene) && !siUni((m.sec || {}).tiene)) {
     L.linea(X, yy, X, yy + 2, { w: 0.4 });
     L.circ(X, yy + 7, 5, { w: 0.4 }); L.circ(X, yy + 13.5, 5, { w: 0.4 });
     L.linea(X, yy + 18.5, X, yy + 21, { w: 0.4 });
@@ -3362,43 +3387,79 @@ function construirUni(m, cx = {}) {
   // Barra y salidas
   const yb = yy + 4;
   L.linea(X, yy, X, yb, { w: 0.4 });
+  const sec = m.sec || {}, conSec = siUni(sec.tiene), xT = 214;
   const MAXF = 10, MAXT = 20;
-  const dib = sal.length > MAXT ? sal.slice(0, MAXT - 1) : sal;
-  const filas = [];
-  for (let i = 0; i < dib.length; i += MAXF) filas.push(dib.slice(i, i + MAXF));
-  if (!filas.length) filas.push([]);
-  let yFila = yb, finCaja = yb + 12, xBarIzq = X, xBarDer = otra ? X2 : X;
-  filas.forEach((fila, fi) => {
-    const n = fila.length, s = n ? Math.min(23, 196 / n) : 0, total = (n - 1) * s;
-    const x0 = n ? Math.max(30, Math.min((otra ? (X + X2) / 2 : X) - total / 2, 226 - total)) : X;
-    const izq = Math.min(x0, fi ? xBarIzq : X) - 4, der = Math.max(x0 + total, fi ? 0 : xBarDer) + 4;
-    L.linea(izq, yFila, der, yFila, { w: 1.1 });
-    if (fi === 0) { xBarIzq = izq; L.texto(izq, yFila - 1.6, recortar('Barra ' + ((m.barra || {}).tension || ''), 60, 5.4), { pt: 5.4, c: UC.GR }); }
-    else L.linea(xBarIzq, yb, xBarIzq, yFila, { w: 0.5, dash: 1 });
-    fila.forEach((o, k) => {
-      const xi = x0 + k * s, w = Math.max(10, s - 1.2);
-      L.linea(xi, yFila, xi, yFila + 3, { w: 0.35 });
-      simInterruptor(L, xi, yFila + 3, 0.72);
-      if (o.dif) { L.rect(xi + 2.4, yFila + 6.6, 2.8, 2.8, { w: 0.22 }); L.linea(xi + 2.4, yFila + 9.4, xi + 5.2, yFila + 6.6, { w: 0.18 }); }
-      simCarga(L, xi, yFila + 14.5, o.carga);
-      zona(xi - Math.max(5, w / 2), yFila, Math.max(10, w), 36, 'salida:' + (m.salidas || []).indexOf(o));
-      L.texto(xi, yFila + 22.6, recortar(o.id || '—', w, 6.2, true), { pt: 6.2, b: 1, al: 'center' });
-      L.texto(xi, yFila + 25.5, recortar([o.polos ? o.polos + 'x' : '', o.in].join('') + (o.dif ? ' ' + o.dif : ''), w, 5.2), { pt: 5.2, al: 'center' });
-      envolver(o.desc || '', w, 4.8, false, 2).forEach((l, j) => L.texto(xi, yFila + 28.2 + j * 2.4, l, { pt: 4.8, al: 'center', c: UC.GR }));
-      if (o.destino) L.texto(xi, yFila + 33.4, recortar('› ' + o.destino, w, 4.8, true), { pt: 4.8, b: 1, al: 'center', c: UC.R });
+  // Dibuja una barra con sus salidas (en filas de hasta 10); devuelve dónde termina
+  const dibujarSalidas = (lista, yIni, xMin, xMax, xCentro, etiqueta, pref, xConex) => {
+    const dib = lista.length > MAXT ? lista.slice(0, MAXT - 1) : lista, filas = [];
+    for (let i = 0; i < dib.length; i += MAXF) filas.push(dib.slice(i, i + MAXF));
+    if (!filas.length) filas.push([]);
+    let yF = yIni, fin = yIni + 12, xIzq = xCentro;
+    filas.forEach((fila, fi) => {
+      const n = fila.length, s = n ? Math.min(23, (xMax - xMin) / n) : 0, total = (n - 1) * s;
+      const x0 = n ? Math.max(xMin, Math.min(xCentro - total / 2, xMax - total)) : xCentro;
+      const izq = Math.min(x0, fi ? xIzq : xCentro) - 4, der = Math.max(x0 + total, fi ? 0 : (xConex || xCentro)) + 4;
+      L.linea(izq, yF, der, yF, { w: 1.1 });
+      if (fi === 0) { xIzq = izq; L.texto(izq, yF - 1.6, recortar(etiqueta, 60, 5.4), { pt: 5.4, c: UC.GR }); }
+      else L.linea(xIzq, yIni, xIzq, yF, { w: 0.5, dash: 1 });
+      fila.forEach((o, k) => {
+        const xi = x0 + k * s, w = Math.max(10, s - 1.2);
+        L.linea(xi, yF, xi, yF + 3, { w: 0.35 });
+        simInterruptor(L, xi, yF + 3, 0.72);
+        if (o.dif) { L.rect(xi + 2.4, yF + 6.6, 2.8, 2.8, { w: 0.22 }); L.linea(xi + 2.4, yF + 9.4, xi + 5.2, yF + 6.6, { w: 0.18 }); }
+        simCarga(L, xi, yF + 14.5, o.carga);
+        zona(xi - Math.max(5, w / 2), yF, Math.max(10, w), 36, pref + ':' + lista.indexOf(o));
+        L.texto(xi, yF + 22.6, recortar(o.id || '—', w, 6.2, true), { pt: 6.2, b: 1, al: 'center' });
+        L.texto(xi, yF + 25.5, recortar([o.polos ? o.polos + 'x' : '', o.in].join('') + (o.dif ? ' ' + o.dif : ''), w, 5.2), { pt: 5.2, al: 'center' });
+        envolver(o.desc || '', w, 4.8, false, 2).forEach((l, j) => L.texto(xi, yF + 28.2 + j * 2.4, l, { pt: 4.8, al: 'center', c: UC.GR }));
+        if (o.destino) L.texto(xi, yF + 33.4, recortar('› ' + o.destino, w, 4.8, true), { pt: 4.8, b: 1, al: 'center', c: UC.R });
+      });
+      if (!n) L.texto(xCentro + 3, yF + 5, 'Sin salidas registradas', { pt: 6, c: UC.GR });
+      fin = yF + (n ? 37 : 10);
+      yF += 41;
     });
-    if (!n) L.texto(X + 3, yFila + 5, 'Sin salidas registradas', { pt: 6, c: UC.GR });
-    finCaja = yFila + (n ? 37 : 10);
-    yFila += 41;
-  });
-  if (sal.length > MAXT) L.texto(30, finCaja + 3, `+ ${sal.length - dib.length} salidas más: ver tabla de componentes`, { pt: 6, b: 1, c: UC.GR });
+    if (lista.length > MAXT) L.texto(30, fin + 3, `+ ${lista.length - dib.length} salidas más: ver tabla de componentes`, { pt: 6, b: 1, c: UC.GR });
+    return fin;
+  };
+  let finCaja = dibujarSalidas(sal, yb, 30, conSec ? xT - 16 : 226, otra ? (X + X2) / 2 : X, 'Barra ' + ((m.barra || {}).tension || ''), 'salida', conSec ? xT : (otra ? X2 : X));
+  // Centro de distribución: transformador T1 desde la barra y tablero de servicios 400 V (fuerza trifásica y monofásica)
+  if (conSec) {
+    const qt = sec.qt || {}, g2 = sec.general || {}, d2 = sec.dif || {}, nPB = bloqueosUni(m).findIndex(b => b.rol === 'Alimentación transformador T1') + 1;
+    L.linea(xT, yb, xT, yb + 3, { w: 0.35 }); const ymq = simInterruptor(L, xT, yb + 3, 0.72);
+    L.texto(xT - 3.4, yb + 8.4, recortar(qt.equipo || 'Q-T1', 24, 6, true), { pt: 6, b: 1, al: 'right' });
+    L.texto(xT - 3.4, yb + 11.2, recortar([qt.calibre, 'a T1'].filter(Boolean).join(' '), 30, 5.2), { pt: 5.2, al: 'right' });
+    if (nPB) { simPB(L, 230, ymq + 1.5, 9, 'PB-' + nPB); L.linea(224.4, ymq, xT + 3.2, ymq, { c: UC.R, w: 0.4 }); L.poli([[xT + 2.6, ymq], [xT + 4.8, ymq - 0.9], [xT + 4.8, ymq + 0.9]], { c: UC.R, w: 0.2, fill: UC.R }); }
+    const yt0 = yb + 15.5;
+    L.linea(xT, yb + 14.5, xT, yt0 + 1.5, { w: 0.35 }); L.circ(xT, yt0 + 5.5, 4, { w: 0.4 }); L.circ(xT, yt0 + 11, 4, { w: 0.4 });
+    L.texto(xT - 6, yt0 + 6, recortar('T1 ' + (tr.kva || ''), 40, 6.4, true), { pt: 6.4, b: 1, al: 'right' });
+    L.texto(xT - 6, yt0 + 9, recortar([tr.relacion, tr.grupo].filter(Boolean).join(' · '), 44, 5.2), { pt: 5.2, al: 'right' });
+    zona(xT - 46, yb, 56, 31, 'trafo');
+    const yS = Math.max(finCaja + 7, yt0 + 22), xS = 122;
+    L.linea(xT, yt0 + 15, xT, yS - 3, { w: 0.4 }); L.linea(xT, yS - 3, xS, yS - 3, { w: 0.4 }); L.linea(xS, yS - 3, xS, yS + 4, { w: 0.4 });
+    L.texto(29, yS + 5, recortar(sec.nombre || 'TDF 400 V SERVICIOS', 80, 8, true), { pt: 8, b: 1 });
+    L.texto(29, yS + 8.8, recortar([sec.tension || '400-231 V', 'Fuerza trifásica y monofásica'].join(' · '), 80, 5.4), { pt: 5.4, c: UC.GR });
+    const ymg = simInterruptor(L, xS, yS + 4, 0.9);
+    lineasInfo(L, xS + 6, yS + 8, [[(g2.equipo || 'Q0-B') + ' Interruptor general', 1], [marcaModelo(g2)], [ajustes(g2)]], 104);
+    zona(26, yS, 210, 19, 'sec');
+    let y2 = yS + 18.4;
+    if (siUni(d2.tiene)) {
+      L.linea(xS, y2, xS, y2 + 10, { w: 0.4 }); L.circ(xS, y2 + 5, 1.5, { w: 0.35, c: '#0077A8' }); L.circ(xS - 12, y2 + 5, 3, { w: 0.35, c: '#0077A8' });
+      L.linea(xS - 9, y2 + 5, xS - 1.5, y2 + 5, { w: 0.3, c: '#0077A8' }); L.texto(xS - 12, y2 + 5.9, recortar(d2.cod || '50G', 5.4, 4.2, true), { pt: 4.2, b: 1, al: 'center', c: '#0077A8' });
+      lineasInfo(L, xS + 6, y2 + 4.4, [[d2.tipo || 'Protección diferencial', 1], [[d2.I ? 'I = ' + d2.I : '', d2.T ? 'T = ' + d2.T : ''].filter(Boolean).join(' · ')]], 104);
+      y2 += 10;
+    }
+    L.linea(xS, y2, xS, y2 + 3, { w: 0.4 });
+    const finS = dibujarSalidas(sec.salidas || [], y2 + 3, 30, 232, xS, 'Barra ' + (sec.tension || '400-231 V'), 'secsal');
+    L.rect(26, yS, 210, finS + 3 - yS, { w: 0.45 });
+    finCaja = finS + 8;
+  }
   if (otra) L.linea(X2, 72, X2, yb, { w: 0.4 });
   const yFin = Math.min(Math.max(finCaja + 8, yT + 70), 278);
   L.rect(20, yT, 220, yFin - yT, { w: 0.6 });
   if (siUni((m.tp || {}).tiene)) { simTierra(L, 228, yFin - 13, 'TP'); zona(222, yFin - 15, 16, 14, 'tp'); }
   zona(X - 52, 32, 22, 30, 'pb'); zona(X - 52, yT + 14, 22, 24, 'pb');
-  const cargasUsadas = [['enchufe1', 'Enchufe hembra'], ['enchufeJ', 'Enchufe jumbo'], ['ilum', 'Iluminación'], ['motor', 'Motor / ventilador']].filter(([k]) => sal.some(o => o.carga === k || (k === 'enchufe1' && o.carga === 'enchufe3')));
-  const conDif = sal.some(o => o.dif), extra = cargasUsadas.length || conDif;
+  const cargasUsadas = [['enchufe1', 'Enchufe hembra'], ['enchufeJ', 'Enchufe jumbo'], ['ilum', 'Iluminación'], ['motor', 'Motor / ventilador']].filter(([k]) => sal.concat(conSec ? sec.salidas || [] : []).some(o => o.carga === k || (k === 'enchufe1' && o.carga === 'enchufe3')));
+  const conDif = sal.concat(conSec ? sec.salidas || [] : []).some(o => o.dif), extra = cargasUsadas.length || conDif;
   if (yFin <= (extra ? 254 : 262)) {   // simbología (como en los planos del fabricante)
     const ys = extra ? 260 : 268; L.texto(20, ys - 3.5, 'SIMBOLOGÍA', { pt: 5.8, b: 1, c: UC.GR });
     L.rect(20, ys - 1.5, 220, extra ? 22 : 14, { w: 0.2, c: UC.CL });
@@ -3483,6 +3544,13 @@ function construirUni(m, cx = {}) {
   if (siUni(tr.tiene)) comp.push(['T1', tr.tipo || 'Transformador', '', [tr.kva, tr.relacion, tr.grupo].filter(Boolean).join(' · ')]);
   if (siUni((m.trafoCtl || {}).tiene)) { const tc2 = m.trafoCtl; comp.push(['TC', 'Transformador de control' + (tc2.alimenta ? ' (' + tc2.alimenta + ')' : ''), tc2.marca || '', [tc2.relacion, tc2.va, tc2.prot].filter(Boolean).join(' · ')]); }
   sal.forEach(o => comp.push([o.id || '—', [o.tipo, nombreCarga(o.carga), o.desc, o.destino ? '› ' + o.destino : ''].filter(Boolean).join(' · '), [o.marca, o.modelo].filter(Boolean).join(' '), [o.polos ? o.polos + ' polos' : '', o.in, o.curva ? 'curva ' + o.curva : '', o.dif].filter(Boolean).join(' · ')]));
+  if (siUni((m.sec || {}).tiene)) {
+    const sc = m.sec, g2 = sc.general || {}, d2 = sc.dif || {};
+    comp.push([(sc.qt || {}).equipo || 'Q-T1', 'Interruptor alimentación transformador T1', '', (sc.qt || {}).calibre || '']);
+    comp.push([g2.equipo || 'Q0-B', 'Interruptor general ' + (sc.nombre || 'TDF 400 V'), marcaModelo(g2), ajustes(g2)]);
+    if (siUni(d2.tiene)) comp.push([d2.cod || 'RD', (d2.tipo || 'Protección diferencial') + ' (' + (sc.nombre || 'TDF 400 V') + ')', '', [d2.I, d2.T].filter(Boolean).join(' · ')]);
+    (sc.salidas || []).forEach(o => comp.push([o.id || '—', [o.tipo, nombreCarga(o.carga), o.desc].filter(Boolean).join(' · '), [o.marca, o.modelo].filter(Boolean).join(' '), [o.polos ? o.polos + ' polos' : '', o.in, o.curva ? 'curva ' + o.curva : '', o.dif].filter(Boolean).join(' · ')]));
+  }
   if (siUni((m.tp || {}).tiene)) comp.push(['TP', 'Puesta a tierra', '', (m.tp || {}).desc || '']);
   if (siUni(of.tiene)) comp.push([of.equipo || 'PB-3', 'Otra fuente: ' + (of.desc || ''), '', of.ubicacion || '']);
   tabla('COMPONENTES', [['Ítem', 0.12], ['Descripción', 0.42], ['Marca / modelo', 0.2], ['Ajuste', 0.26]], comp, { negrita: 1, maxLin: 2 });
@@ -3569,6 +3637,19 @@ const PB_ALTO = 10;   // alto del símbolo de punto de bloqueo en el plano (mm, 
 const COL_NUEVO = '#0050B3';   // en el editor, lo agregado o modificado se ve en azul
 const CODIGO_PLA = (id) => 'PL-' + CONFIG.CONTRATO + '-' + id;
 const BASES = {};
+// Planos tipo GEOVITA: un documento por tipo de tablero (id fijo TIP-01…), dibujado desde su esquema unilineal estándar
+const TIP_ID = { TDF600: 'TIP-01', TDF400: 'TIP-02', TDA: 'TIP-03', CDD: 'TIP-04', TEJ: 'TIP-05', TSM: 'TIP-06', TDFYC: 'TIP-07', TPV: 'TIP-08' };
+const UNI_AREA = { x: 12, y: 27, w: 238, h: 258 };
+const hojasTipo = () => Object.entries(TIP_ID).filter(([k]) => PLANTILLAS[k]).map(([k, id]) => { const tp = TIPOS.find(x => x.key === k) || { nombre: k };
+  return { id, tipoKey: k, nombre: tp.nombre, titulo: 'PLANO TIPO ' + String(tp.nombre).toUpperCase(), plano: 'TIPO', nivel: 'Tipo', archivo: 'Esquema estándar GEO ELEC', tableros: [] }; });
+async function hojaPorId(id) {
+  if (/^TIP-/.test(id)) return hojasTipo().find(h => h.id === id) || null;
+  const R = await cargarRef(); return R ? R.hojas.find(h => h.id === id) || null : null;
+}
+const areaPlano = (base) => base && base.tipo === 'uni' ? UNI_AREA : PLA_AREA;
+// En los planos tipo, los PB agregados se numeran después de los del esquema (PB-1 origen, PB-2 general…)
+const pbOff = (m) => m && m.uni ? bloqueosUni(Object.assign({}, m.uni, { pbExtra: [] })).length : 0;
+const pbN = (m, i) => 'PB-' + (pbOff(m) + i + 1);
 // Símbolo estándar de PUNTO DE BLOQUEO: triángulo rojo con borde amarillo (alto contraste) y número
 function simPB(L, cx, cy, h, etiqueta, bl) {
   const w = h * 1.2, top = cy - h * 2 / 3, bot = cy + h / 3, g = Math.max(0.7, h * 0.13), o = bl ? { bl: 1 } : {};
@@ -3708,7 +3789,8 @@ const plaVigente = (id) => (PLADATA.emitidos || {})[id] || null;
 async function basePlano(hoja) {
   if (BASES[hoja.id]) return BASES[hoja.id];
   let b;
-  if (hoja.vec) {
+  if (hoja.tipoKey) b = { tipo: 'uni', w: 420, h: 297, e: [], pb: [], cab: {} };
+  else if (hoja.vec) {
     const r = await fetch(hoja.vec); if (!r.ok) throw new Error('no se pudo cargar el plano (revisa la señal)');
     const j = await r.json();
     b = { tipo: 'vec', w: j.w, h: j.h, e: j.e, pb: j.pb || [], cab: j.cab || {} };
@@ -3724,6 +3806,7 @@ async function imgDataPlano(base) {
 }
 // Encuadre: el contenido del dibujo ocupa toda el área útil de la hoja A3 (fijo por plano, para que las ediciones no lo muevan)
 function transformPlano(base) {
+  if (base.tipo === 'uni') return { s: 1, ox: 0, oy: 0, P: (x, y) => [x, y], inv: (X, Y) => [X, Y] };
   if (!base.bb) {
     if (base.tipo === 'img') base.bb = [0, 0, base.w, base.h];
     else {
@@ -3781,6 +3864,8 @@ const cajPlano = (hoja, base, m) => Object.assign(cajDefecto(hoja, base), m.caj 
 
 // ---------- Modelo de la revisión ----------
 function modeloPlanoBase(hoja, base, rev) {
+  if (hoja.tipoKey) return { id: hoja.id, rev, estado: rev ? 'BORRADOR' : 'IMPORTADO', titulo: hoja.titulo, plano: 'TIPO', nivel: 'Tipo', archivo: hoja.archivo, tipoKey: hoja.tipoKey,
+    uni: modeloTipo(hoja.tipoKey), pb: [], del: [], txt: {}, mv: {}, add: [], caj: {}, descRev: '', firmas: {} };
   return { id: hoja.id, rev, estado: rev ? 'BORRADOR' : 'IMPORTADO', titulo: (base.cab && base.cab.titulo) || hoja.titulo, plano: hoja.plano, nivel: hoja.nivel, archivo: hoja.archivo,
     pb: (base.pb || []).map(p => ({ x: p[0], y: p[1], equipo: '', tablero: '', idTablero: '', ubic: '', tipo: TIPOS_BLOQUEO[0], origen: 'plano' })),
     del: [], txt: {}, mv: {}, add: [], caj: {}, descRev: '', firmas: {} };
@@ -3800,6 +3885,7 @@ function revisionesPlano(m) {
 
 // ---------- Hoja A3 con formato GEOVITA ----------
 function construirPlano(hoja, base, m, cx = {}) {
+  if (base.tipo === 'uni') return construirTipo(hoja, base, m, cx);
   const L = new Lienzo(), T = transformPlano(base); L.T = T; L.defs = {};
   const f = m.firmas || {}, borrador = m.estado === 'BORRADOR' || m.estado === 'POR APROBAR', C = cajPlano(hoja, base, m);
   const ed = !!cx.editor, colNuevo = ed ? COL_NUEVO : UC.N;
@@ -3816,24 +3902,8 @@ function construirPlano(hoja, base, m, cx = {}) {
     const e = mv[i] ? desplazar(e0, mv[i][0], mv[i][1]) : e0;
     dibujarEnt(L, T, e, e[0] === 't' ? (txt[i] != null ? txt[i] : e[7]) : null, ed && (txt[i] != null || mv[i]) ? { c: COL_NUEVO } : {});
   });
-  // tapas, copias, líneas, textos y símbolos agregados
-  const add = m.add || [];
-  add.forEach(a => { if (a.k === 'tapa') { const [X, Y] = T.P(Math.min(a.x, a.x2), Math.min(a.y, a.y2)); L.rect(X, Y, Math.abs(a.x2 - a.x) * T.s, Math.abs(a.y2 - a.y) * T.s, { fill: '#FFFFFF', sinBorde: !ed, c: '#B0B7C0', w: 0.15, dash: 1, capa: 'MODIFICACION' }); } });
-  add.forEach(a => {
-    if (a.k === 'g') (a.e || []).forEach(e => dibujarEnt(L, T, e, null, { c: ed ? COL_NUEVO : null, capa: 'MODIFICACION' }));
-    else if (a.k === 'l' && a.p && a.p.length >= 4) { const pts = []; for (let k = 0; k < a.p.length; k += 2) pts.push(T.P(a.p[k], a.p[k + 1])); L.poli(pts, { c: colNuevo, w: a.w || 0.3, ab: 1, dash: a.dash ? 1 : 0, capa: 'MODIFICACION' }); }
-    else if (a.k === 't' && a.s) { const [X, Y] = T.P(a.x, a.y); String(a.s).split('\n').forEach((ln, j) => L.texto(X + (a.rot ? j * a.hm * 1.6 : 0), Y + (a.rot ? 0 : j * a.hm * 1.6), ln, { pt: ptAdd(a.hm || 2.5), b: a.b ? 1 : 0, c: colNuevo, rot: a.rot || 0, capa: 'MODIFICACION' })); }
-    else if (a.k === 'sym' && SIMB[a.s]) dibujarSimbolo(L, T, a, colNuevo);
-  });
-  // puntos de bloqueo (siempre encima; en el DXF son el bloque GEO_PB con su número como atributo)
-  const pbs = m.pb || [];
-  pbs.forEach((p, i) => {
-    const [X, Y] = T.P(p.x, p.y);
-    if (p.ax != null) { const [AX, AY] = T.P(p.ax, p.ay); flechaPB(L, X, Y, AX, AY, PB_ALTO); }
-    simPB(L, X, Y, PB_ALTO, 'PB-' + (i + 1), 1);
-    if (!L.defs.GEO_PB) { const Lb = new Lienzo(); simPB(Lb, 0, 0, PB_ALTO, '', 0); L.defs.GEO_PB = { ops: Lb.pags[0].filter(o => !(o.t === 't' && !o.s)), attrs: [{ tag: 'NUM', prompt: 'Número del punto de bloqueo', x: 0, y: 1, h: 2.2, al: 'center' }] }; }
-    L.op({ t: 'ins', nombre: 'GEO_PB', x: X, y: Y, rot: 0, capa: 'BLOQUEO', attrs: [{ tag: 'NUM', v: 'PB-' + (i + 1), x: X, y: Y + 1, h: 2.2, al: 'center' }] });
-  });
+  const add = m.add || [], pbs = m.pb || [];
+  dibujarAgregados(L, T, m, ed);
   // cuadro de simbología (RIC N°18): en la esquina del dibujo con menos contenido
   const usados = [...new Set(add.filter(a => a.k === 'sym' && SIMB[a.s]).map(a => a.s))];
   if (pbs.length || usados.length) cuadroSimbologia(L, T, base, m, usados, pbs.length > 0);
@@ -3907,6 +3977,45 @@ function construirPlano(hoja, base, m, cx = {}) {
   }
   return L;
 }
+// Elementos agregados en el editor y puntos de bloqueo (planos importados y planos tipo)
+function dibujarAgregados(L, T, m, ed) {
+  const add = m.add || [], pbs = m.pb || [], colNuevo = ed ? COL_NUEVO : UC.N;
+  L.defs = L.defs || {};
+  add.forEach(a => { if (a.k === 'tapa') { const [X, Y] = T.P(Math.min(a.x, a.x2), Math.min(a.y, a.y2)); L.rect(X, Y, Math.abs(a.x2 - a.x) * T.s, Math.abs(a.y2 - a.y) * T.s, { fill: '#FFFFFF', sinBorde: !ed, c: '#B0B7C0', w: 0.15, dash: 1, capa: 'MODIFICACION' }); } });
+  add.forEach(a => {
+    if (a.k === 'g') (a.e || []).forEach(e => dibujarEnt(L, T, e, null, { c: ed ? COL_NUEVO : null, capa: 'MODIFICACION' }));
+    else if (a.k === 'l' && a.p && a.p.length >= 4) { const pts = []; for (let k = 0; k < a.p.length; k += 2) pts.push(T.P(a.p[k], a.p[k + 1])); L.poli(pts, { c: colNuevo, w: a.w || 0.3, ab: 1, dash: a.dash ? 1 : 0, capa: 'MODIFICACION' }); }
+    else if (a.k === 't' && a.s) { const [X, Y] = T.P(a.x, a.y); String(a.s).split('\n').forEach((ln, j) => L.texto(X + (a.rot ? j * a.hm * 1.6 : 0), Y + (a.rot ? 0 : j * a.hm * 1.6), ln, { pt: ptAdd(a.hm || 2.5), b: a.b ? 1 : 0, c: colNuevo, rot: a.rot || 0, capa: 'MODIFICACION' })); }
+    else if (a.k === 'sym' && SIMB[a.s]) dibujarSimbolo(L, T, a, colNuevo);
+  });
+  // puntos de bloqueo (siempre encima; en el DXF son el bloque GEO_PB con su número como atributo)
+  pbs.forEach((p, i) => {
+    const [X, Y] = T.P(p.x, p.y);
+    if (p.ax != null) { const [AX, AY] = T.P(p.ax, p.ay); flechaPB(L, X, Y, AX, AY, PB_ALTO); }
+    simPB(L, X, Y, PB_ALTO, pbN(m, i), 1);
+    if (!L.defs.GEO_PB) { const Lb = new Lienzo(); simPB(Lb, 0, 0, PB_ALTO, '', 0); L.defs.GEO_PB = { ops: Lb.pags[0].filter(o => !(o.t === 't' && !o.s)), attrs: [{ tag: 'NUM', prompt: 'Número del punto de bloqueo', x: 0, y: 1, h: 2.2, al: 'center' }] }; }
+    L.op({ t: 'ins', nombre: 'GEO_PB', x: X, y: Y, rot: 0, capa: 'BLOQUEO', attrs: [{ tag: 'NUM', v: pbN(m, i), x: X, y: Y + 1, h: 2.2, al: 'center' }] });
+  });
+}
+// Plano tipo: esquema unilineal estándar del tipo de tablero + lo agregado en el editor
+function uniDePlano(hoja, m) {
+  const u = JSON.parse(JSON.stringify(m.uni || modeloTipo(hoja.tipoKey)));
+  u.pbExtra = (m.pb || []).map(p => ({ equipo: p.equipo || 'POR IDENTIFICAR', ubicacion: p.ubic || p.tablero || '', tipo: p.tipo || TIPOS_BLOQUEO[0] }));
+  Object.assign(u, { rev: m.rev ?? 0, firmas: m.firmas || {}, fechaEmision: m.fechaEmision, descRev: m.descRev || (m.rev ? '' : 'ESQUEMA ESTÁNDAR GEO ELEC') });
+  return u;
+}
+function construirTipo(hoja, base, m, cx = {}) {
+  const ed = !!cx.editor, T = transformPlano(base);
+  const hist = ((PLADATA.historial || {})[m.id] || []).filter(x => x.rev < (m.rev ?? 0)).map(x => ({ rev: x.rev, fecha: x.fecha, por: x.por, desc: x.desc }));
+  if (!hist.length && m.rev) hist.push({ rev: 0, fecha: '', por: '', desc: 'ESQUEMA ESTÁNDAR GEO ELEC' });
+  const L = construirUni(uniDePlano(hoja, m), { tipo: 1, historial: hist, borrador: !ed && (m.estado === 'BORRADOR' || m.estado === 'POR APROBAR'), porAprobar: m.estado === 'POR APROBAR', codigo: CODIGO_PLA(m.id) });
+  L.T = T; L.defs = L.defs || {};
+  const Lo = new Lienzo(); Lo.defs = L.defs;
+  dibujarAgregados(Lo, T, m, ed);
+  if (ed && cx.marcas) cx.marcas(Lo, T);
+  L.pags[0].push(...Lo.pags[0]);
+  return L;
+}
 // Cuadro de simbología: se ubica en la esquina del área de dibujo con menos elementos
 function cuadroSimbologia(L, T, base, m, usados, conPB) {
   const filas = (conPB ? [['pb', 'Punto de bloqueo (PB-n)']] : []).concat(usados.map(k => [k, SIMB[k].n]));
@@ -3965,11 +4074,11 @@ async function dxfPlano(hoja, m) {
 
 // ===================== EDITOR DE PLANOS =====================
 let PE = null;
-const PE_HERR = [['ver', '✋', 'Mano (mover plano)'], ['sel', '👆', 'Seleccionar'], ['area', '⬚', 'Seleccionar área'], ['pb', '⚠', 'Punto de bloqueo'], ['sim', '⎓', 'Símbolo'],
+const PE_HERR = [['ver', '✋', 'Mano (mover vista)'], ['sel', '👆', 'Seleccionar'], ['area', '⬚', 'Seleccionar área'], ['pb', '⚠', 'Punto de bloqueo'], ['sim', '⎓', 'Símbolo'],
   ['texto', 'T', 'Texto'], ['linea', '╱', 'Línea / conductor'], ['tapa', '▭', 'Tapar'], ['borrar', '🗑', 'Borrar']];
 const PE_AYUDA = {
   ver: 'Arrastra para mover el plano. Pellizca o usa la rueda del mouse para acercar.',
-  sel: 'Toca un elemento (del plano original o agregado) para modificarlo, moverlo, copiarlo o borrarlo.',
+  sel: 'Toca un elemento para modificarlo; arrástralo para moverlo. En un plano tipo, toca un componente del esquema para editar sus datos. Teclado: Supr borra, Ctrl+Z / Ctrl+Y, Ctrl+D duplica, flechas desplazan.',
   area: 'Toca dos esquinas: se seleccionan todos los elementos dentro del recuadro (por ejemplo, un tablero completo) para moverlos, copiarlos o borrarlos.',
   pb: 'Toca donde va el símbolo de punto de bloqueo. Luego toca el interruptor o equipo que se bloquea para dibujar la flecha.',
   pbFlecha: 'Ahora toca el interruptor o equipo que se bloquea: la flecha apuntará ahí.',
@@ -3983,7 +4092,7 @@ const PE_AYUDA = {
 };
 async function abrirEditorPlano(id) {
   if (!esAdmin()) { toast('Solo el administrador edita planos.'); return; }
-  const R = await cargarRef(); const hoja = R && R.hojas.find(h => h.id === id);
+  const hoja = await hojaPorId(id);
   if (!hoja) { toast('Plano no disponible sin señal.'); return; }
   let base;
   try { base = await basePlano(hoja); if (base.tipo === 'img') await imgDataPlano(base); } catch (err) { toast(err.message, 5000); return; }
@@ -3994,24 +4103,27 @@ async function abrirEditorPlano(id) {
   else if (bo) { m = JSON.parse(JSON.stringify(bo.modelo)); origen = `Borrador Rev. ${bo.rev} guardado por ${bo.por || '—'} (${bo.fecha || ''}).`; }
   else if (pa) { m = JSON.parse(JSON.stringify(pa.modelo)); m.estado = 'BORRADOR'; m.firmas = {}; }
   else if (e) { m = JSON.parse(JSON.stringify(e.modelo)); Object.assign(m, { rev: revNueva, estado: 'BORRADOR', descRev: '', firmas: {} }); delete m.fechaEmision; delete m.rechazo; origen = `Nueva revisión a partir de la Rev. ${e.rev} vigente.`; }
+  else if (hoja.tipoKey) { m = modeloPlanoBase(hoja, base, 1); origen = 'Plano tipo: ajusta el esquema en "Esquema del tablero", agrega símbolos, textos, conductores o puntos de bloqueo con las herramientas, y emite la revisión.'; }
   else { m = modeloPlanoBase(hoja, base, 1); origen = base.pb.length ? `Se convirtieron ${base.pb.length} punto(s) de bloqueo del plano original al símbolo estándar: completa el equipo de cada uno.` : 'Plano importado del DWG. Agrega los puntos de bloqueo.'; }
   Object.assign(m, { rev: revNueva, estado: 'BORRADOR' });
   ['del', 'add', 'pb'].forEach(k => { m[k] = m[k] || []; }); ['txt', 'mv', 'caj'].forEach(k => { m[k] = m[k] || {}; });
+  if (hoja.tipoKey && !m.uni) m.uni = modeloTipo(hoja.tipoKey);
   if (m.rechazo) origen = `⚠ Devuelto por ${m.rechazo.por} (${m.rechazo.cargo}) el ${m.rechazo.fecha}: ${m.rechazo.obs}` + (origen ? ' · ' + origen : '');
   if (pa) origen = `Esta revisión está enviada a aprobación (Rev. ${pa.rev}). Para corregirla, el aprobador debe devolverla.` + (origen ? ' · ' + origen : '');
-  PE = { hoja, base, m, T: transformPlano(base), modo: 'ver', sel: [], pend: [], undo: [], view: { x: 0, y: 0, w: 420, h: 297 }, orto: true, bloqueado: !!pa, simTipo: 'int' };
-  $('#pe-titulo').textContent = 'Plano eléctrico · ' + (hoja.plano && hoja.plano !== 'PDF' ? hoja.plano + ' · ' : '') + hoja.titulo;
-  $('#pe-sub').textContent = `${CODIGO_PLA(id)} · Rev. ${m.rev} en edición${e ? ' · vigente: Rev. ' + e.rev : ' · vigente: Rev. 0 (importado)'}`;
+  PE = { hoja, base, m, T: transformPlano(base), modo: 'ver', sel: [], pend: [], undo: [], redo: [], grid: false, view: { x: 0, y: 0, w: 420, h: 297 }, orto: true, bloqueado: !!pa, simTipo: 'int' };
+  $('#pe-titulo').textContent = hoja.tipoKey ? 'Plano tipo · ' + hoja.nombre : 'Plano eléctrico · ' + (hoja.plano && hoja.plano !== 'PDF' ? hoja.plano + ' · ' : '') + hoja.titulo;
+  $('#pe-sub').textContent = `${CODIGO_PLA(id)} · Rev. ${m.rev} en edición${e ? ' · vigente: Rev. ' + e.rev : hoja.tipoKey ? ' · vigente: Rev. 0 (esquema estándar)' : ' · vigente: Rev. 0 (importado)'}`;
   $('#pe-aviso').hidden = !origen; $('#pe-aviso').textContent = origen;
   $('#pe-descrev').value = m.descRev || ''; $('#pe-verif').checked = false; $('#pe-error').textContent = '';
   $('#btn-pe-descartar').hidden = !bo;
+  $('#pe-caj').hidden = !!hoja.tipoKey; $('#pe-esq').hidden = !hoja.tipoKey;
   ir('plano-ed', { id });
-  setTimeout(() => { ajustarVistaPE(); renderEditorPlano(); renderCajPE(); }, 30);
+  setTimeout(() => { ajustarVistaPE(); renderEditorPlano(); renderCajPE(); renderEsqPE(); }, 30);
 }
 function guardarLocalPla() { if (PE) ls.set('plaLocal:' + PE.m.id, { m: PE.m, guardado: new Date().toISOString() }); }
 function cambioPE(fn) {
   if (!PE || PE.bloqueado) { if (PE && PE.bloqueado) toast('La revisión está esperando aprobación.'); return false; }
-  PE.undo.push(JSON.stringify(PE.m)); if (PE.undo.length > 60) PE.undo.shift();
+  PE.undo.push(JSON.stringify(PE.m)); if (PE.undo.length > 60) PE.undo.shift(); PE.redo = [];
   fn(PE.m); guardarLocalPla();
   const n = JSON.stringify(Object.assign({}, PE.m, { firmas: {} })).length;
   if (n > 42000 && !PE.avisoTam) { PE.avisoTam = 1; toast('Esta revisión ya tiene muchas modificaciones. Emítela y continúa en la siguiente.', 6000); }
@@ -4020,8 +4132,9 @@ function cambioPE(fn) {
 function ajustarVistaPE() {
   if (!PE) return;
   const box = $('#pe-lienzo'), r = box.getBoundingClientRect(), k = (r.height || 300) / (r.width || 400);
-  let w = PLA_AREA.w + 8, h = w * k; if (h < PLA_AREA.h + 8) { h = PLA_AREA.h + 8; w = h / k; }
-  PE.view = { x: PLA_AREA.x + PLA_AREA.w / 2 - w / 2, y: PLA_AREA.y + PLA_AREA.h / 2 - h / 2, w, h };
+  const A = areaPlano(PE.base);
+  let w = A.w + 8, h = w * k; if (h < A.h + 8) { h = A.h + 8; w = h / k; }
+  PE.view = { x: A.x + A.w / 2 - w / 2, y: A.y + A.h / 2 - h / 2, w, h };
 }
 // Marcas del editor (no salen en el PDF emitido)
 function marcasPE(L, T) {
@@ -4040,7 +4153,8 @@ function marcasPE(L, T) {
 }
 function svgPE() {
   const L = construirPlano(PE.hoja, PE.base, PE.m, { editor: true, img: PE.base.data, marcas: marcasPE });
-  const v = PE.view;
+  PE.L = L; const v = PE.view;
+  if (PE.grid) { const g = 5, ops = []; for (let x = Math.ceil(v.x / g) * g; x < v.x + v.w; x += g) ops.push({ t: 'l', x1: x, y1: v.y, x2: x, y2: v.y + v.h, c: '#C9D6E3', w: 0.06 }); for (let y = Math.ceil(v.y / g) * g; y < v.y + v.h; y += g) ops.push({ t: 'l', x1: v.x, y1: y, x2: v.x + v.w, y2: y, c: '#C9D6E3', w: 0.06 }); L.pags[0].unshift(...ops); }
   return uniASvg(L.pags[0], { clase: 'pe-svg', viewBox: `${v.x} ${v.y} ${v.w} ${v.h}` });
 }
 function dibujarPE() { if (PE) $('#pe-svg').innerHTML = svgPE(); }
@@ -4050,7 +4164,9 @@ function renderEditorPlano() {
   if (!PE) return;
   const on = (k) => PE.modo === k || (k === 'pb' && PE.modo === 'pbFlecha') || (k === 'sel' && (PE.modo === 'mover' || PE.modo === 'copiar'));
   $('#pe-barra').innerHTML = PE_HERR.map(([k, ico, t]) => `<button type="button" class="${on(k) ? 'on' : ''}" data-pe-modo="${k}" title="${t}"><span>${ico}</span><small>${t}</small></button>`).join('')
-    + `<button type="button" data-pe-acc="deshacer" title="Deshacer"${PE.undo.length ? '' : ' disabled'}><span>↶</span><small>Deshacer</small></button>`
+    + `<button type="button" data-pe-acc="deshacer" title="Deshacer (Ctrl+Z)"${PE.undo.length ? '' : ' disabled'}><span>↶</span><small>Deshacer</small></button>`
+    + `<button type="button" data-pe-acc="rehacer" title="Rehacer (Ctrl+Y)"${(PE.redo || []).length ? '' : ' disabled'}><span>↷</span><small>Rehacer</small></button>`
+    + `<button type="button" class="toggle${PE.grid ? ' on' : ''}" data-pe-acc="grid" title="Ajustar a cuadrícula de 2,5 mm"><span>#</span><small>Cuadrícula</small></button>`
     + `<button type="button" data-pe-acc="zoom+" title="Acercar"><span>＋</span><small>Acercar</small></button><button type="button" data-pe-acc="zoom-" title="Alejar"><span>－</span><small>Alejar</small></button>`
     + `<button type="button" data-pe-acc="ajustar" title="Ver todo"><span>⤢</span><small>Ver todo</small></button>`;
   $('#pe-ayuda').textContent = PE.bloqueado ? 'Revisión enviada a aprobación: solo lectura.' : (PE_AYUDA[PE.modo] || '');
@@ -4136,6 +4252,7 @@ function ajustarPunto(x, y, tol) {
   const b = PE.base, m = PE.m; let best = null, dmin = tol;
   const prueba = (px, py) => { const d = Math.hypot(px - x, py - y); if (d < dmin) { dmin = d; best = [px, py]; } };
   if (b.tipo === 'vec') { const del = new Set(m.del); b.e.forEach((e0, i) => { if (e0[0] === 't' || del.has(i)) return; const p = entBase(b, m, i)[3]; prueba(p[0], p[1]); prueba(p[p.length - 2], p[p.length - 1]); }); }
+  if (b.tipo === 'uni' && PE.L) PE.L.pags[0].forEach(o => { if (o.t === 'l' && !o.dash && o.x1 < 252) { prueba(o.x1, o.y1); prueba(o.x2, o.y2); } });
   m.add.forEach(a => {
     if (a.k === 'l') { prueba(a.p[0], a.p[1]); prueba(a.p[a.p.length - 2], a.p[a.p.length - 1]); }
     else if (a.k === 'sym') bornesSim(a, PE.T).forEach(q => prueba(q[0], q[1]));
@@ -4192,7 +4309,16 @@ $('#pe-lienzo').addEventListener('pointerdown', (e) => {
   $('#pe-lienzo').setPointerCapture(e.pointerId);
   PEP.ptrs.set(e.pointerId, [e.clientX, e.clientY]);
   if (PEP.ptrs.size === 2) { const [a, b] = [...PEP.ptrs.values()]; PEP.pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), view: Object.assign({}, PE.view) }; PEP.mov = true; return; }
-  PEP.ini = { x: e.clientX, y: e.clientY, view: Object.assign({}, PE.view) }; PEP.mov = false;
+  PEP.ini = { x: e.clientX, y: e.clientY, view: Object.assign({}, PE.view) }; PEP.mov = false; PEP.arr = null;
+  // en "Seleccionar", si se toma un elemento seleccionado, arrastrar lo mueve (si no, mueve la vista)
+  if (PE.modo === 'sel' && PE.sel.length && !PE.bloqueado) {
+    const pp = puntoPapel(e);
+    if (pp) {
+      const [x, y] = PE.T.inv(pp[0], pp[1]), r = $('#pe-lienzo').getBoundingClientRect(), tol = 14 * PE.view.w / r.width / PE.T.s, h = tocarPE(x, y, tol);
+      const enSel = (h && PE.sel.some(s => s.k === h.k && s.i === h.i)) || PE.sel.some(s => dentroBB(bboxRef(s), x, y, tol * 0.5));
+      if (enSel) PEP.arr = { x, y, m0: JSON.stringify(PE.m), refs: PE.sel.slice(), hecho: false };
+    }
+  }
 });
 $('#pe-lienzo').addEventListener('pointermove', (e) => {
   if (!PE) return;
@@ -4211,7 +4337,18 @@ $('#pe-lienzo').addEventListener('pointermove', (e) => {
   if (!PEP.ini) return;
   const dx = e.clientX - PEP.ini.x, dy = e.clientY - PEP.ini.y;
   if (!PEP.mov && Math.hypot(dx, dy) > 8) PEP.mov = true;
-  if (PEP.mov) {   // arrastrar siempre mueve la vista; tocar sin arrastrar usa la herramienta
+  if (PEP.mov && PEP.arr) {
+    const pp = puntoPapel(e); if (!pp) return;
+    let [x, y] = PE.T.inv(pp[0], pp[1]), dx = x - PEP.arr.x, dy = y - PEP.arr.y;
+    if (PE.grid) { const g = 2.5 / PE.T.s; dx = Math.round(dx / g) * g; dy = Math.round(dy / g) * g; }
+    if (!PEP.arr.hecho) { PE.undo.push(PEP.arr.m0); if (PE.undo.length > 60) PE.undo.shift(); PE.redo = []; PEP.arr.hecho = true; }
+    PE.m = JSON.parse(PEP.arr.m0);
+    const refs = PEP.arr.refs;
+    if (refs.length === 1 && refs[0].k === 'pb') { const p = PE.m.pb[refs[0].i]; p.x += dx; p.y += dy; }   // el símbolo se mueve; la flecha sigue apuntando al equipo
+    else refs.forEach(s => desplazarRef(PE.m, s, dx, dy));
+    dibujarPEPronto(); return;
+  }
+  if (PEP.mov) {   // arrastrar mueve la vista; tocar sin arrastrar usa la herramienta
     const v0 = PEP.ini.view; PE.view = Object.assign({}, v0, { x: v0.x - dx / r.width * v0.w, y: v0.y - dy / r.height * v0.h }); dibujarPEPronto();
   }
 });
@@ -4222,21 +4359,30 @@ function finPuntero(e) {
   if (PEP.ptrs.size < 2) PEP.pinch = null;
   if (eraPinch) { PEP.ini = null; return; }
   if (e.type === 'pointerup' && PEP.ini && !PEP.mov) tocarLienzo(e);
-  PEP.ini = null;
+  if (PEP.arr && PEP.arr.hecho) { guardarLocalPla(); renderEditorPlano(); }
+  PEP.ini = null; PEP.arr = null;
 }
 ['pointerup', 'pointercancel'].forEach(t => $('#pe-lienzo').addEventListener(t, finPuntero));
 function tocarLienzo(ev) {
   const pp = puntoPapel(ev); if (!pp) return;
+  const A = areaPlano(PE.base), esTipo = PE.base.tipo === 'uni';
+  if (PE.grid && !['sel', 'borrar', 'ver'].includes(PE.modo)) { pp[0] = Math.round(pp[0] / 2.5) * 2.5; pp[1] = Math.round(pp[1] / 2.5) * 2.5; }
   const T = PE.T, [x, y] = T.inv(pp[0], pp[1]);
   const r = $('#pe-lienzo').getBoundingClientRect(), tol = 14 * PE.view.w / r.width / T.s;   // 14 px de tolerancia
   const modo = PE.modo;
-  if (modo === 'ver') return;
-  const fuera = pp[0] < PLA_AREA.x || pp[0] > PLA_AREA.x + PLA_AREA.w || pp[1] < PLA_AREA.y || pp[1] > PLA_AREA.y + PLA_AREA.h;
+  const zonaEn = () => esTipo && PE.L && (PE.L.zonas || []).filter(z => pp[0] >= z.x && pp[0] <= z.x + z.w && pp[1] >= z.y && pp[1] <= z.y + z.h).sort((a, b) => a.w * a.h - b.w * b.h)[0];
+  if (modo === 'ver') { const z = zonaEn(); if (z) irAZonaPE(z.z); return; }
+  const fuera = pp[0] < A.x || pp[0] > A.x + A.w || pp[1] < A.y || pp[1] > A.y + A.h;
   if (fuera) {
-    if (modo === 'sel' && pp[1] > PLA_AREA.y + PLA_AREA.h) { $('#pe-caj').scrollIntoView({ behavior: 'smooth', block: 'start' }); toast('Los datos del recuadro se editan en "Recuadro del plano".'); return; }
+    if (modo === 'sel' && esTipo) { $('#pe-esq').scrollIntoView({ behavior: 'smooth', block: 'start' }); toast('Las tablas y el recuadro se completan solos desde el esquema y las firmas.'); return; }
+    if (modo === 'sel' && pp[1] > A.y + A.h) { $('#pe-caj').scrollIntoView({ behavior: 'smooth', block: 'start' }); toast('Los datos del recuadro se editan en "Recuadro del plano".'); return; }
     if (['pb', 'pbFlecha', 'texto', 'linea', 'tapa', 'mover', 'copiar', 'sim'].includes(modo)) { toast('Fuera del área del dibujo. El recuadro y las tablas se completan en los formularios de abajo.'); return; }
   }
-  if (PE.bloqueado || modo === 'sel') { const s = tocarPE(x, y, tol); PE.sel = s ? [s] : []; renderEditorPlano(); return; }
+  if (PE.bloqueado || modo === 'sel') {
+    const s = tocarPE(x, y, tol); PE.sel = s ? [s] : [];
+    if (!s) { const z = zonaEn(); if (z) irAZonaPE(z.z); }
+    renderEditorPlano(); return;
+  }
   if (modo === 'area') {
     PE.pend.push(x, y);
     if (PE.pend.length >= 4) { const [x1, y1, x2, y2] = PE.pend; PE.pend = []; PE.cursor = null; PE.sel = selArea(x1, y1, x2, y2); if (!PE.sel.length) toast('No hay elementos completos dentro del recuadro.'); PE.modo = 'sel'; }
@@ -4299,7 +4445,7 @@ function tocarLienzo(ev) {
 }
 // ---------- Paneles ----------
 const nombresTableros = () => tablerosActivos().map(t => ({ id: t.id, n: nombreTab(t) || t.id, u: t.ubicacion || '' }));
-const accComunes = (ro, extra = '') => `<div class="pe-acc">${extra}<button type="button" data-pe-acc="mover"${ro}>✥ Mover</button><button type="button" data-pe-acc="copiar"${ro}>⧉ Copiar</button>
+const accComunes = (ro, extra = '') => `<div class="pe-acc">${extra}<button type="button" data-pe-acc="mover"${ro}>✥ Mover</button><button type="button" data-pe-acc="duplicar"${ro}>⧉ Duplicar</button><button type="button" data-pe-acc="copiar"${ro}>⧉ Copiar a…</button>
   <button type="button" class="peligro" data-pe-acc="borrarSel"${ro}>🗑 Borrar</button><button type="button" data-pe-acc="listo">✔ Listo</button></div>`;
 function renderPanelPE() {
   const box = $('#pe-panel'), m = PE.m, ro = PE.bloqueado ? ' disabled' : '', sel = PE.sel;
@@ -4339,7 +4485,7 @@ function renderPanelPE() {
   if (s.k === 'pb') {
     const p = m.pb[s.i]; if (!p) { PE.sel = []; return renderPanelPE(); }
     const tabs = nombresTableros();
-    box.innerHTML = `<h3 style="color:var(--rojo)">⚠ PB-${s.i + 1} · Punto de bloqueo</h3>
+    box.innerHTML = `<h3 style="color:var(--rojo)">⚠ ${pbN(m, s.i)} · Punto de bloqueo</h3>
       ${p.origen === 'plano' ? '<p class="muted" style="margin:0 0 6px">Venía dibujado en el plano original; se convirtió al símbolo estándar.</p>' : ''}
       <label>Equipo / dispositivo que se bloquea *</label><input data-pb-k="equipo" class="may" value="${esc(p.equipo || '')}" placeholder="Ej.: Q0 INTERRUPTOR GENERAL NSX400F"${ro}>
       <label>Tablero</label><input data-pb-k="tablero" class="may" list="pe-dl-tab" value="${esc(p.tablero || '')}" placeholder="Ej.: TDF N°94"${ro}>
@@ -4386,10 +4532,12 @@ function renderPanelPE() {
 }
 function renderListaPB() {
   const m = PE.m;
-  $('#pe-pbs').innerHTML = m.pb.length ? m.pb.map((p, i) => `<li><div class="info"><b style="color:var(--rojo)">PB-${i + 1} · ${esc(p.equipo || 'POR IDENTIFICAR')}</b>
+  $('#pe-pbs').innerHTML = m.pb.length ? m.pb.map((p, i) => `<li><div class="info"><b style="color:var(--rojo)">${pbN(m, i)} · ${esc(p.equipo || 'POR IDENTIFICAR')}</b>
     <small>${esc([p.tablero, p.ubic, p.tipo].filter(Boolean).join(' · '))}${p.ax == null ? ' · sin flecha' : ''}</small></div>
     <button type="button" class="btn-pdf" data-pe-ir-pb="${i}">Ver</button></li>`).join('')
     : '<li><div class="info"><small>Este plano aún no tiene puntos de bloqueo. Usa la herramienta ⚠ Punto de bloqueo.</small></div></li>';
+  if (m.uni) $('#pe-pbs').innerHTML = bloqueosUni(Object.assign({}, m.uni, { pbExtra: [] })).map(b => `<li><div class="info"><b style="color:var(--rojo)">${b.id} · ${esc(b.equipo || '(sin definir)')}</b><small>${esc(b.rol)} · del esquema (se edita en "Esquema del tablero")</small></div></li>`).join('')
+    + (m.pb.length ? $('#pe-pbs').innerHTML : '<li><div class="info"><small>Para agregar otro punto de bloqueo, usa la herramienta ⚠ Punto de bloqueo.</small></div></li>');
 }
 // Recuadro del plano: datos editables (por defecto, los del rótulo original)
 const CAJ_CAMPOS = [['titulo', 'Título del plano (descripción)', 1], ['instalacion', 'Instalación / destino'], ['ubicacion', 'Ubicación (nivel, calle, zanja, sector)'],
@@ -4424,7 +4572,9 @@ document.addEventListener('click', (e) => {
   if (ir_) { const i = +ir_.dataset.peIrPb, p = PE.m.pb[i]; PE.sel = [{ k: 'pb', i }]; PE.modo = 'sel'; centrarEn(p.x, p.y); renderEditorPlano(); $('#pe-lienzo').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
   const a = e.target.closest('[data-pe-acc]'); if (!a) return;
   const acc = a.dataset.peAcc, sel = PE.sel, s = sel[0];
-  if (acc === 'deshacer') { const u = PE.undo.pop(); if (u) { PE.m = JSON.parse(u); PE.sel = []; guardarLocalPla(); renderCajPE(); } renderEditorPlano(); }
+  if (acc === 'deshacer' || acc === 'rehacer') pasoHistPE(acc === 'rehacer');
+  else if (acc === 'grid') { PE.grid = !PE.grid; renderEditorPlano(); }
+  else if (acc === 'duplicar' && sel.length) duplicarSelPE();
   else if (acc === 'zoom+') zoomPE(1 / 1.4);
   else if (acc === 'zoom-') zoomPE(1.4);
   else if (acc === 'ajustar') { ajustarVistaPE(); dibujarPE(); }
@@ -4474,8 +4624,92 @@ $('#pe-panel').addEventListener('change', (e) => {
 });
 $('#pe-panel').addEventListener('focusout', () => { if (PE) PE._editando = null; });
 $('#pe-descrev').addEventListener('input', () => { if (PE && !PE.bloqueado) { PE.m.descRev = $('#pe-descrev').value.trim().toLocaleUpperCase('es-CL'); guardarLocalPla(); } });
+// ---------- Esquema del plano tipo (mismo formulario del diagrama unilineal) ----------
+function htmlEsqTipo() {
+  const UE0 = UE; let h;
+  UE = { m: PE.m.uni, sug: new Set(), t: {}, sinRef: true };
+  try { h = htmlEditorUni(); } finally { UE = UE0; }
+  const i9 = h.indexOf('<details class="ue-sec" open><summary>9 ·'); if (i9 > 0) h = h.slice(0, i9);
+  return h.replace(/<div class="ancho ue-esq">[\s\S]*?<\/p><\/div>/, '').replace(/ id="(btn-ue-sal2?|dl-marcas|dl-calibres|dl-icu|ue-dl-pers)"/g, ' id="pe-$1"').replace(/ list="(dl-marcas|dl-calibres|dl-icu)"/g, ' list="pe-$1"');
+}
+function renderEsqPE() {
+  if (!PE || !PE.m.uni) return;
+  const box = $('#pe-esq-form'), abiertos = [...box.querySelectorAll('details')].map(d => d.open);
+  box.innerHTML = htmlEsqTipo();
+  const ds = box.querySelectorAll('details');
+  if (abiertos.length) ds.forEach((d, i) => { if (abiertos[i] != null) d.open = abiertos[i]; });
+  else ds.forEach((d, i) => { d.open = i < 1; });
+  if (PE.bloqueado) box.querySelectorAll('input,select,textarea,button').forEach(x => { x.disabled = true; });
+}
+function irAZonaPE(z) {
+  if (!PE || !PE.m.uni) return;
+  if (z.startsWith('pb')) { $('#pe-pbs').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+  if (irAZonaUni(z, '#pe-esq-form')) toast('Datos del componente abiertos en "Esquema del tablero".', 2200);
+}
+function cambioEsq(fn, clave, redibujarForm) {
+  if (!PE || !PE.m.uni) return;
+  if (clave && PE._editando === clave) { fn(PE.m.uni); guardarLocalPla(); }
+  else { if (!cambioPE(m => fn(m.uni))) return; PE._editando = clave || null; }
+  if (redibujarForm) renderEsqPE();
+  dibujarPEPronto(); renderListaPB(); $('#pe-barra [data-pe-acc="deshacer"]') && ($('#pe-barra [data-pe-acc="deshacer"]').disabled = false);
+}
+$('#pe-esq-form').addEventListener('input', (e) => {
+  const el = e.target.closest('[data-k]'); if (!el || !PE) return;
+  let v = el.value; const k = el.dataset.k;
+  if (el.classList.contains('may')) v = v.toLocaleUpperCase('es-CL');
+  if (/(^|\.)salidas\.\d+\.carga$/.test(k)) v = (CARGAS.find(c => c[1] === v) || [v])[0];
+  cambioEsq(u => setP(u, k, v), 'esq:' + k);
+});
+$('#pe-esq-form').addEventListener('change', (e) => {
+  const k = e.target.dataset && e.target.dataset.k; if (!k || !PE) return;
+  PE._editando = null;
+  if (/\.(marca|tipo)$/.test(k) && !/^tablero\./.test(k)) renderEsqPE();
+});
+$('#pe-esq-form').addEventListener('focusout', () => { if (PE) PE._editando = null; });
+$('#pe-esq-form').addEventListener('click', (e) => {
+  if (!PE || !PE.m.uni) return;
+  const sg = e.target.closest('[data-seg] button');
+  if (sg) { const k = sg.closest('[data-seg]').dataset.seg; cambioEsq(u => setP(u, k, sg.dataset.v), null, true); return; }
+  if (e.target.closest('#pe-btn-ue-sal2')) { cambioEsq(u => { const sc = u.sec = u.sec || {}; (sc.salidas = sc.salidas || []).push({ id: 'Q' + (sc.salidas.length + 11), carga: 'enchufe3', tipo: 'MCB (miniatura)', desc: '', polos: '3', in: '', dif: '30 mA', destino: '', destinoId: '' }); }, null, true); return; }
+  if (e.target.closest('#pe-btn-ue-sal')) { cambioEsq(u => { (u.salidas = u.salidas || []).push({ id: 'Q' + (u.salidas.length + 1), carga: 'tablero', tipo: 'MCCB (caja moldeada)', desc: '', polos: '3', in: '', dif: '', destino: '', destinoId: '' }); }, null, true); return; }
+  const d = e.target.closest('[data-sal-del]');
+  if (d) { const [b, i] = d.dataset.salDel.split(':'); if (confirm('¿Quitar esta salida?')) cambioEsq(u => getP(u, b).splice(+i, 1), null, true); return; }
+  const up = e.target.closest('[data-sal-up]');
+  if (up) { const [b, x] = up.dataset.salUp.split(':'), i = +x; if (i > 0) cambioEsq(u => { const s_ = getP(u, b); [s_[i - 1], s_[i]] = [s_[i], s_[i - 1]]; }, null, true); return; }
+});
+// Deshacer / rehacer / duplicar (botones y teclado)
+function pasoHistPE(rehacer) {
+  if (!PE) return;
+  const de = rehacer ? PE.redo : PE.undo, a = rehacer ? PE.undo : PE.redo;
+  const u = de.pop(); if (!u) return;
+  a.push(JSON.stringify(PE.m)); PE.m = JSON.parse(u); PE.sel = []; PE.pend = [];
+  guardarLocalPla(); renderCajPE(); renderEsqPE(); renderEditorPlano();
+}
+function duplicarSelPE() {
+  if (!PE || !PE.sel.length) return;
+  const d = 5 / PE.T.s, refs = PE.sel.slice(); let nuevos = [];
+  if (cambioPE(m => { nuevos = copiarRefs(m, refs, d, d); })) { PE.sel = nuevos; PE.modo = 'sel'; renderEditorPlano(); toast('Duplicado: arrástralo a su lugar.', 2200); }
+}
+document.addEventListener('keydown', (e) => {
+  if (!PE || $('#v-plano-ed').hidden) return;
+  if (e.target.closest && e.target.closest('input,textarea,select,[contenteditable]')) return;
+  const k = e.key, ctrl = e.ctrlKey || e.metaKey;
+  if (ctrl && (k === 'z' || k === 'Z')) { e.preventDefault(); pasoHistPE(e.shiftKey); return; }
+  if (ctrl && (k === 'y' || k === 'Y')) { e.preventDefault(); pasoHistPE(true); return; }
+  if (ctrl && (k === 'd' || k === 'D')) { e.preventDefault(); duplicarSelPE(); return; }
+  if (ctrl) return;
+  if ((k === 'Delete' || k === 'Backspace') && PE.sel.length && !PE.bloqueado) { e.preventDefault(); borrarRefs(PE.sel); return; }
+  if (k === 'Escape') { PE.pend = []; PE.cursor = null; PE.sel = []; PE.modo = PE.modo === 'ver' ? 'ver' : 'sel'; renderEditorPlano(); return; }
+  if (k.startsWith('Arrow') && PE.sel.length && !PE.bloqueado) {
+    e.preventDefault(); const p = (e.shiftKey ? 5 : 1) / PE.T.s, dx = k === 'ArrowLeft' ? -p : k === 'ArrowRight' ? p : 0, dy = k === 'ArrowUp' ? -p : k === 'ArrowDown' ? p : 0, refs = PE.sel.slice();
+    if (PE._editando !== 'flechas') { cambioPE(m => refs.forEach(s => desplazarRef(m, s, dx, dy))); PE._editando = 'flechas'; } else { refs.forEach(s => desplazarRef(PE.m, s, dx, dy)); guardarLocalPla(); }
+    dibujarPEPronto(); clearTimeout(PE._tFl); PE._tFl = setTimeout(() => { if (PE) { PE._editando = null; renderEditorPlano(); } }, 700); return;
+  }
+  const atajo = { v: 'ver', h: 'ver', s: 'sel', a: 'area', b: 'pb', p: 'pb', y: 'sim', t: 'texto', l: 'linea', r: 'tapa' }[k.toLowerCase()];
+  if (atajo) { PE.modo = atajo; PE.pend = []; PE.cursor = null; if (atajo !== 'sel') PE.sel = []; renderEditorPlano(); }
+});
 // ---------- Guardar, descargar, emitir ----------
-const modeloPlaLimpio = () => { const m = JSON.parse(JSON.stringify(PE.m)); m.descRev = $('#pe-descrev').value.trim().toLocaleUpperCase('es-CL'); m.titulo = cajPlano(PE.hoja, PE.base, m).titulo; return m; };
+const modeloPlaLimpio = () => { const m = JSON.parse(JSON.stringify(PE.m)); m.descRev = $('#pe-descrev').value.trim().toLocaleUpperCase('es-CL'); m.titulo = PE.hoja.tipoKey ? PE.hoja.titulo : cajPlano(PE.hoja, PE.base, m).titulo; return m; };
 $('#btn-pe-guardar').addEventListener('click', async () => {
   if (!PE || PE.bloqueado) return;
   const btn = $('#btn-pe-guardar'); btn.disabled = true;
@@ -4500,9 +4734,9 @@ $('#btn-pe-volver').addEventListener('click', () => { PE = null; ir('planos'); }
 function validarPlano(m) {
   const err = [], av = [];
   if (!String(m.descRev || '').trim()) err.push('Escribe la descripción de la revisión.');
-  m.pb.forEach((p, i) => { if (!p.equipo) err.push(`Falta el equipo del PB-${i + 1}.`); if (p.ax == null) av.push(`PB-${i + 1} sin flecha al equipo.`); if (!p.tablero) av.push(`PB-${i + 1} sin tablero.`); });
+  m.pb.forEach((p, i) => { const n = pbN(m, i); if (!p.equipo) err.push(`Falta el equipo del ${n}.`); if (p.ax == null) av.push(`${n} sin flecha al equipo.`); if (!p.tablero && !m.uni) av.push(`${n} sin tablero.`); });
   (m.add || []).forEach(a => { if (a.k === 'sym' && !String(a.id || '').trim()) av.push(`${SIMB[a.s] ? SIMB[a.s].n : 'Símbolo'} sin identificación.`); });
-  if (!m.pb.length) av.push('El plano no tiene puntos de bloqueo.');
+  if (!m.pb.length && !m.uni) av.push('El plano no tiene puntos de bloqueo.');
   if (JSON.stringify(Object.assign({}, m, { firmas: {} })).length > 47000) err.push('La revisión tiene demasiadas modificaciones: divide el trabajo en dos revisiones.');
   return { err, av };
 }
@@ -4515,7 +4749,7 @@ async function enviarAprobacionPlano() {
   if (v.err.length) { err.textContent = 'Resuelve primero: ' + v.err.join(' '); return; }
   if (!$('#pe-verif').checked) { err.textContent = 'Confirma que verificaste los puntos de bloqueo y las modificaciones.'; return; }
   if (!navigator.onLine) { err.textContent = 'Se necesita señal para enviar a aprobación.'; return; }
-  if (!confirm(`Enviar ${CODIGO_PLA(m.id)} Rev. ${m.rev} a aprobación.\n\nPuntos de bloqueo:\n${m.pb.map((p, i) => `PB-${i + 1}: ${p.equipo} (${p.tablero || '—'})`).join('\n') || '—'}\n\n${v.av.length ? 'Avisos:\n' + v.av.slice(0, 8).join('\n') + '\n\n' : ''}Lo firmarás como elaboró y revisó.`)) return;
+  if (!confirm(`Enviar ${CODIGO_PLA(m.id)} Rev. ${m.rev} a aprobación.\n\nPuntos de bloqueo agregados:\n${m.pb.map((p, i) => `${pbN(m, i)}: ${p.equipo} (${p.tablero || '—'})`).join('\n') || '—'}\n\n${v.av.length ? 'Avisos:\n' + v.av.slice(0, 8).join('\n') + '\n\n' : ''}Lo firmarás como elaboró y revisó.`)) return;
   const fz = await pedirFirma('Firmar plano (elaboró y revisó)', `${m.titulo} · Rev. ${m.rev}`);
   if (!fz) return;
   const btn = $('#btn-pe-emitir'); btn.disabled = true; btn.textContent = 'Enviando…';
@@ -4533,7 +4767,7 @@ async function enviarAprobacionPlano() {
 async function verPlanoPorAprobar(id) {
   const x = (PLADATA.porAprobar || {})[id]; if (!x) return;
   try {
-    const R = await cargarRef(), hoja = R.hojas.find(h => h.id === id);
+    const hoja = await hojaPorId(id);
     const doc = await pdfPlano(hoja, x.modelo);
     verDocumento({ titulo: 'Por aprobar · ' + hoja.titulo, codigo: CODIGO_PLA(id) + ' · Rev. ' + x.rev, blobLocal: doc.output('blob'), mime: 'application/pdf', nombre: nombreArchPla(hoja, x.modelo, 'pdf') });
   } catch (err) { toast(err.message, 5000); }
@@ -4544,12 +4778,12 @@ async function aprobarPlano(id) {
   const el = (x.modelo.firmas || {}).elaboro || {};
   if (el.usuario && el.usuario === sesion().usuario) { toast('No puedes aprobar un plano que elaboraste tú.', 5000); return; }
   if (!navigator.onLine) { toast('Se necesita señal para aprobar.'); return; }
-  if (!confirm(`Aprobar y liberar ${CODIGO_PLA(id)} Rev. ${x.rev}: ${x.modelo.titulo}\n\nPuntos de bloqueo:\n${(x.modelo.pb || []).map((p, i) => `PB-${i + 1}: ${p.equipo} (${p.tablero || '—'})`).join('\n') || '—'}\n\nReemplaza a la revisión vigente. ¿Lo revisaste completo?`)) return;
+  if (!confirm(`Aprobar y liberar ${CODIGO_PLA(id)} Rev. ${x.rev}: ${x.modelo.titulo}\n\nPuntos de bloqueo agregados:\n${(x.modelo.pb || []).map((p, i) => `${pbN(x.modelo, i)}: ${p.equipo} (${p.tablero || '—'})`).join('\n') || '—'}\n\nReemplaza a la revisión vigente. ¿Lo revisaste completo?`)) return;
   const fz = await pedirFirma('Aprobar y liberar plano', `${x.modelo.titulo} · Rev. ${x.rev}`);
   if (!fz) return;
   try {
     toast('Aprobando…', 3000);
-    const R = await cargarRef(), hoja = R.hojas.find(h => h.id === id);
+    const hoja = await hojaPorId(id);
     const m = JSON.parse(JSON.stringify(x.modelo));
     m.firmas.aprobo = { nombre: fz.nombre, cargo: fz.cargo, usuario: fz.usuario, rut: fz.rut, fecha: fz.fecha, img: fz.img };
     m.estado = 'EMITIDO'; m.fechaEmision = new Date().toLocaleDateString('en-CA');
@@ -4576,42 +4810,30 @@ document.addEventListener('click', async (e) => {
   const no = e.target.closest('[data-aprpl-no]'); if (no) { rechazarPlano(no.dataset.aprplNo); return; }
   const ed = e.target.closest('[data-pl-editar]'); if (ed) { abrirEditorPlano(ed.dataset.plEditar); return; }
   const dx = e.target.closest('[data-pl-dxf]');
-  if (dx) { try { const R = await cargarRef(), h = R.hojas.find(x => x.id === dx.dataset.plDxf); const base = await basePlano(h); await dxfPlano(h, modeloVigente(h, base)); } catch (err) { toast('No se pudo: ' + err.message, 5000); } }
+  if (dx) { try { const h = await hojaPorId(dx.dataset.plDxf); const base = await basePlano(h); await dxfPlano(h, modeloVigente(h, base)); } catch (err) { toast('No se pudo: ' + err.message, 5000); } }
 });
 
-let plNivel = 'Todos';
 async function renderPlanos() {
-  $('#pl-info').textContent = 'Cargando planos…';
-  const R = await cargarRef();
-  if (!R) { $('#pl-info').textContent = 'No se pudo cargar la biblioteca de planos (revisa la señal).'; return; }
-  botonesSeg($('#pl-niveles'), ['Todos', 'Producción', 'Acarreo', 'Tipos'], plNivel, v => { plNivel = v; renderPlanos(); });
-  const q = $('#pl-buscar').value.trim().toUpperCase(), qk = claveNum(q.replace(/^(TDF|TDA|TGF|TEJ)\s*/, '$1 N°'));
-  const hojas = R.hojas.filter(h => (plNivel === 'Todos' || h.nivel === plNivel) &&
-    (!q || [h.plano, h.titulo].concat(h.tableros).concat(R.tableros.filter(x => x.hoja === h.id).map(x => x.tagRef || '')).join(' ').toUpperCase().includes(q) || (qk && R.tableros.some(x => x.hoja === h.id && x.clave === qk))));
-  const tipos = `<li class="sub">Planos tipo GEOVITA · esquema estándar por tipo de tablero</li>` + TIPOS.filter(x => PLANTILLAS[x.key]).map(x => `<li class="plano con-adm"><div class="info"><b>${PLANTILLAS[x.key].icono} ${esc(x.nombre)}</b><small>${esc(PLANTILLAS[x.key].desc)}</small></div>
-    <div class="acc-adm"><button type="button" class="btn-pdf" data-tipo-pdf="${x.key}">📄 Plano tipo</button><button type="button" class="btn-pdf" data-tipo-dxf="${x.key}">⤓ DXF</button>${esAdmin() ? `<button type="button" data-ir="uni-nuevo" data-un-pre="${x.key}">📐 Confeccionar</button>` : ''}</div></li>`).join('');
-  $('#pl-lista').innerHTML = (q ? '' : tipos) + ['Producción', 'Acarreo', 'Tipos'].map(n => {
-    const hs = hojas.filter(h => h.nivel === n); if (!hs.length) return '';
-    return `<li class="sub">${n === 'Tipos' ? 'Tableros tipo (fabricante)' : 'Planos de referencia ' + n + ' (DWG)'} · ${hs.length} plano(s)</li>` + hs.map(h => {
-      const e = plaVigente(h.id), bo = (PLADATA.borradores || {})[h.id], pa = (PLADATA.porAprobar || {})[h.id], adm = esAdmin();
-      const est = pa ? `<span class="pl-est apr">Rev. ${pa.rev} por aprobar</span>` : '';
-      const vig = e ? `<span class="pl-est vig">Rev. ${e.rev} vigente · ${esc(e.fecha || '')}</span>` : '<span class="pl-est imp">Rev. 0 · importado del DWG</span>';
-      const nPB = e ? (e.modelo.pb || []).length : null;
-      return `<li class="plano con-adm"><div class="info"><b>${esc(h.plano && h.plano !== 'PDF' ? h.plano + ' · ' : '')}${esc(h.titulo || 'Sin título')}</b>
-      <small>${(h.tableros = h.tableros.filter(n => /\d/.test(n))).length ? esc(h.tableros.slice(0, 8).join(' · ')) + (h.tableros.length > 8 ? ' …' : '') : esc(h.archivo)}${nPB != null ? ' · ' + nPB + ' PB' : ''}</small>
+  const q = $('#pl-buscar').value.trim().toUpperCase(), adm = esAdmin();
+  const hs = hojasTipo().filter(h => !q || [h.id, h.tipoKey, h.nombre, (PLANTILLAS[h.tipoKey] || {}).desc].join(' ').toUpperCase().includes(q));
+  $('#pl-lista').innerHTML = `<li class="sub">Planos tipo GEOVITA · ${hs.length} tipo(s) de tablero</li>` + hs.map(h => {
+    const e = plaVigente(h.id), bo = (PLADATA.borradores || {})[h.id], pa = (PLADATA.porAprobar || {})[h.id], P = PLANTILLAS[h.tipoKey];
+    const vig = e ? `<span class="pl-est vig">Rev. ${e.rev} vigente · ${esc(e.fecha || '')}</span>` : '<span class="pl-est imp">Rev. 0 · esquema estándar</span>';
+    const est = pa ? `<span class="pl-est apr">Rev. ${pa.rev} por aprobar</span>` : '';
+    return `<li class="plano con-adm"><div class="info"><b>${P.icono} ${esc(h.nombre)}</b><small>${esc(CODIGO_PLA(h.id))} · ${esc(P.desc)}</small>
       <div>${vig} ${est} ${adm && bo ? `<span class="pl-est bor">Borrador Rev. ${bo.rev}</span>` : ''}</div></div>
-      <div class="acc-adm"><button type="button" class="btn-pdf" data-plano="${esc(h.id)}">📄 Ver plano</button>
-      ${adm ? `<button type="button" data-pl-editar="${esc(h.id)}">✏️ ${bo ? 'Seguir editando' : 'Editar plano'}</button>` : ''}
-      ${adm && h.vec ? `<button type="button" class="btn-pdf" data-pl-dxf="${esc(h.id)}">⤓ DXF</button>` : ''}
-      ${pa ? `<button type="button" class="btn-pdf" data-aprpl-ver="${esc(h.id)}">Revisión por aprobar</button>` : ''}</div></li>`;
-    }).join('');
-  }).join('') || '<li><div class="info"><small>Sin resultados.</small></div></li>';
-  $('#pl-info').textContent = `Fuente: ${R.fuente}. Los planos que venían en PDF se editan sobre la imagen (puntos de bloqueo, textos, líneas y tapas).`;
+      <div class="acc-adm"><button type="button" class="btn-pdf" data-plano="${h.id}">📄 Ver plano</button>
+      ${adm ? `<button type="button" data-pl-editar="${h.id}">✏️ ${bo ? 'Seguir editando' : 'Editar plano'}</button><button type="button" class="btn-pdf" data-pl-dxf="${h.id}">⤓ DXF</button>` : ''}
+      ${pa ? `<button type="button" class="btn-pdf" data-aprpl-ver="${h.id}">Revisión por aprobar</button>` : ''}</div></li>`;
+  }).join('') + (hs.length ? '' : '<li><div class="info"><small>Sin resultados.</small></div></li>')
+    + `<li class="sub">Diagramas unilineales de cada tablero</li><li class="plano con-adm"><div class="info"><b>📐 Diagramas por tablero</b><small>Se confeccionan a partir del plano tipo y quedan asociados a cada tablero (ficha del tablero). El registro se irá completando a medida que se emitan.</small></div>
+      ${adm ? '<div class="acc-adm"><button type="button" data-ir="uni-nuevo">📐 Confeccionar diagrama de un tablero</button></div>' : ''}</li>`;
+  $('#pl-info').textContent = adm ? 'Para editar: ✏️ Editar plano. El esquema (componentes) se ajusta en su panel; los símbolos, textos, conductores y puntos de bloqueo con las herramientas del editor.' : 'Para descargar el plano en PDF: 📄 Ver plano.';
 }
 $('#pl-buscar').addEventListener('input', () => renderPlanos());
 document.addEventListener('click', async (e) => {
   const b = e.target.closest('[data-plano]'); if (!b) return;
-  const R = await cargarRef(); const h = R && R.hojas.find(x => x.id === b.dataset.plano);
+  const h = await hojaPorId(b.dataset.plano);
   if (h) verPlano(h); else toast('Plano no disponible sin señal.');
 });
 
@@ -4813,13 +5035,19 @@ const PLANTILLAS = {
       salidas: [SAL('Q1', 'ilum', MCB, '1', '10 A', { curva: 'C', dif: '30 mA', desc: 'Alumbrado circuito 1' }), SAL('Q2', 'ilum', MCB, '1', '10 A', { curva: 'C', dif: '30 mA', desc: 'Alumbrado circuito 2' }),
         SAL('Q3', 'enchufe1', MCB, '1', '16 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 3x16 A' }), SAL('Q4', 'enchufe1', MCB, '1', '16 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 3x16 A' }),
         SAL('Q5', 'enchufe3', MCB, '3', '32 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 5x32 A' })] } },
-  CDD: { icono: '🏭', desc: 'Centro de distribución. Interruptor general, relé 50G y transformador de poder; alimentadores a los tableros del sector.',
-    m: { tablero: { tension: '600 V' }, alim: { tension: '600 V' }, general: { tipo: MCCB, polos: '3', regulable: 'SI', calibre: '630 A', icu: '50 kA' },
+  CDD: { icono: '🏭', desc: 'Centro de distribución: TDF 600 V (general MCCB + relé 50G) con salidas a tableros, transformador T1 (100, 250, 300 o 500 kVA) y TDF 400 V de servicios con salidas trifásicas y monofásicas.',
+    m: { tablero: { tension: '600 V' }, alim: { tension: '600 V' }, general: { tipo: MCCB, polos: '3', regulable: 'SI', calibre: '630 A', icu: '50 kA', bobina: 'Bobina MX' },
       dif: { tiene: 'SI', tipo: 'Relé diferencial con toroide', cod: '50G', I: '300 mA', T: '150 ms', regulable: 'SI' },
-      trafo: { tiene: 'SI', tipo: 'Transformador', kva: '500 kVA', relacion: '600/380-220 V', grupo: 'Dyn1' }, trafoCtl: { tiene: 'NO' }, barra: { tension: '380-220 V' },
+      trafo: { tiene: 'SI', tipo: 'Transformador', kva: '300 kVA', relacion: '600/400-231 V', grupo: 'Dyn1' }, trafoCtl: { tiene: 'NO' }, barra: { tension: '600 V' },
       tp: { tiene: 'SI', desc: 'Malla de tierra del centro (2 chicotes)' },
-      salidas: [SAL('Q1', 'tablero', MCCB, '3', '250 A', { desc: 'Alimentador TDF' }), SAL('Q2', 'tablero', MCCB, '3', '250 A', { desc: 'Alimentador TDF' }), SAL('Q3', 'tablero', MCCB, '3', '160 A', { desc: 'Alimentador TDA' }),
-        SAL('Q4', 'reserva', MCCB, '3', '160 A', { desc: 'Reserva' })] } },
+      salidas: [SAL('Q1', 'tablero', MCCB, '3', '250 A', { desc: 'Alimentador TDF 600 V' }), SAL('Q2', 'tablero', MCCB, '3', '250 A', { desc: 'Alimentador TDF 600 V' }),
+        SAL('Q3', 'tablero', MCCB, '3', '250 A', { desc: 'Alimentador TEJ (jumbo)' }), SAL('Q4', 'reserva', MCCB, '3', '160 A', { desc: 'Reserva' })],
+      sec: { tiene: 'SI', nombre: 'TDF 400 V SERVICIOS', tension: '400-231 V', qt: { equipo: 'Q-T1', calibre: '400 A', tipoBloqueo: TIPOS_BLOQUEO[0] },
+        general: { equipo: 'Q0-B', tipo: MCCB, polos: '4', regulable: 'SI', calibre: '400 A', icu: '36 kA' },
+        dif: { tiene: 'SI', tipo: 'Relé diferencial con toroide', cod: '50G', I: '300 mA', T: '150 ms' },
+        salidas: [SAL('Q11', 'enchufe3', MCB, '3', '32 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 5x32 A' }), SAL('Q12', 'enchufe3', MCB, '3', '32 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 5x32 A' }),
+          SAL('Q13', 'enchufe1', MCB, '1', '16 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 3x16 A' }), SAL('Q14', 'enchufe1', MCB, '1', '16 A', { curva: 'C', dif: '30 mA', desc: 'Enchufe hembra 3x16 A' }),
+          SAL('Q15', 'ilum', MCB, '1', '10 A', { curva: 'C', dif: '30 mA', desc: 'Alumbrado del centro' }), SAL('Q16', 'tablero', MCB, '4', '40 A', { curva: 'C', desc: 'Alimentador TDA' })] } } },
   TEJ: { icono: '🚜', desc: 'Tablero eléctrico jumbo 600 V. General 3x250 A con 50G y parada de emergencia; enchufe hembra jumbo 225 A y enchufes con diferencial 30 mA.',
     m: { tablero: { tension: '600 V' }, alim: { tension: '600 V' }, general: { tipo: MCCB, polos: '3', regulable: 'SI', calibre: '250 A', icu: '36 kA', bobina: 'Bobina MX + parada de emergencia (P/E)' },
       dif: { tiene: 'SI', tipo: 'Relé diferencial con toroide', cod: '50G', I: '100 mA', T: '60 ms', regulable: 'SI' }, trafo: { tiene: 'NO' },
@@ -4856,6 +5084,8 @@ function aplicarPlantilla(m, key, sug) {
   if (!m.alim.tension) poner('alim.tension', T.alim.tension);
   if (T.alim.equipo && !m.alim.equipo) poner('alim.equipo', T.alim.equipo);
   m.salidas = T.salidas.map(x => Object.assign({}, x));
+  m.sec = T.sec ? JSON.parse(JSON.stringify(T.sec)) : { tiene: 'NO' };
+  if (sug && T.sec) { sug.add('trafo.kva'); (T.sec.salidas || []).forEach((x, i) => sug.add(`sec.salidas.${i}.in`)); }
   m.salidas.forEach((x, i) => ['in', 'desc'].forEach(k => { if (sug && x[k]) sug.add(`salidas.${i}.${k}`); }));
   m.plantilla = key;
   return marcados;
@@ -4985,20 +5215,22 @@ function renderRefVista() {
 }
 function htmlEditorUni() {
   const m = UE.m, ids = tablerosActivos().filter(x => x.id !== m.id);
-  const sal = (m.salidas || []).map((s, i) => `<div class="ue-sal">
-      <div class="ue-sal-h"><b>Salida ${i + 1}</b><span><button type="button" data-sal-up="${i}" aria-label="Subir">↑</button><button type="button" data-sal-del="${i}" aria-label="Quitar">✕</button></span></div>
-      <div class="ue-g">${fUni(`salidas.${i}.id`, 'Identificación', { ph: 'Q1' })}${fUni(`salidas.${i}.carga`, 'Tipo de carga', { opciones: CARGAS.map(c => c[1]) })}${fUni(`salidas.${i}.tipo`, 'Protección', { opciones: ['MCB (miniatura)', 'MCCB (caja moldeada)', 'Diferencial (RCCB)', 'Guardamotor', 'Fusibles'] })}
-      ${fUni(`salidas.${i}.in`, 'Corriente (In)', { lista: 'dl-calibres', ph: '32 A' })}${fUni(`salidas.${i}.polos`, 'Polos', { opciones: ['1', '2', '3', '4'] })}
-      ${/MCB/.test(s.tipo || '') ? fUni(`salidas.${i}.curva`, 'Curva', { opciones: ['B', 'C', 'D'] }) : ''}${fUni(`salidas.${i}.dif`, 'Diferencial', { opciones: ['30 mA', '100 mA', '300 mA'] })}
-      ${datalistsProt(`salidas.${i}`, s)}${fUni(`salidas.${i}.marca`, 'Marca', { lista: 'dl-marcas' })}${fUni(`salidas.${i}.modelo`, 'Modelo', { lista: 'dl-mod-' + `salidas.${i}`.replace(/\W/g, '-') })}
-      ${fUni(`salidas.${i}.desc`, 'Descripción / carga', { ph: 'Enchufe 32 A, alumbrado…', ancho: 1 })}
-      ${fUni(`salidas.${i}.destinoId`, 'Alimenta al tablero (GEO ELEC)', { opciones: ids.map(x => x.id), ancho: 1 })}
-      ${fUni(`salidas.${i}.destino`, 'Destino (texto en el plano)', { ph: 'TDA N°12', ancho: 1 })}</div></div>`).join('');
+  const htmlSal = (base, s, i) => `<div class="ue-sal">
+      <div class="ue-sal-h"><b>Salida ${i + 1}</b><span><button type="button" data-sal-up="${base}:${i}" aria-label="Subir">↑</button><button type="button" data-sal-del="${base}:${i}" aria-label="Quitar">✕</button></span></div>
+      <div class="ue-g">${fUni(`${base}.${i}.id`, 'Identificación', { ph: 'Q1' })}${fUni(`${base}.${i}.carga`, 'Tipo de carga', { opciones: CARGAS.map(c => c[1]) })}${fUni(`${base}.${i}.tipo`, 'Protección', { opciones: ['MCB (miniatura)', 'MCCB (caja moldeada)', 'Diferencial (RCCB)', 'Guardamotor', 'Fusibles'] })}
+      ${fUni(`${base}.${i}.in`, 'Corriente (In)', { lista: 'dl-calibres', ph: '32 A' })}${fUni(`${base}.${i}.polos`, 'Polos', { opciones: ['1', '2', '3', '4'] })}
+      ${/MCB/.test(s.tipo || '') ? fUni(`${base}.${i}.curva`, 'Curva', { opciones: ['B', 'C', 'D'] }) : ''}${fUni(`${base}.${i}.dif`, 'Diferencial', { opciones: ['30 mA', '100 mA', '300 mA'] })}
+      ${datalistsProt(`${base}.${i}`, s)}${fUni(`${base}.${i}.marca`, 'Marca', { lista: 'dl-marcas' })}${fUni(`${base}.${i}.modelo`, 'Modelo', { lista: 'dl-mod-' + `${base}.${i}`.replace(/\W/g, '-') })}
+      ${fUni(`${base}.${i}.desc`, 'Descripción / carga', { ph: 'Enchufe 32 A, alumbrado…', ancho: 1 })}
+      ${fUni(`${base}.${i}.destinoId`, 'Alimenta al tablero (GEO ELEC)', { opciones: ids.map(x => x.id), ancho: 1 })}
+      ${fUni(`${base}.${i}.destino`, 'Destino (texto en el plano)', { ph: 'TDA N°12', ancho: 1 })}</div></div>`;
+  const sal = (m.salidas || []).map((s, i) => htmlSal('salidas', s, i)).join('');
+  const sc = m.sec || {}, sal2 = (sc.salidas || []).map((s, i) => htmlSal('sec.salidas', s, i)).join('');
   const pbx = (m.pbExtra || []).map((p, i) => `<div class="ue-sal"><div class="ue-sal-h"><b>Punto de bloqueo adicional</b><span><button type="button" data-pbx-del="${i}" aria-label="Quitar">✕</button></span></div>
       <div class="ue-g">${fUni(`pbExtra.${i}.equipo`, 'Dispositivo', { ph: 'Seccionador S1' })}${fUni(`pbExtra.${i}.ubicacion`, 'Ubicación')}
       ${fUni(`pbExtra.${i}.tipo`, 'Tipo de bloqueo', { opciones: TIPOS_BLOQUEO, ancho: 1 })}</div></div>`).join('');
   const a = m.alim || {}, nombres = [...new Set(ls.get('personal', []).filter(p => p.estado === 'ACTIVO').map(p => p.nombre))];
-  return htmlRefUni() + `
+  return (UE.sinRef ? '' : htmlRefUni()) + `
   <datalist id="ue-dl-pers">${nombres.map(n => `<option value="${esc(n)}">`).join('')}</datalist>
   <datalist id="dl-marcas">${Object.keys(CATALOGO).map(n => `<option value="${esc(n)}">`).join('')}</datalist>
   <datalist id="dl-calibres">${CALIBRES.map(n => `<option value="${n}">`).join('')}</datalist>
@@ -5032,7 +5264,7 @@ function htmlEditorUni() {
       + fUni('dif.I', 'Sensibilidad', { opciones: ['30 mA', '100 mA', '200 mA', '300 mA', '500 mA', '1 A', '3 A'] }) + fUni('dif.T', 'Tiempo', { opciones: ['Instantáneo', '30 ms', '60 ms', '150 ms', '250 ms', '310 ms', '500 ms', '1 s'] }) : ''}
     <h4 class="ancho" style="margin:16px 0 0">Transformador de potencia</h4>
     ${segU('trafo.tiene', '¿Tiene transformador o autotransformador de potencia?', SINO)}
-    ${m.trafo.tiene === 'SI' ? fUni('trafo.tipo', 'Tipo', { opciones: ['Autotransformador', 'Transformador', 'Transformador de aislación'] }) + fUni('trafo.kva', 'Potencia', { opciones: ['15 kVA', '30 kVA', '45 kVA', '75 kVA', '112,5 kVA', '150 kVA', '225 kVA', '300 kVA', '500 kVA'] }) + fUni('trafo.relacion', 'Relación', { opciones: ['600/400 V', '600/380-220 V', '400/231 V', '380/220 V', '1000/400 V'] }) + fUni('trafo.grupo', 'Grupo de conexión', { opciones: ['Dy1', 'Dyn1', 'Dyn5', 'Dyn11', 'Yy0', 'Monofásico'] }) : ''}
+    ${m.trafo.tiene === 'SI' ? fUni('trafo.tipo', 'Tipo', { opciones: ['Autotransformador', 'Transformador', 'Transformador de aislación'] }) + fUni('trafo.kva', 'Potencia', { opciones: ['15 kVA', '30 kVA', '45 kVA', '75 kVA', '100 kVA', '112,5 kVA', '150 kVA', '225 kVA', '250 kVA', '300 kVA', '500 kVA', '750 kVA', '1000 kVA'] }) + fUni('trafo.relacion', 'Relación', { opciones: ['600/400-231 V', '600/400 V', '600/380-220 V', '400/231 V', '380/220 V', '1000/400 V'] }) + fUni('trafo.grupo', 'Grupo de conexión', { opciones: ['Dy1', 'Dyn1', 'Dyn5', 'Dyn11', 'Yy0', 'Monofásico'] }) : ''}
     <h4 class="ancho" style="margin:16px 0 0">Transformador de control</h4>
     <p class="muted ancho" style="margin:2px 0 0">Transformador pequeño que alimenta el circuito de control: luces piloto, bobina de disparo, parada de emergencia, relés.</p>
     ${segU('trafoCtl.tiene', '¿Tiene transformador de control?', SINO)}
@@ -5043,6 +5275,17 @@ function htmlEditorUni() {
   <details class="ue-sec" open><summary>6 · Barra y salidas (${(m.salidas || []).length})</summary>
     <div class="ue-g">${fUni('barra.tension', 'Tensión de barra', { opciones: TENSIONES })}</div>${sal}
     <button type="button" class="big" id="btn-ue-sal">＋ Agregar salida</button></details>
+  <details class="ue-sec"${siUni(sc.tiene) ? ' open' : ''}><summary>6b · Transformador T1 y tablero de servicios 400 V (centro de distribución)</summary>
+    <p class="muted" style="margin:0 0 6px">En los CCDD: desde la barra de 600 V, el interruptor Q-T1 alimenta el transformador T1 (sección 5) y el TDF 400 V de servicios (fuerza trifásica y monofásica).</p>
+    <div class="ue-g">${segU('sec.tiene', '¿Tiene transformador T1 y tablero de servicios 400 V?', SINO, 1)}
+    ${siUni(sc.tiene) ? fUni('sec.qt.equipo', 'Interruptor que alimenta T1', { ph: 'Q-T1' }) + fUni('sec.qt.calibre', 'Corriente', { lista: 'dl-calibres', ph: '400 A' })
+      + fUni('sec.qt.tipoBloqueo', 'Tipo de bloqueo (Q-T1)', { opciones: TIPOS_BLOQUEO, vacio: false, ancho: 1 })
+      + fUni('sec.nombre', 'Nombre del tablero de servicios', { ph: 'TDF 400 V SERVICIOS', may: 1 }) + fUni('sec.tension', 'Tensión', { opciones: TENSIONES })
+      + fUni('sec.general.equipo', 'Interruptor general (identificación)', { ph: 'Q0-B' }) + camposProt('sec.general', sc.general || {})
+      + segU('sec.dif.tiene', '¿Tiene protección diferencial general?', SINO)
+      + ((sc.dif || {}).tiene === 'SI' ? fUni('sec.dif.tipo', 'Tipo', { opciones: ['Relé diferencial con toroide', 'Bloque diferencial (Vigi)', 'Interruptor diferencial (RCCB)'] }) + fUni('sec.dif.cod', 'Código', { ph: '50G' })
+        + fUni('sec.dif.I', 'Sensibilidad', { opciones: ['30 mA', '100 mA', '300 mA', '500 mA', '1 A'] }) + fUni('sec.dif.T', 'Tiempo', { opciones: ['Instantáneo', '60 ms', '150 ms', '250 ms', '500 ms'] }) : '') : ''}</div>
+    ${siUni(sc.tiene) ? sal2 + '<button type="button" class="big" id="btn-ue-sal2">＋ Agregar salida al tablero de servicios</button>' : ''}</details>
   <details class="ue-sec"><summary>7 · Puesta a tierra</summary><div class="ue-g">
     ${segU('tp.tiene', '¿Tiene puesta a tierra?', SINO)}${fUni('tp.desc', 'Descripción', { ph: 'Barra Cu a malla del CCDD', ancho: 1 })}</div></details>
   <details class="ue-sec" open><summary>8 · Otras fuentes de energía (PB-3)</summary><div class="ue-g">
@@ -5136,7 +5379,7 @@ $('#ue-form').addEventListener('input', (e) => {
   const el = e.target.closest('[data-k]'); if (!el || !UE) return;
   let v = el.value;
   if (el.classList.contains('may')) v = v.toLocaleUpperCase('es-CL');
-  if (/^salidas\.\d+\.carga$/.test(el.dataset.k)) v = (CARGAS.find(c => c[1] === v) || [v])[0];
+  if (/(^|\.)salidas\.\d+\.carga$/.test(el.dataset.k)) v = (CARGAS.find(c => c[1] === v) || [v])[0];
   setP(UE.m, el.dataset.k, v);
   if (UE.sug.delete(el.dataset.k)) el.classList.remove('sug');
   guardarLocalUni(); actualizarUni();
@@ -5163,11 +5406,12 @@ $('#ue-form').addEventListener('click', (e) => {
   if (sg) { setP(UE.m, sg.closest('[data-seg]').dataset.seg, sg.dataset.v); guardarLocalUni(); renderEditorUni(); return; }
   const r = e.target.closest('[data-ref-i]');
   if (r) { const i = +r.dataset.refI; UE.m.ref = { hoja: REF.tableros[i].hoja, i }; guardarLocalUni(); renderEditorUni(); return; }
+  if (e.target.closest('#btn-ue-sal2')) { const sc = UE.m.sec = UE.m.sec || {}; const n = (sc.salidas || []).length + 11; (sc.salidas = sc.salidas || []).push({ id: 'Q' + n, carga: 'enchufe3', tipo: 'MCB (miniatura)', desc: '', polos: '3', in: '', dif: '30 mA', destino: '', destinoId: '' }); guardarLocalUni(); renderEditorUni(); return; }
   if (e.target.closest('#btn-ue-sal')) { const n = (UE.m.salidas || []).length + 1; (UE.m.salidas = UE.m.salidas || []).push({ id: 'Q' + n, carga: 'enchufe3', tipo: 'MCB (miniatura)', desc: '', polos: '3', in: '', dif: '', destino: '', destinoId: '' }); guardarLocalUni(); renderEditorUni(); return; }
   const d = e.target.closest('[data-sal-del]');
-  if (d) { if (confirm('¿Quitar esta salida?')) { UE.m.salidas.splice(+d.dataset.salDel, 1); guardarLocalUni(); renderEditorUni(); } return; }
+  if (d) { const [b, i] = d.dataset.salDel.split(':'); if (confirm('¿Quitar esta salida?')) { getP(UE.m, b).splice(+i, 1); guardarLocalUni(); renderEditorUni(); } return; }
   const u = e.target.closest('[data-sal-up]');
-  if (u) { const i = +u.dataset.salUp; if (i > 0) { const s = UE.m.salidas; [s[i - 1], s[i]] = [s[i], s[i - 1]]; guardarLocalUni(); renderEditorUni(); } return; }
+  if (u) { const [b, x] = u.dataset.salUp.split(':'), i = +x; if (i > 0) { const s = getP(UE.m, b); [s[i - 1], s[i]] = [s[i], s[i - 1]]; guardarLocalUni(); renderEditorUni(); } return; }
   if (e.target.closest('#btn-ue-pbx')) { (UE.m.pbExtra = UE.m.pbExtra || []).push({ equipo: '', ubicacion: '', tipo: TIPOS_BLOQUEO[0] }); guardarLocalUni(); renderEditorUni(); return; }
   const px = e.target.closest('[data-pbx-del]');
   if (px) { UE.m.pbExtra.splice(+px.dataset.pbxDel, 1); guardarLocalUni(); renderEditorUni(); return; }
@@ -5203,14 +5447,14 @@ function usarDatosRef() {
 const modeloLimpio = () => { const m = JSON.parse(JSON.stringify(UE.m)); m._sug = [...UE.sug]; m.descRev = $('#ue-descrev').value.trim(); return m; };
 $('#ue-descrev').addEventListener('input', () => { if (UE) { UE.m.descRev = $('#ue-descrev').value.trim(); guardarLocalUni(); actualizarUni(true); } });
 // Tocar un componente del diagrama abre sus datos en el formulario
-const SEC_ZONA = { tablero: '2', alim: '3', general: '4', dif: '5', trafo: '5', trafoCtl: '5', salida: '6', tp: '7', otra: '8', pb: '9' };
-function irAZonaUni(z) {
+const SEC_ZONA = { tablero: '2', alim: '3', general: '4', dif: '5', trafo: '5', trafoCtl: '5', salida: '6', sec: '6b', secsal: '6b', tp: '7', otra: '8', pb: '9' };
+function irAZonaUni(z, raiz = '#ue-form') {
   const [k, i] = z.split(':'), n = SEC_ZONA[k]; if (!n) return false;
-  const det = [...document.querySelectorAll('#ue-form details')].find(d => (d.querySelector('summary') || {}).textContent.trim().startsWith(n + ' ·'));
+  const det = [...document.querySelectorAll(raiz + ' details')].find(d => (d.querySelector('summary') || {}).textContent.trim().startsWith(n + ' ·'));
   if (!det) return false;
   det.open = true;
   let destino = det;
-  if (k === 'salida' && i != null) destino = det.querySelectorAll('.ue-sal')[+i] || det;
+  if ((k === 'salida' || k === 'secsal') && i != null) destino = det.querySelectorAll('.ue-sal')[+i] || det;
   else if (k === 'dif' || k === 'trafo' || k === 'trafoCtl') destino = det.querySelector(`[data-seg="${k}.tiene"]`) || det;
   destino.scrollIntoView({ behavior: 'smooth', block: 'start' });
   destino.classList.add('ue-flash'); setTimeout(() => destino.classList.remove('ue-flash'), 1600);
