@@ -1,6 +1,6 @@
 // Service worker: permite abrir la app sin señal (también al escanear un QR).
 // Si cambias index.html, sube el número de versión para que los teléfonos actualicen.
-const VERSION = 'tableros-esm-v24';
+const VERSION = 'tableros-esm-v26';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png',
   './favicon.png', './logo-globo.png', './logo-geovita.png',
   './lib/jsQR.js', './lib/qrcode.js', './lib/jspdf.umd.min.js',
@@ -11,6 +11,12 @@ self.addEventListener('install', (e) => {
     const c = await caches.open(VERSION);
     await c.addAll(SHELL);
     await c.add('./planos-ref/index.json').catch(() => {});   // opcional: si aún no se sube la carpeta, la app igual se instala
+    // Planos eléctricos (vectoriales) disponibles sin señal en la mina
+    try {
+      const idx = await (await c.match('./planos-ref/index.json')).json();
+      const vec = (idx.hojas || []).filter(h => h.vec).map(h => './' + h.vec);
+      for (let i = 0; i < vec.length; i += 8) await Promise.all(vec.slice(i, i + 8).map(u => c.add(u).catch(() => {})));
+    } catch (err) {}
     await self.skipWaiting();
   })());
 });

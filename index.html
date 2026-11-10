@@ -269,6 +269,26 @@
   .ue-sal-h { display: flex; justify-content: space-between; align-items: center; }
   .ue-sal-h button { min-height: 36px; padding: 4px 12px; margin-left: 6px; }
   #ue-prev .ue-svg { width: 100%; height: auto; border: 1px solid var(--borde); border-radius: 8px; background: #fff; display: block; margin-top: 8px; cursor: zoom-in; }
+  /* Editor de planos */
+  .pe-barra { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 6px; margin: 0 0 8px; }
+  .pe-barra button { min-height: 52px; padding: 4px 2px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-size: 18px; }
+  .pe-barra button small { font-size: 10.5px; font-weight: 600; line-height: 1.1; color: var(--gris); }
+  .pe-barra button.on { background: #FFE9E6; border-color: var(--rojo); box-shadow: inset 0 0 0 2px var(--rojo); }
+  .pe-barra button.on small { color: var(--rojo); }
+  .pe-lienzo { height: 62vh; min-height: 300px; border: 1px solid var(--borde); border-radius: 10px; background: #E9ECEF; overflow: hidden; touch-action: none; position: relative; cursor: crosshair; }
+  .pe-lienzo svg { width: 100%; height: 100%; display: block; user-select: none; -webkit-user-select: none; }
+  .pe-acc { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .pe-paleta { display: grid; grid-template-columns: repeat(auto-fill, minmax(86px, 1fr)); gap: 6px; }
+  .pe-paleta button { min-height: 86px; padding: 4px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 2px; }
+  .pe-paleta button svg { width: 44px; height: 44px; display: block; }
+  .pe-paleta button small { font-size: 10.5px; line-height: 1.15; font-weight: 600; color: var(--gris); text-align: center; }
+  .pe-paleta button.on { background: #FFE9E6; border-color: var(--rojo); box-shadow: inset 0 0 0 2px var(--rojo); }
+  svg.pe-ico { width: 26px; height: 26px; vertical-align: middle; }
+  .pe-acc button { min-height: 40px; padding: 4px 12px; font-size: 14px; }
+  button.peligro { color: var(--no, #B00020); border-color: #E7B1B8; }
+  .pl-est { display: inline-block; font-size: 11.5px; font-weight: 700; padding: 1px 7px; border-radius: 999px; margin-top: 3px; }
+  .pl-est.vig { background: #E3F4E8; color: #0A7A2A; } .pl-est.imp { background: #EEF1F4; color: #5B6470; }
+  .pl-est.bor { background: #FFF1CC; color: #8A5A00; } .pl-est.apr { background: #FFE3E3; color: #B71C1C; }
   .val-err { color: var(--no); margin: 6px 0; } ul.val-err, ul.val-av { padding-left: 20px; font-size: 14px; }
   .val-av { color: var(--aviso); margin: 6px 0; } .val-ok { color: var(--ok); font-weight: 700; }
   .pbbox { border: 2px solid #C8102E; border-radius: 10px; padding: 10px 12px; background: #FFF7F8; margin-top: 10px; font-size: 14px; }
@@ -328,7 +348,7 @@
       <button type="button" class="tile" data-docs="PROC"><span class="t-ico">📘</span><b>Procedimientos</b><small>Documentos de las actividades</small></button>
       <button type="button" class="tile" data-docs="PLANOS"><span class="t-ico">🗺️</span><b>Planos</b><small>Zonas de transición, mapas de calor, puntos de encuentro</small></button>
       <button type="button" class="tile" data-ir="enlaces"><span class="t-ico">🔗</span><b>Enlaces de interés</b><small>Monitoreo sísmico y apoyo a la operación</small></button>
-      <button type="button" class="tile ancho" data-ir="planos"><span class="t-ico">📐</span><b>Unilineales de referencia</b><small>Planos ELEC de Producción y Acarreo · buscar por tablero</small></button>
+      <button type="button" class="tile ancho" data-ir="planos"><span class="t-ico">📐</span><b>Planos eléctricos</b><small>Producción y Acarreo · puntos de bloqueo · buscar por tablero</small></button>
     </div>
     <div id="ini-admin" hidden>
       <h3 class="sec-tit">Administración</h3>
@@ -417,8 +437,8 @@
   <!-- ============ DOCUMENTOS POR APROBAR (JEFE DE TERRENO / DEPARTAMENTO) ============ -->
   <section id="v-aprobar" hidden>
     <div class="card">
-      <h2>📝 Diagramas por aprobar</h2>
-      <p class="muted">Revisa el diagrama completo antes de firmar. Al aprobar, queda liberado como unilineal oficial del tablero (también para quien escanea el QR).</p>
+      <h2>📝 Documentos por aprobar</h2>
+      <p class="muted">Diagramas unilineales y planos eléctricos. Revisa el documento completo antes de firmar: al aprobar, queda liberado como versión oficial.</p>
       <ul class="lista" id="apr-lista"></ul>
     </div>
     <button class="big" data-ir="inicio">Volver al inicio</button>
@@ -427,14 +447,46 @@
   <!-- ============ PLANOS UNILINEALES DE REFERENCIA ============ -->
   <section id="v-planos" hidden>
     <div class="card">
-      <h2>📐 Unilineales de referencia</h2>
-      <p class="muted" style="margin:4px 0 0">Planos ELEC de Producción y Acarreo (archivos DWG del departamento). Úsalos como apoyo; el diagrama vigente de cada tablero es el emitido en su ficha.</p>
+      <h2>📐 Planos eléctricos</h2>
+      <p class="muted" style="margin:4px 0 0">Planos ELEC de Producción y Acarreo con formato GEOVITA y puntos de bloqueo. Cada plano tiene su revisión vigente; las modificaciones se emiten como nueva revisión con firma y aprobación del Jefe de terreno o Jefe de departamento.</p>
       <div class="tabs tabs-in" id="pl-niveles"></div>
-      <input id="pl-buscar" type="search" placeholder="Buscar plano, CCDD, tablero o TAG GOM (ej.: TDF 94)" style="margin-top:12px">
+      <input id="pl-buscar" type="search" placeholder="Buscar plano, CCDD o tablero (ej.: TDF 94)" style="margin-top:12px">
       <ul class="lista" id="pl-lista"></ul>
       <p class="muted" id="pl-info" style="margin:10px 0 0"></p>
     </div>
     <button class="big" data-ir="inicio">Volver al inicio</button>
+  </section>
+
+  <!-- ============ EDITOR DE PLANOS ELÉCTRICOS (ADMINISTRADOR) ============ -->
+  <section id="v-plano-ed" hidden>
+    <div class="card adm">
+      <h2 id="pe-titulo">Plano eléctrico</h2>
+      <p class="muted" id="pe-sub" style="margin:4px 0 0"></p>
+      <div class="aviso" id="pe-aviso" hidden style="margin:12px 0 0"></div>
+    </div>
+    <div class="pe-barra" id="pe-barra"></div>
+    <div class="pe-lienzo" id="pe-lienzo"><div id="pe-svg" style="width:100%;height:100%"></div></div>
+    <p class="muted" id="pe-ayuda" style="margin:6px 2px 10px"></p>
+    <div class="card" id="pe-panel"></div>
+    <div class="card"><h3>⚠ Puntos de bloqueo de este plano</h3><ul class="lista" id="pe-pbs"></ul></div>
+    <div class="card" id="pe-caj"><h3>🗂 Recuadro del plano</h3>
+      <p class="muted" style="margin:4px 0 0">Datos del rótulo (formato GEOVITA, RIC N°18). Vienen del rótulo original del DWG y se pueden corregir. Las firmas, la revisión y la fecha las completa la app.</p>
+      <div class="ue-g" id="pe-caj-campos"></div></div>
+    <div class="grid2" style="margin-bottom:12px">
+      <button class="big" id="btn-pe-pdf">📄 Vista previa PDF</button>
+      <button class="big" id="btn-pe-dxf">⤓ DXF (AutoCAD)</button>
+    </div>
+    <div class="card adm">
+      <h3>Emitir revisión</h3>
+      <label for="pe-descrev">Descripción de la revisión</label>
+      <input id="pe-descrev" class="may" placeholder="Ej.: Se agregan puntos de bloqueo / Cambio de interruptor TDF N°94">
+      <label class="chk"><input type="checkbox" id="pe-verif"> Verifiqué en terreno (o con el personal que lo hizo) los puntos de bloqueo y las modificaciones del plano.</label>
+      <p class="error" id="pe-error"></p>
+      <button class="big primary" id="btn-pe-emitir">✍ Firmar y enviar a aprobación</button>
+    </div>
+    <button class="big" id="btn-pe-guardar">Guardar borrador</button>
+    <button class="big" id="btn-pe-descartar" hidden>Descartar borrador</button>
+    <button class="big" id="btn-pe-volver">Volver a los planos</button>
   </section>
 
   <!-- ============ EDITOR DE DIAGRAMA UNILINEAL (ADMINISTRADOR) ============ -->
@@ -1098,7 +1150,7 @@
 // ===================== CONFIGURACIÓN =====================
 const CONFIG = {
   // URL de la aplicación web de Apps Script (termina en /exec)
-  SCRIPT_URL: 'script.google.com/macros/s/AKfycbz5WAbvd0_J4yC92xXNokbk6uLGklbYlT0Yk6uJn1ELW2K43EwDfHanoCfJASBgL2_Tsw/exec',
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbz5WAbvd0_J4yC92xXNokbk6uLGklbYlT0Yk6uJn1ELW2K43EwDfHanoCfJASBgL2_Tsw/exec',
   // Debe ser igual a CONFIG.CLAVE en Codigo.gs
   CLAVE: 'geovita-esm-2026',
   // N° de contrato fijo (se registra en todas las fichas; no se puede modificar en el formulario)
@@ -1106,7 +1158,7 @@ const CONFIG = {
 };
 
 // Versión visible al pie de la pantalla de inicio (sirve para confirmar que el teléfono tiene la última)
-const VERSION_APP = 'v24 · 09-11-2026';
+const VERSION_APP = 'v26 · 09-11-2026';
 const NIVELES = ['UCL', 'Producción', 'Acarreo', 'SNV'];
 const SEN = 'Cuadro de señalética (riesgo eléctrico, potencia, nivel de tensión, punto de bloqueo, maniobra RCP, logo empresa, personal autorizado, diagrama unilineal, carga de fuego, programa de mantenimiento)';
 const BASE_TD = ['Orden y aseo en el sector', 'Iluminación', 'Número de TAG', 'Soporte o anclaje del tablero en buen estado',
@@ -1488,7 +1540,7 @@ async function firmarDocumentoRegistro(registro, titulo) {
 }
 
 // ===================== NAVEGACIÓN =====================
-const VISTAS = ['inicio', 'firma', 'aprobar', 'planos', 'uni-ed', 'enlaces', 'enlace', 'login', 'clave', 'persona', 'cred', 'chk', 'hist', 'admin', 'admin-form', 'tableros', 'envios', 'etiquetas', 'actividad', 'rf01', 'pregunta', 'etiqueta', 'ficha', 'unilineal', 'form', 'scan', 'docs', 'subir'];
+const VISTAS = ['inicio', 'firma', 'aprobar', 'planos', 'plano-ed', 'uni-ed', 'enlaces', 'enlace', 'login', 'clave', 'persona', 'cred', 'chk', 'hist', 'admin', 'admin-form', 'tableros', 'envios', 'etiquetas', 'actividad', 'rf01', 'pregunta', 'etiqueta', 'ficha', 'unilineal', 'form', 'scan', 'docs', 'subir'];
 // Botón / gesto "atrás" del teléfono: cada pantalla abierta queda en el historial del navegador,
 // así "atrás" vuelve a la pantalla anterior en vez de salir de la app.
 const pila = [];                 // pantallas abiertas sobre "inicio": { v, id, alInicio }
@@ -1527,8 +1579,8 @@ function renderVista(v) {
   else if (v === 'admin') renderAdmin();
   else if (v === 'hist') renderHistCompleto();
   else if (v === 'enlaces') { renderEnlaces(); cargarEnlaces(); }
-  else if (v === 'planos') renderPlanos();
-  else if (v === 'aprobar') { renderAprobar(); cargarUni(true); }
+  else if (v === 'planos') { renderPlanos(); cargarPlanos(); }
+  else if (v === 'aprobar') { renderAprobar(); cargarUni(true); cargarPlanos(true); }
 }
 const vistaActual = () => VISTAS.find(v => !$('#v-' + v).hidden);
 // Logo / nombre de la app: vuelve al inicio
@@ -2812,7 +2864,7 @@ async function sincronizar(manual = false) {
         break; // se reintenta luego, en orden
       }
     }
-    if (!error) { await actualizarTableros(); cargarDocs(); cargarEnlaces(); cargarUni(manual); if (esAdmin()) regenerarChecklists('', true); }
+    if (!error) { await actualizarTableros(); cargarDocs(); cargarEnlaces(); cargarUni(manual); cargarPlanos(manual); if (esAdmin()) regenerarChecklists('', true); }
   } catch (err) { error = err.message; }
   sincronizando = false; $('#btn-sync').disabled = false;
   const quedan = (await DB.all().catch(() => [])).length;
@@ -2946,7 +2998,7 @@ Lienzo.prototype = {
 function uniASvg(ops, opt = {}) {
   const a = (v) => Math.round(v * 100) / 100;
   const st = (o) => `stroke="${o.c || UC.N}" stroke-width="${o.w || 0.25}"${o.dash ? ' stroke-dasharray="2.4 1.4"' : ''}`;
-  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${UNI_HOJA.W} ${UNI_HOJA.H}"${opt.clase ? ` class="${opt.clase}"` : ''}><rect width="${UNI_HOJA.W}" height="${UNI_HOJA.H}" fill="#fff"/>`;
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${opt.viewBox || '0 0 ' + UNI_HOJA.W + ' ' + UNI_HOJA.H}"${opt.clase ? ` class="${opt.clase}"` : ''} preserveAspectRatio="xMidYMid meet"><rect width="${UNI_HOJA.W}" height="${UNI_HOJA.H}" fill="#fff"/>`;
   for (const o of ops) {
     if (o.t === 'l') s += `<line x1="${a(o.x1)}" y1="${a(o.y1)}" x2="${a(o.x2)}" y2="${a(o.y2)}" ${st(o)} stroke-linecap="round"/>`;
     else if (o.t === 'r') s += `<rect x="${a(o.x)}" y="${a(o.y)}" width="${a(o.rw)}" height="${a(o.rh)}" fill="${o.fill || 'none'}" ${o.sinBorde ? 'stroke="none"' : st(o)}/>`;
@@ -2955,14 +3007,14 @@ function uniASvg(ops, opt = {}) {
       const r0 = o.a0 * Math.PI / 180, r1 = o.a1 * Math.PI / 180;
       s += `<path d="M${a(o.cx + o.r * Math.cos(r0))} ${a(o.cy + o.r * Math.sin(r0))} A${a(o.r)} ${a(o.r)} 0 ${o.a1 - o.a0 > 180 ? 1 : 0} 1 ${a(o.cx + o.r * Math.cos(r1))} ${a(o.cy + o.r * Math.sin(r1))}" fill="none" ${st(o)}/>`;
     }
-    else if (o.t === 'p') s += `<polygon points="${o.pts.map(p => a(p[0]) + ',' + a(p[1])).join(' ')}" fill="${o.fill || 'none'}" ${st(o)} stroke-linejoin="round"/>`;
+    else if (o.t === 'p') s += `<${o.ab ? 'polyline' : 'polygon'} points="${o.pts.map(p => a(p[0]) + ',' + a(p[1])).join(' ')}" fill="${o.ab ? 'none' : (o.fill || 'none')}" ${o.sinBorde ? 'stroke="none"' : st(o)} stroke-linejoin="round"/>`;
     else if (o.t === 't') {
       const anc = o.al === 'center' ? 'middle' : o.al === 'right' ? 'end' : 'start';
       s += `<text x="${a(o.x)}" y="${a(o.y)}" font-family="Helvetica, Arial, sans-serif" font-size="${a(o.pt * PT_MM)}" font-weight="${o.b ? 700 : 400}" fill="${o.c || UC.N}" text-anchor="${anc}"${o.rot ? ` transform="rotate(${-o.rot} ${a(o.x)} ${a(o.y)})"` : ''}>${esc(o.s)}</text>`;
     }
     else if (o.t === 'i') s += `<image href="logo-geovita.png" x="${a(o.x)}" y="${a(o.y)}" width="${a(o.w)}" height="${a(o.h)}" preserveAspectRatio="xMidYMid meet"/>`;
     else if (o.t === 'g') s += `<image href="${o.src}" x="${a(o.x)}" y="${a(o.y)}" width="${a(o.w)}" height="${a(o.h)}" preserveAspectRatio="xMidYMid meet"/>`;
-    else if (o.t === 'f') s += `<image href="${o.src}" x=""${a(o.x)}" y="${a(o.y)}" width="${a(o.w)}" height="${a(o.h)}" preserveAspectRatio="xMidYMid meet"/>`;
+    else if (o.t === 'f') s += `<image href="${o.src}" x="${a(o.x)}" y="${a(o.y)}" width="${a(o.w)}" height="${a(o.h)}" preserveAspectRatio="xMidYMid meet"/>`;
   }
   return s + '</svg>';
 }
@@ -2992,7 +3044,7 @@ function uniAPdf(L) {
       }
       else if (o.t === 'p') {
         const d = o.pts.slice(1).map((p, k) => [p[0] - o.pts[k][0], p[1] - o.pts[k][1]]);
-        doc.lines(d, o.pts[0][0], o.pts[0][1], [1, 1], est, true);
+        doc.lines(d, o.pts[0][0], o.pts[0][1], [1, 1], o.ab ? 'S' : est, !o.ab);
       }
       else if (o.t === 't') {
         doc.setFont('helvetica', o.b ? 'bold' : 'normal'); doc.setFontSize(o.pt); doc.setTextColor(...rgb(o.c || UC.N));
@@ -3015,7 +3067,7 @@ function uniAPdf(L) {
 // DXF R12 en milímetros (se abre en AutoCAD / BricsCAD / LibreCAD). Cada hoja se ubica a la derecha de la anterior.
 function uniADxf(L) {
   const out = [], g = (c, v) => out.push(c, v);
-  const aci = (h) => ({ [UC.R]: 1, [UC.G]: 3, [UC.GR]: 8, [UC.CL]: 9, [UC.AGUA]: 9 })[h] || 7;
+  const aci = (h) => ({ [UC.R]: 1, [UC.G]: 3, [UC.GR]: 8, [UC.CL]: 9, [UC.AGUA]: 9, '#FFD400': 2, '#0077A8': 5, '#0050B3': 5, '#6E0012': 1 })[h] || 7;
   const capa = (o) => o.capa || (o.c === UC.R ? 'BLOQUEO' : o.c === UC.G ? 'TIERRA' : o.t === 't' ? 'TEXTO' : 'UNILINEAL');
   const txt = (s) => String(s).replace(/[\r\n]+/g, ' ');
   const n = (v) => (Math.round(v * 1000) / 1000).toString();
@@ -3025,28 +3077,58 @@ function uniADxf(L) {
   g(0, 'LTYPE'); g(2, 'CONTINUOUS'); g(70, 0); g(3, 'Solid line'); g(72, 65); g(73, 0); g(40, '0.0');
   g(0, 'LTYPE'); g(2, 'DASHED'); g(70, 0); g(3, '__ __ __'); g(72, 65); g(73, 2); g(40, '3.8'); g(49, '2.4'); g(49, '-1.4');
   g(0, 'ENDTAB');
-  const capas = [['UNILINEAL', 7], ['BLOQUEO', 1], ['TIERRA', 3], ['TEXTO', 7], ['CAJETIN', 7], ['MARCO', 7]];
+  const capas = [['UNILINEAL', 7], ['BLOQUEO', 1], ['TIERRA', 3], ['TEXTO', 7], ['CAJETIN', 7], ['MARCO', 7], ['PLANO', 7], ['PLANO-TEXTO', 7], ['MODIFICACION', 5], ['SIMBOLOS', 7]];
   g(0, 'TABLE'); g(2, 'LAYER'); g(70, capas.length);
   capas.forEach(([c, col]) => { g(0, 'LAYER'); g(2, c); g(70, 0); g(62, col); g(6, 'CONTINUOUS'); });
   g(0, 'ENDTAB'); g(0, 'ENDSEC');
+  // Escribe una entidad con la transformación de coordenadas X/Y dada (hoja o bloque)
+  const ent = (o, X, Y) => {
+    const ln = (x1, y1, x2, y2) => { g(0, 'LINE'); g(8, capa(o)); if (o.dash) g(6, 'DASHED'); g(62, aci(o.c || UC.N)); g(10, X(x1)); g(20, Y(y1)); g(11, X(x2)); g(21, Y(y2)); };
+    if (o.t === 'l') ln(o.x1, o.y1, o.x2, o.y2);
+    else if (o.t === 'r' && !o.sinBorde) { const w = o.rw, h = o.rh; ln(o.x, o.y, o.x + w, o.y); ln(o.x + w, o.y, o.x + w, o.y + h); ln(o.x + w, o.y + h, o.x, o.y + h); ln(o.x, o.y + h, o.x, o.y); }
+    else if (o.t === 'p') {
+      const blanco = String(o.fill || '').toUpperCase() === '#FFFFFF';
+      if (o.fill && !o.ab && !blanco && o.pts.length >= 3 && o.pts.length <= 4) {   // relleno (símbolo de bloqueo, flechas)
+        const q = o.pts.length === 3 ? [o.pts[0], o.pts[1], o.pts[2], o.pts[2]] : [o.pts[0], o.pts[1], o.pts[3], o.pts[2]];
+        g(0, 'SOLID'); g(8, capa(o)); g(62, aci(o.fill)); q.forEach((p, k) => { g(10 + k, X(p[0])); g(20 + k, Y(p[1])); });
+      }
+      if (!o.sinBorde) { const n2 = o.ab ? o.pts.length - 1 : o.pts.length; for (let k = 0; k < n2; k++) { const p = o.pts[k], q = o.pts[(k + 1) % o.pts.length]; ln(p[0], p[1], q[0], q[1]); } }
+    }
+    else if (o.t === 'c') { g(0, 'CIRCLE'); g(8, capa(o)); g(62, aci(o.c || UC.N)); g(10, X(o.cx)); g(20, Y(o.cy)); g(40, n(o.r)); }
+    else if (o.t === 'a') { g(0, 'ARC'); g(8, capa(o)); g(62, aci(o.c || UC.N)); g(10, X(o.cx)); g(20, Y(o.cy)); g(40, n(o.r)); g(50, n(-o.a1)); g(51, n(-o.a0)); }
+    else if (o.t === 't' && o.s) {
+      const al = o.al === 'center' ? 1 : o.al === 'right' ? 2 : 0;
+      g(0, 'TEXT'); g(8, o.capa || 'TEXTO'); g(62, aci(o.c || UC.N)); g(10, X(o.x)); g(20, Y(o.y)); g(40, n(o.pt * PT_MM * 0.72)); g(1, txt(o.s));
+      if (o.rot) g(50, n(o.rot));
+      if (al) { g(72, al); g(11, X(o.x)); g(21, Y(o.y)); }
+    }
+    else if (o.t === 'f') { g(0, 'TEXT'); g(8, 'CAJETIN'); g(62, 5); g(10, X(o.x)); g(20, Y(o.y + o.h * 0.6)); g(40, n(1.6)); g(1, '[Firma digital GEO ELEC]'); }
+    else if (o.t === 'i') { g(0, 'TEXT'); g(8, 'CAJETIN'); g(62, 1); g(10, X(o.x + 2)); g(20, Y(o.y + o.h * 0.65)); g(40, n(o.h * 0.42)); g(1, 'GEOVITA'); }
+  };
+  // Bloques (símbolos normalizados con atributos editables en AutoCAD)
+  const defs = L.defs || {};
+  if (Object.keys(defs).length) {
+    g(0, 'SECTION'); g(2, 'BLOCKS');
+    Object.entries(defs).forEach(([nombre, d]) => {
+      g(0, 'BLOCK'); g(8, '0'); g(2, nombre); g(70, (d.attrs || []).length ? 2 : 0); g(10, '0'); g(20, '0'); g(3, nombre);
+      d.ops.forEach(o => ent(o, (x) => n(x), (y) => n(-y)));
+      (d.attrs || []).forEach(a => { g(0, 'ATTDEF'); g(8, 'SIMBOLOS'); g(10, n(a.x)); g(20, n(-a.y)); g(40, n(a.h)); g(1, ''); g(3, a.prompt || a.tag); g(2, a.tag); g(70, 0); if (a.al === 'center') { g(72, 1); g(11, n(a.x)); g(21, n(-a.y)); } });
+      g(0, 'ENDBLK'); g(8, '0');
+    });
+    g(0, 'ENDSEC');
+  }
   g(0, 'SECTION'); g(2, 'ENTITIES');
   L.pags.forEach((ops, ip) => {
     const dx = ip * (UNI_HOJA.W + 20), X = (x) => n(x + dx), Y = (y) => n(UNI_HOJA.H - y);
-    const ln = (o, x1, y1, x2, y2) => { g(0, 'LINE'); g(8, capa(o)); if (o.dash) g(6, 'DASHED'); g(62, aci(o.c || UC.N)); g(10, X(x1)); g(20, Y(y1)); g(11, X(x2)); g(21, Y(y2)); };
     for (const o of ops) {
-      if (o.t === 'l') ln(o, o.x1, o.y1, o.x2, o.y2);
-      else if (o.t === 'r' && !o.sinBorde) { const w = o.rw, h = o.rh; ln(o, o.x, o.y, o.x + w, o.y); ln(o, o.x + w, o.y, o.x + w, o.y + h); ln(o, o.x + w, o.y + h, o.x, o.y + h); ln(o, o.x, o.y + h, o.x, o.y); }
-      else if (o.t === 'p') o.pts.forEach((p, k) => { const q = o.pts[(k + 1) % o.pts.length]; ln(o, p[0], p[1], q[0], q[1]); });
-      else if (o.t === 'c') { g(0, 'CIRCLE'); g(8, capa(o)); g(62, aci(o.c || UC.N)); g(10, X(o.cx)); g(20, Y(o.cy)); g(40, n(o.r)); }
-      else if (o.t === 'a') { g(0, 'ARC'); g(8, capa(o)); g(62, aci(o.c || UC.N)); g(10, X(o.cx)); g(20, Y(o.cy)); g(40, n(o.r)); g(50, n(-o.a1)); g(51, n(-o.a0)); }
-      else if (o.t === 't' && o.s) {
-        const al = o.al === 'center' ? 1 : o.al === 'right' ? 2 : 0;
-        g(0, 'TEXT'); g(8, o.capa || 'TEXTO'); g(62, aci(o.c || UC.N)); g(10, X(o.x)); g(20, Y(o.y)); g(40, n(o.pt * PT_MM * 0.72)); g(1, txt(o.s));
-        if (o.rot) g(50, n(o.rot));
-        if (al) { g(72, al); g(11, X(o.x)); g(21, Y(o.y)); }
+      if (o.bl) continue;   // geometría de un bloque: va dentro del INSERT
+      if (o.t === 'ins') {
+        const at = o.attrs || [];
+        g(0, 'INSERT'); g(8, o.capa || 'SIMBOLOS'); if (at.length) g(66, 1); g(2, o.nombre); g(10, X(o.x)); g(20, Y(o.y)); g(41, '1'); g(42, '1'); g(50, n((360 - (o.rot || 0)) % 360));
+        if (at.length) { at.forEach(a => { g(0, 'ATTRIB'); g(8, o.capa || 'SIMBOLOS'); g(10, X(a.x)); g(20, Y(a.y)); g(40, n(a.h)); g(1, txt(a.v)); g(2, a.tag); g(70, 0); if (a.al === 'center') { g(72, 1); g(11, X(a.x)); g(21, Y(a.y)); } }); g(0, 'SEQEND'); g(8, o.capa || 'SIMBOLOS'); }
+        continue;
       }
-      else if (o.t === 'f') { g(0, 'TEXT'); g(8, 'CAJETIN'); g(62, 5); g(10, X(o.x)); g(20, Y(o.y + o.h * 0.6)); g(40, n(1.6)); g(1, '[Firma digital GEO ELEC]'); }
-      else if (o.t === 'i') { g(0, 'TEXT'); g(8, 'CAJETIN'); g(62, 1); g(10, X(o.x + 2)); g(20, Y(o.y + o.h * 0.65)); g(40, n(o.h * 0.42)); g(1, 'GEOVITA'); }
+      ent(o, X, Y);
     }
   });
   g(0, 'ENDSEC'); g(0, 'EOF');
@@ -3071,11 +3153,7 @@ function simInterruptor(L, x, y, k = 1) {
   return y + 8 * k;   // centro (donde apunta el punto de bloqueo)
 }
 function simBloqueo(L, id, xc, ym, xDestino) {
-  const yt = ym - 12;
-  L.poli([[xc, yt], [xc - 11, yt + 19], [xc + 11, yt + 19]], { c: UC.R, w: 0.6, fill: '#FFFFFF' });
-  L.texto(xc, yt + 11.2, id, { pt: 8, b: 1, c: UC.R, al: 'center', capa: 'BLOQUEO' });
-  L.texto(xc, yt + 14.6, 'PUNTO DE', { pt: 4.4, b: 1, c: UC.R, al: 'center', capa: 'BLOQUEO' });
-  L.texto(xc, yt + 17.2, 'BLOQUEO', { pt: 4.4, b: 1, c: UC.R, al: 'center', capa: 'BLOQUEO' });
+  simPB(L, xc, ym - 12 + 16 * 2 / 3, 16, id);   // símbolo estándar GEO ELEC (igual en planos y unilineales)
   const xa = xc + 7, dir = Math.sign(xDestino - xa) || 1;
   L.linea(xa, ym, xDestino - dir * 1.8, ym, { c: UC.R, w: 0.4 });
   L.poli([[xDestino, ym], [xDestino - dir * 2.4, ym - 1], [xDestino - dir * 2.4, ym + 1]], { c: UC.R, w: 0.3, fill: UC.R });
@@ -3274,7 +3352,7 @@ function construirUni(m, cx = {}) {
     L.circ(70, ys + 5, 1.2, { w: 0.3, c: '#0077A8' }); L.circ(76, ys + 5, 2.6, { w: 0.3, c: '#0077A8' }); L.texto(76, ys + 5.8, '50G', { pt: 3.4, b: 1, al: 'center', c: '#0077A8' });
     L.texto(80.5, ys + 6, 'Toroide y relé diferencial', { pt: 5 });
     L.circ(118, ys + 3.6, 2.4, { w: 0.3 }); L.circ(118, ys + 6.6, 2.4, { w: 0.3 }); L.texto(122, ys + 6, 'Transformador', { pt: 5 });
-    L.poli([[150, ys + 0.4], [145.5, ys + 8.4], [154.5, ys + 8.4]], { c: UC.R, w: 0.4, fill: '#FFFFFF' }); L.texto(150, ys + 6.8, 'PB', { pt: 3.6, b: 1, al: 'center', c: UC.R });
+    simPB(L, 150, ys + 5.4, 8, 'PB');
     L.texto(157, ys + 6, 'Punto de bloqueo', { pt: 5 });
     simTierra(L, 186, ys + 0.6, ''); L.texto(191, ys + 6, 'Puesta a tierra (TP)', { pt: 5 });
     L.linea(214, ys + 5, 222, ys + 5, { w: 1 }); L.texto(224, ys + 6, 'Barra', { pt: 5 });
@@ -3326,7 +3404,7 @@ function construirUni(m, cx = {}) {
     ['Nivel / Ubicación', [t.nivel, t.ubic].filter(Boolean).join(' · ')],
     ['Alimentado desde', [a.nombre, a.equipo].filter(Boolean).join(' · ') + (a.idTablero ? ' (' + a.idTablero + ')' : '')],
     ['Ruta de energía', (cx.cadena && cx.cadena.length ? cx.cadena.concat([t.nombre || m.id]) : [a.nombre || '?', t.nombre || m.id]).join(' › ')],
-    ['Plano de referencia', cx.refTxt || '—']
+    ['Plano eléctrico', cx.refTxt || '—']
   ], { negrita: 1 });
   tabla('PUNTOS DE BLOQUEO (aislar en este orden)', [['PB', 0.11], ['Dispositivo', 0.33], ['Ubicación', 0.3], ['Tipo de bloqueo', 0.26]],
     BL.map(b => [b.id, b.equipo || '(sin definir)', b.ubicacion || '(sin definir)', b.tipo]), { rojo: 1, negrita: 1 });
@@ -3369,6 +3447,7 @@ let UNIDATA = ls.get('uni', { emitidos: {}, borradores: {}, historial: {} });
 const uniEmitido = (id) => (UNIDATA.emitidos || {})[String(id || '').toUpperCase()] || null;
 const uniBorrador = (id) => (UNIDATA.borradores || {})[String(id || '').toUpperCase()] || null;
 function guardarUniData(j) {
+  expandirFirmas(j);
   UNIDATA = { emitidos: j.emitidos || {}, borradores: esAdmin() ? (j.borradores || {}) : {}, porAprobar: j.porAprobar || {}, historial: j.historial || {}, actualizado: new Date().toISOString(), admin: esAdmin() };
   ls.set('uni', UNIDATA);
   if (!$('#v-inicio').hidden) renderAvisoAprobar();
@@ -3418,96 +3497,1019 @@ const nombreTab = (t) => {
 };
 // Referencia de TAG GOM y ubicación según el plano mina (capas del DWG de Producción)
 const gomDe = (clave) => (REF && REF.gom || []).find(g => g.clave === clave) || null;
-// Tableros que aparecen en una hoja, cruzados con GEO ELEC (ID, TAG GOM actual, ubicación) y con el plano mina
-function filasRefHoja(hoja) {
-  const vistos = new Set(), filas = [];
-  const tabs = REF.tableros.filter(x => x.hoja === hoja.id).concat((hoja.tableros || []).filter(n => /\d/.test(n)).map(n => ({ nombre: n, clave: claveNum(n) })));
-  tabs.forEach(x => {
-    const k = x.clave || claveNum(x.nombre); const key = k || x.nombre; if (vistos.has(key)) return; vistos.add(key);
-    const t = k ? tablerosActivos().find(tt => claveTablero(tt) === k) : null, g = k ? gomDe(k) : null;
-    const e = t ? uniEmitido(t.id) : null;
-    filas.push([x.nombre || (g && g.nombre) || k, t ? [t.id, t.ubicacion].filter(Boolean).join(' · ') : 'No registrado', t ? (t.tag || 'Sin TAG') : '—',
-      g ? [g.tag, g.ubic, g.sector].filter(Boolean).join(' · ') : '—',
-      e ? 'Rev. ' + e.rev + ' · desde ' + (e.modelo.alim.nombre || '—') : (x.aa ? 'desde ' + x.aa.nombre + ' (plano)' : '—')]);
-  });
-  return filas;
+// ===================== PLANOS ELÉCTRICOS (GEO ELEC) =====================
+// Cada hoja de los DWG de Producción y Acarreo se convirtió a dibujo vectorial (planos-ref/vec/*.json), completa:
+// solo se quitó el rótulo original, cuyos datos pasan a los campos editables del recuadro GEOVITA.
+// Modelo de cada revisión (formato GEO ELEC, compatible con DXF):
+//   pb   puntos de bloqueo (símbolo estándar + flecha al equipo)
+//   del  elementos del dibujo original borrados · txt textos originales corregidos · mv elementos originales desplazados
+//   add  elementos agregados: símbolos normalizados con atributos (sym), textos (t), líneas (l), tapas (tapa), copias (g)
+//   caj  datos del recuadro (título, ubicación, proyecto, notas, referencias, lámina…)
+// Cada revisión se firma (elaboró / revisó) y la aprueba un Jefe de terreno o Jefe de departamento.
+const PL_COL = { k: UC.N, r: UC.R, g: UC.G, b: '#0077A8' };
+const PLA_AREA = { x: 14, y: 29, w: 392, h: 193 };
+const PB_ALTO = 10;   // alto del símbolo de punto de bloqueo en el plano (mm, siempre el mismo)
+const COL_NUEVO = '#0050B3';   // en el editor, lo agregado o modificado se ve en azul
+const CODIGO_PLA = (id) => 'PL-' + CONFIG.CONTRATO + '-' + id;
+const BASES = {};
+// Símbolo estándar de PUNTO DE BLOQUEO: triángulo rojo con borde amarillo (alto contraste) y número
+function simPB(L, cx, cy, h, etiqueta, bl) {
+  const w = h * 1.2, top = cy - h * 2 / 3, bot = cy + h / 3, g = Math.max(0.7, h * 0.13), o = bl ? { bl: 1 } : {};
+  L.poli([[cx, top - g * 1.9], [cx - w / 2 - g * 1.65, bot + g], [cx + w / 2 + g * 1.65, bot + g]], Object.assign({ fill: '#FFD400', c: '#111111', w: 0.2, capa: 'BLOQUEO' }, o));
+  L.poli([[cx, top], [cx - w / 2, bot], [cx + w / 2, bot]], Object.assign({ fill: UC.R, c: '#6E0012', w: 0.3, capa: 'BLOQUEO' }, o));
+  L.texto(cx, cy + h * 0.1, etiqueta, Object.assign({ pt: Math.min(9.5, h * 0.82), b: 1, c: '#FFFFFF', al: 'center', capa: 'BLOQUEO' }, o));
+  L.texto(cx, bot - h * 0.09, 'BLOQUEO', Object.assign({ pt: Math.min(5, h * 0.34), b: 1, c: '#FFFFFF', al: 'center', capa: 'BLOQUEO' }, o));
 }
-// La hoja de referencia se entrega siempre con formato GEOVITA (marco, logo, cajetín y tabla de tableros)
-function construirPlanoRef(hoja, img, filas) {
-  const L = new Lienzo(), hoy = new Date().toLocaleDateString('es-CL').replace(/\//g, '-');
-  const marco = () => { L.rect(6, 6, 408, 285, { w: 0.7, capa: 'MARCO' }); L.rect(9, 9, 402, 279, { w: 0.25, capa: 'MARCO' }); };
-  marco();
-  L.texto(16, 18.5, recortar('PLANO DE REFERENCIA – ' + hoja.titulo, 330, 13, true), { pt: 13, b: 1 });
-  L.texto(16, 23.5, recortar([hoja.nivel, hoja.plano && hoja.plano !== 'PDF' ? 'Plano ' + hoja.plano : '', 'Origen: ' + hoja.archivo].filter(Boolean).join(' · '), 330, 7.2), { pt: 7.2, c: UC.GR });
-  L.texto(404, 18.5, 'DOCUMENTO DE REFERENCIA', { pt: 7, b: 1, c: UC.R, al: 'right' });
-  const ax = 14, ay = 27, aw = 392, ah = 196, r = hoja.w / hoja.h;
-  let w = aw, h = aw / r; if (h > ah) { h = ah; w = ah * r; }
-  L.rect(ax, ay, aw, ah, { w: 0.2, c: UC.CL });
-  L.raster(ax + (aw - w) / 2, ay + (ah - h) / 2, w, h, img);
-  // Tabla de tableros (TAG GOM, ubicación, alimentación)
-  const tx = 14, tw = 238, ws = [0.12, 0.23, 0.15, 0.31, 0.19].map(k => k * tw);
-  const cabe = ['N° en plano', 'ID GEO ELEC · ubicación', 'TAG GOM vigente', 'Ref. plano: TAG · ubicación (no actualizada)', 'Diagrama / alimentación'];
-  const tabla = (y0, lista, titulo, lim) => {
-    L.rect(tx, y0, tw, 5.4, { fill: UC.OSC, sinBorde: 1 }); L.texto(tx + 1.6, y0 + 3.8, titulo, { pt: 6.6, b: 1, c: '#FFFFFF' });
-    L.rect(tx, y0 + 5.4, tw, 4, { fill: UC.SUAVE, sinBorde: 1 });
-    let xx = tx; cabe.forEach((c, i) => { L.texto(xx + 1, y0 + 8.4, c, { pt: 5.2, b: 1 }); xx += ws[i]; });
-    let y = y0 + 9.4, n = 0;
-    for (const f of lista) {
-      if (y + 3.6 > lim) break;
-      xx = tx; f.forEach((v, i) => { L.texto(xx + 1, y + 2.7, recortar(v, ws[i] - 2, 5.2, i === 0), { pt: 5.2, b: i === 0 }); xx += ws[i]; });
-      y += 3.6; n++; L.linea(tx, y, tx + tw, y, { w: 0.12, c: UC.CL });
-    }
-    if (!lista.length) { L.texto(tx + 1, y + 2.8, 'Sin tableros identificados en este plano.', { pt: 5.2, c: UC.GR }); y += 3.6; }
-    L.rect(tx, y0, tw, y - y0, { w: 0.3 });
-    return n;
+function flechaPB(L, x1, y1, x2, y2, h) {
+  const d = Math.hypot(x2 - x1, y2 - y1); if (d < h * 0.7) return;
+  const ux = (x2 - x1) / d, uy = (y2 - y1) / d, r0 = h * 0.5;
+  L.linea(x1 + ux * r0, y1 + uy * r0, x2 - ux * 2, y2 - uy * 2, { c: UC.R, w: 0.5, capa: 'BLOQUEO' });
+  L.poli([[x2, y2], [x2 - ux * 2.8 - uy * 1.1, y2 - uy * 2.8 + ux * 1.1], [x2 - ux * 2.8 + uy * 1.1, y2 - uy * 2.8 - ux * 1.1]], { c: UC.R, w: 0.2, fill: UC.R, capa: 'BLOQUEO' });
+}
+
+// ---------- Simbología normalizada (IEC 60617 / RIC N°18) ----------
+// Cada símbolo se define vertical, centrado en (0,0), en mm de papel; bornes en b. at: nombres de sus atributos.
+const AT_INT = ['Identificación', 'Corriente / polos', 'Marca y modelo', 'Ajustes (In, Isd, Icu)'];
+const SIMB = {
+  int: { n: 'Interruptor termomagnético', ext: [-1.5, -7, 3.6, 7], b: [[0, -7], [0, 7]], at: AT_INT,
+    d(g) { g.l(0, -7, 0, -3.5); g.a(0, 0, 3.5, -90, 90); g.l(-1.2, -3.5, 1.2, -3.5); g.l(0, 3.5, 0, 7); } },
+  dif: { n: 'Interruptor diferencial', ext: [-1.5, -7, 9.2, 7], b: [[0, -7], [0, 7]], at: ['Identificación', 'Corriente / polos', 'Sensibilidad (mA)', 'Marca y modelo'],
+    d(g) { SIMB.int.d(g); g.p([[4.4, -2.4], [9.2, -2.4], [9.2, 2.4], [4.4, 2.4]]); g.l(4.4, 2.4, 9.2, -2.4); g.t(5.6, -0.2, 'P', { pt: 3.8 }); g.t(8, 2, 'D', { pt: 3.8 }); } },
+  rd: { n: 'Toroide y relé diferencial 50G', ext: [-1.8, -5, 9.9, 5], b: [[0, -5], [0, 5]], at: ['Identificación', 'Sensibilidad', 'Tiempo', 'Marca y modelo'],
+    d(g) { g.l(0, -5, 0, 5); g.c(0, 0, 1.6); g.l(1.6, 0, 4.2, 0, { dash: 1 }); g.c(7, 0, 2.8); g.t(7, 0.9, '50G', { pt: 3.6, b: 1 }); } },
+  fus: { n: 'Fusible', ext: [-1.5, -6, 1.5, 6], b: [[0, -6], [0, 6]], at: ['Identificación', 'Corriente', 'Tipo (gG, aM…)', ''],
+    d(g) { g.l(0, -6, 0, 6); g.p([[-1.4, -3.5], [1.4, -3.5], [1.4, 3.5], [-1.4, 3.5]]); } },
+  secc: { n: 'Seccionador / int.-seccionador', ext: [-3.4, -7, 1.4, 7], b: [[0, -7], [0, 7]], at: AT_INT,
+    d(g) { g.l(0, -7, 0, -3.5); g.l(-1.2, -3.5, 1.2, -3.5); g.l(0, 3.5, 0, 7); g.l(0, 3.5, -3.2, -2.6); } },
+  cont: { n: 'Contactor', ext: [-3.4, -7, 1, 7], b: [[0, -7], [0, 7]], at: ['Identificación', 'Corriente (AC3)', 'Bobina', 'Marca y modelo'],
+    d(g) { g.l(0, -7, 0, -3.5); g.a(0, -2.4, 1.1, 90, 270); g.l(0, 3.5, 0, 7); g.l(0, 3.5, -3.2, -2.6); } },
+  trafo: { n: 'Transformador', ext: [-3.8, -9, 3.8, 9], b: [[0, -9], [0, 9]], at: ['Identificación', 'Potencia (kVA)', 'Relación (V)', 'Grupo de conexión'],
+    d(g) { g.l(0, -9, 0, -6.3); g.c(0, -2.6, 3.7); g.c(0, 2.6, 3.7); g.l(0, 6.3, 0, 9); } },
+  auto: { n: 'Autotransformador', ext: [-4.6, -9, 4.6, 9], b: [[0, -9], [0, 9]], at: ['Identificación', 'Potencia (kVA)', 'Relación (V)', 'Grupo de conexión'],
+    d(g) { g.l(0, -9, 0, -4.5); g.c(0, 0, 4.5); g.l(0, 4.5, 0, 9); g.a(0, 0, 2.2, -90, 90); g.l(3.4, 3.4, -3.2, -3.2); g.p([[-3.6, -3.6], [-1.9, -3.2], [-3.2, -1.9]], { fill: 1 }); } },
+  tc: { n: 'Transformador de control', ext: [-2.7, -6, 2.7, 6], b: [[0, -6], [0, 6]], at: ['Identificación', 'Potencia (VA)', 'Relación (V)', 'Alimenta a'],
+    d(g) { g.l(0, -6, 0, -4.4); g.c(0, -1.7, 2.6); g.c(0, 1.7, 2.6); g.l(0, 4.4, 0, 6); } },
+  tierra: { n: 'Puesta a tierra (TP)', ext: [-3.3, -4.5, 3.3, 3.4], b: [[0, -4.5]], col: UC.G, at: ['Identificación', 'Resistencia (ohm)', '', ''],
+    d(g) { g.l(0, -4.5, 0, 0.5); g.l(-3.2, 0.5, 3.2, 0.5); g.l(-2.1, 1.9, 2.1, 1.9); g.l(-1, 3.3, 1, 3.3); } },
+  enchufe: { n: 'Enchufe hembra', ext: [-3.6, -5, 3.6, 3.6], b: [[0, -5]], at: ['Identificación', 'Corriente / polos', 'Tipo', ''],
+    d(g) { g.l(0, -5, 0, 0); g.l(-3.5, 0, 3.5, 0); g.a(0, 0, 3.5, 0, 180); } },
+  piloto: { n: 'Luz piloto', ext: [-2.7, -6, 2.7, 6], b: [[0, -6], [0, 6]], at: ['Identificación', 'Color', 'Tensión', ''],
+    d(g) { g.l(0, -6, 0, -2.6); g.c(0, 0, 2.6); g.l(-1.84, -1.84, 1.84, 1.84); g.l(-1.84, 1.84, 1.84, -1.84); g.l(0, 2.6, 0, 6); } },
+  pe: { n: 'Parada de emergencia', ext: [-8.3, -7, 1, 7], b: [[0, -7], [0, 7]], at: ['Identificación', 'Función', '', ''],
+    d(g) { g.l(0, -7, 0, -3.5); g.l(0, 3.5, 0, 7); g.l(0, 3.5, -3.2, -2.6); g.l(-1.6, -0.4, -5, -0.4, { dash: 1 }); g.a(-6.6, -0.4, 1.6, 90, 270); g.l(-6.6, -2, -6.6, 1.2); } },
+  motor: { n: 'Motor', ext: [-4.1, -7, 4.1, 4.1], b: [[0, -7]], at: ['Identificación', 'Potencia (kW)', 'Tensión', ''],
+    d(g) { g.l(0, -7, 0, -4); g.c(0, 0, 4); g.t(0, 1.6, 'M', { pt: 9, b: 1 }); } },
+  medidor: { n: 'Medidor de energía', ext: [-3.6, -6, 3.6, 6], b: [[0, -6], [0, 6]], at: ['Identificación', 'Tipo', '', ''],
+    d(g) { g.l(0, -6, 0, -3); g.p([[-3.5, -3], [3.5, -3], [3.5, 3], [-3.5, 3]]); g.t(0, 1, 'kWh', { pt: 4.4, b: 1 }); g.l(0, 3, 0, 6); } },
+  barra: { n: 'Barra', var: 1, b: [], at: ['Identificación', 'Tensión', 'Capacidad', ''],
+    ext: (a) => [-(a.lg || 40) / 2, -0.8, (a.lg || 40) / 2, 0.8], d(g, a) { g.l(-(a.lg || 40) / 2, 0, (a.lg || 40) / 2, 0, { w: 1.1 }); } },
+  tablero: { n: 'Tablero (envolvente)', var: 1, b: [], at: ['Nombre del tablero', 'Tensión', 'TAG / ID GEO ELEC', 'Ubicación'],
+    ext: (a) => [-(a.ancho || 40) / 2, -(a.alto || 30) / 2, (a.ancho || 40) / 2, (a.alto || 30) / 2],
+    d(g, a) { const w = (a.ancho || 40) / 2, h = (a.alto || 30) / 2; g.p([[-w, -h], [w, -h], [w, h], [-w, h]], { dash: 1 }); } }
+};
+const extSim = (a) => { const S = SIMB[a.s]; return typeof S.ext === 'function' ? S.ext(a) : S.ext; };
+// Contexto de dibujo local → papel (rotación en múltiplos de 90°, sentido horario)
+function ctxSim(L, X, Y, rot, col, extra) {
+  const r = (rot || 0) * Math.PI / 180, c = Math.round(Math.cos(r) * 1e6) / 1e6, s = Math.round(Math.sin(r) * 1e6) / 1e6;
+  const P = (x, y) => [X + x * c - y * s, Y + x * s + y * c], o = (e) => Object.assign({ w: 0.3, c: col, capa: 'SIMBOLOS' }, extra || {}, e || {});
+  return {
+    l: (x1, y1, x2, y2, e) => { const a = P(x1, y1), b = P(x2, y2); L.linea(a[0], a[1], b[0], b[1], o(e)); },
+    c: (cx, cy, rr, e) => { const a = P(cx, cy); L.circ(a[0], a[1], rr, o(e)); },
+    a: (cx, cy, rr, a0, a1, e) => { const a = P(cx, cy); L.arco(a[0], a[1], rr, a0 + (rot || 0), a1 + (rot || 0), o(e)); },
+    p: (pts, e) => L.poli(pts.map(q => P(q[0], q[1])), o(Object.assign({}, e, e && e.fill ? { fill: col } : {}))),
+    t: (x, y, txt, e) => { const a = P(x, y); L.texto(a[0], a[1], txt, o(Object.assign({ pt: 5, al: 'center' }, e))); }
   };
-  const n1 = tabla(227, filas, 'TABLEROS DE ESTE PLANO · DATOS VIGENTES (GEO ELEC) Y REFERENCIA DEL PLANO', 280);
-  if (n1 < filas.length) L.texto(tx, 283.5, `+ ${filas.length - n1} tablero(s) más en la hoja 2`, { pt: 5.2, b: 1, c: UC.GR });
-  const cajetin = (hojaN, total) => {
-    const x = 256, y = 227, cw = 154;
-    L.rect(x, y, cw, 56, { w: 0.5, capa: 'CAJETIN' });
-    L.img(x + 3, y + 3, 38, 15);
-    L.linea(x + 44, y, x + 44, y + 21, { w: 0.25 });
-    L.texto(x + 47, y + 5.2, 'SISTEMA ELÉCTRICO GEOVITA', { pt: 9, b: 1 });
-    L.texto(x + 47, y + 9.2, 'OBRAS PREMIN MINA CENTRAL SUR · CONTRATO ' + CONFIG.CONTRATO, { pt: 5.6, c: UC.GR });
-    envolver('PLANO DE REFERENCIA ' + hoja.titulo, cw - 50, 7, true, 2).forEach((l, i) => L.texto(x + 47, y + 14 + i * 3.2, l, { pt: 7, b: 1 }));
-    L.linea(x, y + 21, x + cw, y + 21, { w: 0.25 });
-    const celdas = [['Código', 'RE-' + CONFIG.CONTRATO + '-ELEC-REF-' + hoja.id, 66], ['Nivel', hoja.nivel, 30], ['Fecha', hoy, 22], ['Hoja · Escala', hojaN + '/' + total + ' · S/E', 36]];
-    let xx = x;
-    celdas.forEach(([k, v, w2], i) => { L.texto(xx + 1.5, y + 24.2, k, { pt: 5, c: UC.GR }); L.texto(xx + 1.5, y + 28.4, recortar(v, w2 - 2.5, 6.4, true), { pt: 6.4, b: 1 }); xx += w2; if (i < 3) L.linea(xx, y + 21, xx, y + 30, { w: 0.25 }); });
-    L.linea(x, y + 30, x + cw, y + 30, { w: 0.25 });
-    L.texto(x + 1.5, y + 33.4, 'ORIGEN DEL PLANO', { pt: 4.8, c: UC.GR });
-    L.texto(x + 1.5, y + 37, recortar(hoja.archivo + (hoja.plano && hoja.plano !== 'PDF' ? ' · ' + hoja.plano : ''), cw - 3, 6, true), { pt: 6, b: 1 });
-    envolver('Documento de referencia generado por GEO ELEC a partir de los planos del Departamento Eléctrico. Verificar en terreno. No reemplaza el diagrama unilineal emitido y aprobado de cada tablero.', cw - 3, 5, false, 3)
-      .forEach((l, i) => L.texto(x + 1.5, y + 41.5 + i * 2.6, l, { pt: 5, c: UC.GR }));
-    envolver('N° de tablero, TAG GOM y ubicación tomados del plano: información NO actualizada, solo referencial. Los datos vigentes son los registrados en GEO ELEC.', cw - 3, 4.8, true, 2)
-      .forEach((l, i) => L.texto(x + 1.5, y + 50.6 + i * 2.5, l, { pt: 4.8, b: 1, c: UC.R }));
-  };
-  let total = 1;
-  if (n1 < filas.length) {
-    L.pag(); marco(); total = 2;
-    L.texto(16, 18.5, recortar('PLANO DE REFERENCIA – ' + hoja.titulo + ' (tableros, continuación)', 380, 12, true), { pt: 12, b: 1 });
-    const rest = filas.slice(n1); let y0 = 26;
-    for (let i = 0; i < rest.length; i += 50) { tabla(y0, rest.slice(i, i + 50), 'TABLEROS DE ESTE PLANO (continuación)', 222); }
+}
+function rotExt(ex, rot) {
+  const pts = [[ex[0], ex[1]], [ex[2], ex[1]], [ex[2], ex[3]], [ex[0], ex[3]]], r = (rot || 0) * Math.PI / 180, c = Math.round(Math.cos(r)), s = Math.round(Math.sin(r));
+  const q = pts.map(([x, y]) => [x * c - y * s, x * s + y * c]);
+  return [Math.min(...q.map(p => p[0])), Math.min(...q.map(p => p[1])), Math.max(...q.map(p => p[0])), Math.max(...q.map(p => p[1]))];
+}
+// Dibuja un símbolo agregado: geometría (para PDF/pantalla) + bloque con atributos (para el DXF)
+function dibujarSimbolo(L, T, a, col) {
+  const S = SIMB[a.s]; if (!S) return;
+  const [X, Y] = T.P(a.x, a.y), c = S.col || col;
+  S.d(ctxSim(L, X, Y, a.rot, c, { bl: 1 }), a);
+  const nombre = 'GEO_' + a.s.toUpperCase() + (S.var ? '_' + Math.round(extSim(a)[2] * 2) + 'x' + Math.round(extSim(a)[3] * 2) : '');
+  L.defs = L.defs || {};
+  if (!L.defs[nombre]) {
+    const Lb = new Lienzo(), ex0 = extSim(a); S.d(ctxSim(Lb, 0, 0, 0, c), a);
+    L.defs[nombre] = { ops: Lb.pags[0], attrs: ['ID', 'DATO1', 'DATO2', 'DATO3'].map((tag, i) => ({ tag, prompt: S.at[i] || tag, x: ex0[2] + 1.6, y: -1.5 + i * 2.9, h: 1.3 })) };
   }
-  for (let i = 0; i < L.pags.length; i++) { L.p = i; cajetin(i + 1, total); }
+  // atributos: a la derecha del símbolo (o dentro, arriba a la izquierda, en un tablero)
+  const ex = rotExt(extSim(a), a.rot), vals = [a.id, a.d1, a.d2, a.d3].map(v => String(v || '').trim()), attrs = [];
+  const lineas = vals.map((v, i) => [v, i]).filter(([v]) => v);
+  const x0 = a.s === 'tablero' ? X + ex[0] + 1.5 : X + ex[2] + 1.6, y0 = a.s === 'tablero' ? Y + ex[1] + 3.6 : Y - (lineas.length - 1) * 1.45 + 1;
+  lineas.forEach(([v, i], k) => {
+    const pt = i === 0 ? 6.2 : 5.2, y = y0 + k * 2.9;
+    L.texto(x0, y, v, { pt, b: i === 0 ? 1 : 0, c: S.col || col, capa: 'SIMBOLOS', bl: 1 });
+    attrs.push({ tag: ['ID', 'DATO1', 'DATO2', 'DATO3'][i], v, x: x0, y, h: pt * PT_MM * 0.72 });
+  });
+  L.op({ t: 'ins', nombre, x: X, y: Y, rot: a.rot || 0, attrs, capa: 'SIMBOLOS' });
+}
+function bornesSim(a, T) {
+  const S = SIMB[a.s], r = (a.rot || 0) * Math.PI / 180, c = Math.round(Math.cos(r)), s = Math.round(Math.sin(r));
+  return (S.b || []).map(([x, y]) => [a.x + (x * c - y * s) / T.s, a.y + (x * s + y * c) / T.s]);
+}
+function iconoSim(k) {
+  const S = SIMB[k], a = { s: k, lg: 26, ancho: 22, alto: 15 }, L = new Lienzo(), ex = extSim(a), m = 2;
+  S.d(ctxSim(L, 0, 0, 0, S.col || UC.N), a);
+  const w = Math.max(ex[2] - ex[0], ex[3] - ex[1]) + 2 * m, cx = (ex[0] + ex[2]) / 2, cy = (ex[1] + ex[3]) / 2;
+  return uniASvg(L.pags[0], { viewBox: `${cx - w / 2} ${cy - w / 2} ${w} ${w}` }).replace('<rect width="420" height="297" fill="#fff"/>', '');
+}
+
+// ---------- Datos del servidor ----------
+let PLADATA = ls.get('planosGeo', { emitidos: {}, borradores: {}, porAprobar: {}, historial: {} });
+function expandirFirmas(j) {
+  const d = j.firmas || {};
+  ['emitidos', 'borradores', 'porAprobar'].forEach(g => Object.values(j[g] || {}).forEach(r => {
+    const f = (r.modelo || {}).firmas || {};
+    Object.values(f).forEach(p => { if (p && p.img && d[p.img]) p.img = d[p.img]; });
+  }));
+  delete j.firmas; return j;
+}
+function guardarPlaData(j) {
+  expandirFirmas(j);
+  PLADATA = { emitidos: j.emitidos || {}, borradores: esAdmin() ? (j.borradores || {}) : {}, porAprobar: j.porAprobar || {}, historial: j.historial || {}, actualizado: new Date().toISOString(), admin: esAdmin() };
+  ls.set('planosGeo', PLADATA);
+  if (!$('#v-inicio').hidden) renderAvisoAprobar();
+  if (!$('#v-aprobar').hidden) renderAprobar();
+  if (!$('#v-planos').hidden) renderPlanos();
+}
+async function cargarPlanos(forzar) {
+  if (!configurado() || !navigator.onLine) return;
+  if (!forzar && PLADATA.actualizado && Date.now() - new Date(PLADATA.actualizado).getTime() < 10 * 60000 && (!esAdmin() || PLADATA.admin)) return;
+  try {
+    const q = '?accion=planos&clave=' + encodeURIComponent(CONFIG.CLAVE) + (esAdmin() ? '&claveAdmin=' + encodeURIComponent(ls.get('claveAdmin', '')) : '');
+    const j = await (await fetchT(CONFIG.SCRIPT_URL + q, {}, 30000)).json();
+    if (j.ok) guardarPlaData(j);
+  } catch {}
+}
+const plaVigente = (id) => (PLADATA.emitidos || {})[id] || null;
+
+// ---------- Dibujo base (vector desde el DWG, o imagen para los planos que venían en PDF) ----------
+async function basePlano(hoja) {
+  if (BASES[hoja.id]) return BASES[hoja.id];
+  let b;
+  if (hoja.vec) {
+    const r = await fetch(hoja.vec); if (!r.ok) throw new Error('no se pudo cargar el plano (revisa la señal)');
+    const j = await r.json();
+    b = { tipo: 'vec', w: j.w, h: j.h, e: j.e, pb: j.pb || [], cab: j.cab || {} };
+  } else b = { tipo: 'img', w: hoja.w, h: hoja.h, src: hoja.img, pb: [], cab: {} };
+  return (BASES[hoja.id] = b);
+}
+async function imgDataPlano(base) {
+  if (base.tipo !== 'img' || base.data) return base.data;
+  const r = await fetch(base.src); if (!r.ok) throw new Error('no se pudo cargar la imagen del plano');
+  const blob = await r.blob();
+  base.data = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); });
+  return base.data;
+}
+// Encuadre: el contenido del dibujo ocupa toda el área útil de la hoja A3 (fijo por plano, para que las ediciones no lo muevan)
+function transformPlano(base) {
+  if (!base.bb) {
+    if (base.tipo === 'img') base.bb = [0, 0, base.w, base.h];
+    else {
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      const inc = (x, y) => { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; };
+      base.e.forEach(e => { if (e[0] === 't') inc(e[2], e[3]); else for (let k = 0; k < e[3].length; k += 2) inc(e[3][k], e[3][k + 1]); });
+      base.pb.forEach(p => inc(p[0], p[1]));
+      if (!isFinite(x0)) { x0 = 0; y0 = 0; x1 = base.w; y1 = base.h; }
+      const mx = (x1 - x0) * 0.025 + 1, my = (y1 - y0) * 0.035 + 1;
+      base.bb = [x0 - mx, y0 - my, x1 + mx, y1 + my];
+    }
+  }
+  const [x0, y0, x1, y1] = base.bb, A = PLA_AREA;
+  const s = Math.min(A.w / (x1 - x0), A.h / (y1 - y0));
+  const ox = A.x + (A.w - (x1 - x0) * s) / 2 - x0 * s, oy = A.y + (A.h - (y1 - y0) * s) / 2 - y0 * s;
+  return { s, ox, oy, P: (x, y) => [ox + x * s, oy + y * s], inv: (X, Y) => [(X - ox) / s, (Y - oy) / s] };
+}
+// Entidad del dibujo con su desplazamiento (si se movió en el editor)
+const desplazar = (e, dx, dy) => e[0] === 't' ? [e[0], e[1], e[2] + dx, e[3] + dy, e[4], e[5], e[6], e[7]] : [e[0], e[1], e[2], e[3].map((v, k) => v + (k % 2 ? dy : dx))];
+const entBase = (base, m, i) => { const d = (m.mv || {})[i]; return d ? desplazar(base.e[i], d[0], d[1]) : base.e[i]; };
+// Texto del DWG → texto del lienzo (altura real → puntos; alineación y rotación)
+function textoBase(L, T, e, s, opt = {}) {
+  const [X, Y] = T.P(e[2], e[3]), hm = e[4] * T.s, pt = Math.max(2, hm / (0.72 * PT_MM));
+  const al = Math.floor(e[6] / 10), va = e[6] % 10, r = -e[5], rad = r * Math.PI / 180;
+  const lineas = String(s).split('\n'), base0 = va === 2 ? hm / 2 : va === 3 ? hm : 0;
+  lineas.forEach((ln, i) => {
+    const dy = base0 + i * hm * 1.6;
+    L.texto(X + dy * Math.sin(rad), Y + dy * Math.cos(rad), ln, Object.assign({ pt, c: PL_COL[e[1]] || UC.N, al: ['left', 'center', 'right'][Math.min(2, al)], rot: r || 0, capa: 'PLANO-TEXTO' }, opt));
+  });
+}
+function dibujarEnt(L, T, e, s, opt = {}) {
+  if (e[0] === 't') { if (String(s ?? e[7]).trim()) textoBase(L, T, e, s ?? e[7], opt.c ? { c: opt.c } : {}); return; }
+  const c = e[3], pts = []; for (let k = 0; k < c.length; k += 2) pts.push(T.P(c[k], c[k + 1]));
+  if (pts.length < 2) return;
+  const col = opt.c || PL_COL[e[1]] || UC.N;
+  if (e[0] === 'f') L.poli(pts, { fill: col, sinBorde: 1, capa: opt.capa || 'PLANO' });
+  else L.poli(pts, { c: col, w: 0.18, ab: e[2] ? 0 : 1, capa: opt.capa || 'PLANO' });
+}
+const ptAdd = (hm) => hm / (0.72 * PT_MM);
+
+// ---------- Recuadro (datos editables; por defecto, los del rótulo original del DWG) ----------
+function cajDefecto(hoja, base) {
+  const c = (base && base.cab) || {};
+  return {
+    titulo: c.titulo || hoja.titulo || hoja.id,
+    instalacion: 'SISTEMA ELÉCTRICO ' + String(hoja.nivel || '').toUpperCase() + ' · MINA ESMERALDA',
+    ubicacion: [c.encabezado, c.lugar].filter(Boolean).join(' · ') || String(hoja.nivel || '').toUpperCase(),
+    proyecto: c.proyecto || '', planoOrig: c.plano || (hoja.plano !== 'PDF' ? hoja.plano : ''), escala: 'S/E', lamina: '1', laminas: '1',
+    cliente: 'CODELCO CHILE · DIVISIÓN EL TENIENTE', obra: c.obra || 'OBRAS PREMIN MINA CENTRAL SUR',
+    notas: '1. SIMBOLOGÍA SEGÚN RIC N°18 E IEC 60617.\n2. ANTES DE INTERVENIR, BLOQUEAR SEGÚN PT-' + CONFIG.CONTRATO + '-ELE-003 Y VERIFICAR AUSENCIA DE TENSIÓN.\n3. VERIFICAR EN TERRENO DATOS DE PROTECCIONES Y CONDUCTORES.',
+    referencias: (hoja.archivo ? 'PLANO ORIGEN: ' + hoja.archivo + (c.plano ? ' (' + c.plano + ')' : '') : '')
+  };
+}
+const cajPlano = (hoja, base, m) => Object.assign(cajDefecto(hoja, base), m.caj || {});
+
+// ---------- Modelo de la revisión ----------
+function modeloPlanoBase(hoja, base, rev) {
+  return { id: hoja.id, rev, estado: rev ? 'BORRADOR' : 'IMPORTADO', titulo: (base.cab && base.cab.titulo) || hoja.titulo, plano: hoja.plano, nivel: hoja.nivel, archivo: hoja.archivo,
+    pb: (base.pb || []).map(p => ({ x: p[0], y: p[1], equipo: '', tablero: '', idTablero: '', ubic: '', tipo: TIPOS_BLOQUEO[0], origen: 'plano' })),
+    del: [], txt: {}, mv: {}, add: [], caj: {}, descRev: '', firmas: {} };
+}
+function modeloVigente(hoja, base) {
+  const e = plaVigente(hoja.id);
+  return e ? e.modelo : modeloPlanoBase(hoja, base, 0);
+}
+function revisionesPlano(m) {
+  const h = ((PLADATA.historial || {})[m.id] || []).filter(x => x.rev < (m.rev ?? 0) || (x.rev === m.rev && m.estado === 'EMITIDO'));
+  const filas = [{ rev: 0, fecha: '—', desc: 'IMPORTADO DESDE ' + (m.archivo || 'DWG') + (m.plano && m.plano !== 'PDF' ? ' (' + m.plano + ')' : ''), por: '—' }]
+    .concat(h.map(x => ({ rev: x.rev, fecha: x.fecha, desc: x.desc || 'ACTUALIZACIÓN', por: x.por })));
+  if (m.rev && m.estado !== 'EMITIDO') filas.push({ rev: m.rev, fecha: m.estado === 'POR APROBAR' ? 'POR APROBAR' : 'EN EDICIÓN', desc: m.descRev || '—', por: '' });
+  else if (m.rev && !h.some(x => x.rev === m.rev)) filas.push({ rev: m.rev, fecha: m.fechaEmision ? m.fechaEmision.split('-').reverse().join('-') : '', desc: m.descRev || '—', por: ((m.firmas || {}).aprobo || {}).nombre || '' });
+  return filas.filter((x, i, a) => a.findIndex(y => y.rev === x.rev) === i).slice(-8);
+}
+
+// ---------- Hoja A3 con formato GEOVITA ----------
+function construirPlano(hoja, base, m, cx = {}) {
+  const L = new Lienzo(), T = transformPlano(base); L.T = T; L.defs = {};
+  const f = m.firmas || {}, borrador = m.estado === 'BORRADOR' || m.estado === 'POR APROBAR', C = cajPlano(hoja, base, m);
+  const ed = !!cx.editor, colNuevo = ed ? COL_NUEVO : UC.N;
+  L.rect(6, 6, 408, 285, { w: 0.7, capa: 'MARCO' }); L.rect(9, 9, 402, 279, { w: 0.25, capa: 'MARCO' });
+  L.texto(16, 19, recortar('PLANO ELÉCTRICO – ' + C.titulo, 300, 14, true), { pt: 14, b: 1 });
+  L.texto(16, 24.5, recortar([C.instalacion, C.ubicacion, C.planoOrig ? 'Plano original ' + C.planoOrig : ''].filter(Boolean).join(' · '), 300, 7.5), { pt: 7.5, c: UC.GR });
+  const est = m.estado === 'EMITIDO' ? `REV. ${m.rev} VIGENTE` : m.estado === 'IMPORTADO' ? 'REV. 0 · IMPORTADO DEL DWG' : m.estado === 'POR APROBAR' ? `REV. ${m.rev} POR APROBAR` : `REV. ${m.rev} EN EDICIÓN`;
+  L.texto(404, 19, est, { pt: 8, b: 1, c: m.estado === 'EMITIDO' ? UC.G : m.estado === 'IMPORTADO' ? UC.GR : UC.R, al: 'right' });
+  // dibujo original (con lo borrado, corregido y desplazado)
+  const del = new Set(m.del || []), txt = m.txt || {}, mv = m.mv || {};
+  if (base.tipo === 'img') { const [X0, Y0] = T.P(0, 0); L.raster(X0, Y0, base.w * T.s, base.h * T.s, cx.img || base.data || base.src); }
+  else base.e.forEach((e0, i) => {
+    if (del.has(i)) return;
+    const e = mv[i] ? desplazar(e0, mv[i][0], mv[i][1]) : e0;
+    dibujarEnt(L, T, e, e[0] === 't' ? (txt[i] != null ? txt[i] : e[7]) : null, ed && (txt[i] != null || mv[i]) ? { c: COL_NUEVO } : {});
+  });
+  // tapas, copias, líneas, textos y símbolos agregados
+  const add = m.add || [];
+  add.forEach(a => { if (a.k === 'tapa') { const [X, Y] = T.P(Math.min(a.x, a.x2), Math.min(a.y, a.y2)); L.rect(X, Y, Math.abs(a.x2 - a.x) * T.s, Math.abs(a.y2 - a.y) * T.s, { fill: '#FFFFFF', sinBorde: !ed, c: '#B0B7C0', w: 0.15, dash: 1, capa: 'MODIFICACION' }); } });
+  add.forEach(a => {
+    if (a.k === 'g') (a.e || []).forEach(e => dibujarEnt(L, T, e, null, { c: ed ? COL_NUEVO : null, capa: 'MODIFICACION' }));
+    else if (a.k === 'l' && a.p && a.p.length >= 4) { const pts = []; for (let k = 0; k < a.p.length; k += 2) pts.push(T.P(a.p[k], a.p[k + 1])); L.poli(pts, { c: colNuevo, w: a.w || 0.3, ab: 1, dash: a.dash ? 1 : 0, capa: 'MODIFICACION' }); }
+    else if (a.k === 't' && a.s) { const [X, Y] = T.P(a.x, a.y); String(a.s).split('\n').forEach((ln, j) => L.texto(X + (a.rot ? j * a.hm * 1.6 : 0), Y + (a.rot ? 0 : j * a.hm * 1.6), ln, { pt: ptAdd(a.hm || 2.5), b: a.b ? 1 : 0, c: colNuevo, rot: a.rot || 0, capa: 'MODIFICACION' })); }
+    else if (a.k === 'sym' && SIMB[a.s]) dibujarSimbolo(L, T, a, colNuevo);
+  });
+  // puntos de bloqueo (siempre encima; en el DXF son el bloque GEO_PB con su número como atributo)
+  const pbs = m.pb || [];
+  pbs.forEach((p, i) => {
+    const [X, Y] = T.P(p.x, p.y);
+    if (p.ax != null) { const [AX, AY] = T.P(p.ax, p.ay); flechaPB(L, X, Y, AX, AY, PB_ALTO); }
+    simPB(L, X, Y, PB_ALTO, 'PB-' + (i + 1), 1);
+    if (!L.defs.GEO_PB) { const Lb = new Lienzo(); simPB(Lb, 0, 0, PB_ALTO, '', 0); L.defs.GEO_PB = { ops: Lb.pags[0].filter(o => !(o.t === 't' && !o.s)), attrs: [{ tag: 'NUM', prompt: 'Número del punto de bloqueo', x: 0, y: 1, h: 2.2, al: 'center' }] }; }
+    L.op({ t: 'ins', nombre: 'GEO_PB', x: X, y: Y, rot: 0, capa: 'BLOQUEO', attrs: [{ tag: 'NUM', v: 'PB-' + (i + 1), x: X, y: Y + 1, h: 2.2, al: 'center' }] });
+  });
+  // cuadro de simbología (RIC N°18): en la esquina del dibujo con menos contenido
+  const usados = [...new Set(add.filter(a => a.k === 'sym' && SIMB[a.s]).map(a => a.s))];
+  if (pbs.length || usados.length) cuadroSimbologia(L, T, base, m, usados, pbs.length > 0);
+  if (ed && cx.marcas) cx.marcas(L, T);
+  if (borrador && !ed) L.texto(208, 150, m.estado === 'POR APROBAR' ? 'PENDIENTE DE APROBACIÓN' : 'BORRADOR – EN EDICIÓN', { pt: 40, b: 1, c: UC.AGUA, al: 'center', rot: 18 });
+
+  // ===== Banda inferior: puntos de bloqueo · notas y referencias · revisiones · recuadro =====
+  const y0 = 226;
+  const tabla = (x, y, w, titulo, cols, filas, maxF) => {
+    L.rect(x, y, w, 5.4, { fill: UC.OSC, sinBorde: 1 }); L.texto(x + 1.6, y + 3.8, titulo, { pt: 6.2, b: 1, c: '#FFFFFF' });
+    L.rect(x, y + 5.4, w, 3.8, { fill: UC.SUAVE, sinBorde: 1 });
+    let xx = x; cols.forEach(([c, k]) => { L.texto(xx + 1, y + 8.2, c, { pt: 4.8, b: 1 }); xx += k * w; });
+    let yy = y + 9.2; const n = Math.min(filas.length, maxF);
+    for (let i = 0; i < n; i++) {
+      xx = x; filas[i].forEach((v, j) => { L.texto(xx + 1, yy + 2.6, recortar(v, cols[j][1] * w - 2, 4.9, j === 0), { pt: 4.9, b: j === 0, c: j === 0 && titulo.startsWith('PUNTOS') ? UC.R : UC.N }); xx += cols[j][1] * w; });
+      yy += 3.4; L.linea(x, yy, x + w, yy, { w: 0.12, c: UC.CL });
+    }
+    if (!filas.length) { L.texto(x + 1, yy + 2.7, titulo.startsWith('PUNTOS') ? 'Sin puntos de bloqueo registrados.' : '—', { pt: 4.9, c: UC.GR }); yy += 3.4; }
+    if (filas.length > maxF) { L.texto(x + 1, yy + 2.7, `+ ${filas.length - maxF} más: ver lámina de detalle`, { pt: 4.9, b: 1, c: UC.R }); yy += 3.4; }
+    L.rect(x, y, w, yy - y, { w: 0.3 });
+  };
+  const filasPB = pbs.map((p, i) => ['PB-' + (i + 1), p.equipo || 'POR IDENTIFICAR', p.tablero || '—', p.tipo || '—']);
+  const colsPB = [['PB', 0.11], ['Equipo / dispositivo', 0.37], ['Tablero', 0.26], ['Tipo de bloqueo', 0.26]];
+  tabla(14, y0, 112, 'PUNTOS DE BLOQUEO', colsPB, filasPB, 13);
+  // notas y referencias
+  { const x = 129, w = 60; let yy = y0;
+    const bloque = (tit, texto, max) => {
+      L.rect(x, yy, w, 5.4, { fill: UC.OSC, sinBorde: 1 }); L.texto(x + 1.6, yy + 3.8, tit, { pt: 6.2, b: 1, c: '#FFFFFF' }); yy += 5.4;
+      const ls_ = String(texto || '—').split('\n').flatMap(l => envolver(l, w - 2.5, 4.6, false, 4)).slice(0, max);
+      ls_.forEach((l, i) => L.texto(x + 1.2, yy + 2.8 + i * 2.6, l, { pt: 4.6 })); yy += Math.max(1, ls_.length) * 2.6 + 1.4;
+    };
+    const y1 = y0; bloque('NOTAS', C.notas, 9); bloque('REFERENCIAS', C.referencias, Math.max(1, Math.floor((283 - yy - 6.8) / 2.6)));
+    L.rect(x, y1, w, Math.min(283, yy) - y1, { w: 0.3 }); }
+  const revs = revisionesPlano(m);
+  tabla(192, y0, 61, 'REVISIONES', [['Rev', 0.1], ['Fecha', 0.25], ['Descripción', 0.43], ['Por', 0.22]], revs.map(r => [String(r.rev), r.fecha || '', r.desc || '', r.por || '']), 12);
+  const total = filasPB.length > 13 ? 2 : 1;
+  const cajetin = (hojaN) => {
+    const x = 256, y = 228, w = 154;
+    L.rect(x, y, w, 55, { w: 0.5, capa: 'CAJETIN' });
+    L.img(x + 3, y + 3, 38, 15);
+    L.linea(x + 44, y, x + 44, y + 21, { w: 0.25, capa: 'CAJETIN' });
+    L.texto(x + 47, y + 4.6, 'SISTEMA ELÉCTRICO GEOVITA', { pt: 8.4, b: 1, capa: 'CAJETIN' });
+    L.texto(x + 47, y + 8.2, recortar(C.obra + ' · ' + C.cliente, w - 49, 5, false), { pt: 5, c: UC.GR, capa: 'CAJETIN' });
+    envolver(C.titulo, w - 50, 7, true, 3).forEach((l, i) => L.texto(x + 47, y + 12.4 + i * 3, l, { pt: 7, b: 1, capa: 'CAJETIN' }));
+    L.linea(x, y + 21, x + w, y + 21, { w: 0.25, capa: 'CAJETIN' });
+    const celdas = (yy, alto, lista) => { let xx = x; lista.forEach(([k, v, cw], i) => {
+      L.texto(xx + 1.3, yy + 2.6, k, { pt: 4.4, c: UC.GR, capa: 'CAJETIN' }); L.texto(xx + 1.3, yy + alto - 1.3, recortar(v || '—', cw - 2.4, 5.8, true), { pt: 5.8, b: 1, capa: 'CAJETIN' });
+      xx += cw; if (i < lista.length - 1) L.linea(xx, yy, xx, yy + alto, { w: 0.25, capa: 'CAJETIN' }); }); L.linea(x, yy + alto, x + w, yy + alto, { w: 0.25, capa: 'CAJETIN' }); };
+    celdas(y + 21, 7.6, [['Código', CODIGO_PLA(hoja.id), 44], ['Plano original', C.planoOrig, 22], ['Rev.', String(m.rev ?? 0), 10],
+      ['Fecha', m.fechaEmision ? m.fechaEmision.split('-').reverse().join('-') : (borrador ? 'BORRADOR' : '—'), 22], ['Escala', C.escala, 18], ['Lámina', (C.lamina || hojaN) + ' de ' + Math.max(+C.laminas || 1, total), 38]]);
+    celdas(y + 28.6, 7.6, [['Ubicación', C.ubicacion, 88], ['Proyecto', C.proyecto, 66]]);
+    const yf = y + 36.2;
+    [['ELABORÓ', f.elaboro], ['REVISÓ', f.reviso], ['APROBÓ (JEFE TERRENO / DEPTO.)', f.aprobo]].forEach(([k, p], i) => {
+      const fx = x + i * (w / 3), cw = w / 3;
+      if (i) L.linea(fx, yf, fx, y + 55, { w: 0.25, capa: 'CAJETIN' });
+      L.texto(fx + 1.3, yf + 2.4, k, { pt: 4.4, c: UC.GR, capa: 'CAJETIN' });
+      if (p && p.img) L.firma(fx + 3, yf + 2.9, cw - 6, 6.6, p.img);
+      else L.texto(fx + cw / 2, yf + 7, p && p.nombre ? '' : (m.estado === 'IMPORTADO' ? '—' : 'Pendiente'), { pt: 5, c: UC.CL, al: 'center', capa: 'CAJETIN' });
+      L.linea(fx + 3, yf + 9.8, fx + cw - 3, yf + 9.8, { w: 0.15, c: UC.CL, capa: 'CAJETIN' });
+      L.texto(fx + 1.3, yf + 12.3, recortar((p && p.nombre) || '', cw - 2.6, 5.4, true), { pt: 5.4, b: 1, capa: 'CAJETIN' });
+      L.texto(fx + 1.3, yf + 15, recortar((p && p.cargo) || '', cw - 2.6, 4.5), { pt: 4.5, c: UC.GR, capa: 'CAJETIN' });
+      L.texto(fx + 1.3, yf + 17.6, recortar(p && p.fecha ? 'Firma digital ' + p.fecha : '', cw - 2.6, 4.3), { pt: 4.3, c: UC.GR, capa: 'CAJETIN' });
+    });
+  };
+  cajetin(1);
+  if (total > 1 && !ed) {
+    L.pag(); L.rect(6, 6, 408, 285, { w: 0.7, capa: 'MARCO' }); L.rect(9, 9, 402, 279, { w: 0.25, capa: 'MARCO' });
+    L.texto(16, 19, recortar('PLANO ELÉCTRICO – ' + C.titulo + ' · PUNTOS DE BLOQUEO', 380, 13, true), { pt: 13, b: 1 });
+    tabla(14, 26, 392, 'PUNTOS DE BLOQUEO (LISTA COMPLETA)', colsPB.concat([['Ubicación', 0.0]]).map(([c, k], i) => [c, [0.07, 0.3, 0.2, 0.2, 0.23][i]]), pbs.map((p, i) => ['PB-' + (i + 1), p.equipo || 'POR IDENTIFICAR', p.tablero || '—', p.tipo || '—', p.ubic || '—']), 55);
+    cajetin(2);
+  }
   return L;
 }
+// Cuadro de simbología: se ubica en la esquina del área de dibujo con menos elementos
+function cuadroSimbologia(L, T, base, m, usados, conPB) {
+  const filas = (conPB ? [['pb', 'Punto de bloqueo (PB-n)']] : []).concat(usados.map(k => [k, SIMB[k].n]));
+  const w = 58, h = 5.4 + filas.length * 6.2 + 1, A = PLA_AREA, mg = 1.5;
+  const cand = [[A.x + mg, A.y + mg], [A.x + A.w - w - mg, A.y + mg], [A.x + mg, A.y + A.h - h - mg], [A.x + A.w - w - mg, A.y + A.h - h - mg]];
+  const pts = [];
+  if (base.tipo === 'vec') base.e.forEach(e => { if (e[0] === 't') pts.push(T.P(e[2], e[3])); else for (let k = 0; k < e[3].length; k += 2) pts.push(T.P(e[3][k], e[3][k + 1])); });
+  (m.pb || []).forEach(p => pts.push(T.P(p.x, p.y)));
+  (m.add || []).forEach(a => { if (a.x != null) pts.push(T.P(a.x, a.y)); });
+  const cuenta = ([x, y]) => pts.filter(p => p[0] >= x - 2 && p[0] <= x + w + 2 && p[1] >= y - 2 && p[1] <= y + h + 2).length;
+  const [x, y] = cand.map(c => [c, cuenta(c)]).sort((a, b) => a[1] - b[1])[0][0];
+  L.rect(x, y, w, h, { fill: '#FFFFFF', c: UC.N, w: 0.3 });
+  L.rect(x, y, w, 5.4, { fill: UC.OSC, sinBorde: 1 }); L.texto(x + 1.6, y + 3.8, 'SIMBOLOGÍA', { pt: 6, b: 1, c: '#FFFFFF' });
+  filas.forEach(([k, n], i) => {
+    const yy = y + 5.4 + 3.6 + i * 6.2;
+    if (k === 'pb') simPB(L, x + 5, yy + 0.6, 5.2, 'PB');
+    else { const S = SIMB[k], a = { s: k, lg: 8, ancho: 7, alto: 5 }, ex = extSim(a), esc = Math.min(1, 5.4 / Math.max(ex[3] - ex[1], ex[2] - ex[0]));
+      const Lb = new Lienzo(); S.d(ctxSim(Lb, 0, 0, 0, S.col || UC.N), a);
+      Lb.pags[0].forEach(o => { const q = Object.assign({}, o), P = (px, py) => [x + 5 + px * esc, yy + py * esc];
+        if (q.t === 'l') { [q.x1, q.y1] = P(o.x1, o.y1); [q.x2, q.y2] = P(o.x2, o.y2); } else if (q.t === 'c' || q.t === 'a') { [q.cx, q.cy] = P(o.cx, o.cy); q.r = o.r * esc; }
+        else if (q.t === 'p') q.pts = o.pts.map(p => P(p[0], p[1])); else if (q.t === 't') { [q.x, q.y] = P(o.x, o.y); q.pt = o.pt * esc; }
+        q.w = 0.22; L.op(q); }); }
+    L.texto(x + 11, yy + 1.4, recortar(n, w - 12.5, 5), { pt: 5 });
+  });
+}
+async function pdfPlano(hoja, m) {
+  if (!window.jspdf) throw new Error('el generador de PDF aún está cargando');
+  const base = await basePlano(hoja); await imgDataPlano(base);
+  return uniAPdf(construirPlano(hoja, base, m));
+}
+const nombreArchPla = (hoja, m, ext) => `${CODIGO_PLA(hoja.id)}_${(hoja.plano || '').replace(/\W/g, '')}_Rev${m.rev ?? 0}${m.estado === 'EMITIDO' || m.estado === 'IMPORTADO' ? '' : '_' + m.estado.replace(/ /g, '_')}.${ext}`;
 async function verPlano(hoja) {
-  const base = { titulo: (hoja.plano && hoja.plano !== 'PDF' ? hoja.plano + ' · ' : '') + hoja.titulo, codigo: 'Formato GEOVITA · ' + hoja.archivo };
   try {
-    if (!window.jspdf) throw new Error('pdf');
     toast('Preparando plano…', 2500);
-    const r = await fetch(hoja.img); if (!r.ok) throw new Error('sin señal');
-    const blob = await r.blob();
-    const img = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); });
-    await cargarRef();
-    const doc = uniAPdf(construirPlanoRef(hoja, img, filasRefHoja(hoja)));
-    verDocumento(Object.assign(base, { blobLocal: doc.output('blob'), mime: 'application/pdf', nombre: 'REF_' + hoja.id + '_' + (hoja.plano || '') + '.pdf' }));
-  } catch (err) {
-    verDocumento(Object.assign(base, { urlEstatica: hoja.img, mime: 'image/png', nombre: hoja.id + '.png', fileId: 'plano-' + hoja.id }));
+    const base = await basePlano(hoja), m = modeloVigente(hoja, base);
+    const doc = await pdfPlano(hoja, m);
+    verDocumento({ titulo: (hoja.plano && hoja.plano !== 'PDF' ? hoja.plano + ' · ' : '') + hoja.titulo, codigo: CODIGO_PLA(hoja.id) + ' · Rev. ' + (m.rev ?? 0), blobLocal: doc.output('blob'), mime: 'application/pdf', nombre: nombreArchPla(hoja, m, 'pdf') });
+  } catch (err) { toast('No se pudo abrir el plano: ' + err.message, 5000); }
+}
+async function dxfPlano(hoja, m) {
+  const base = await basePlano(hoja);
+  descargarBlob(dxfABlob(uniADxf(construirPlano(hoja, base, m))), nombreArchPla(hoja, m, 'dxf'));
+}
+
+// ===================== EDITOR DE PLANOS =====================
+let PE = null;
+const PE_HERR = [['ver', '✋', 'Mover vista'], ['sel', '👆', 'Seleccionar'], ['area', '⬚', 'Seleccionar área'], ['pb', '⚠', 'Punto de bloqueo'], ['sim', '⎓', 'Símbolo'],
+  ['texto', 'T', 'Texto'], ['linea', '╱', 'Línea / conductor'], ['tapa', '▭', 'Tapar'], ['borrar', '🗑', 'Borrar']];
+const PE_AYUDA = {
+  ver: 'Arrastra para mover el plano. Pellizca o usa la rueda del mouse para acercar.',
+  sel: 'Toca un elemento (del plano original o agregado) para modificarlo, moverlo, copiarlo o borrarlo.',
+  area: 'Toca dos esquinas: se seleccionan todos los elementos dentro del recuadro (por ejemplo, un tablero completo) para moverlos, copiarlos o borrarlos.',
+  pb: 'Toca donde va el símbolo de punto de bloqueo. Luego toca el interruptor o equipo que se bloquea para dibujar la flecha.',
+  pbFlecha: 'Ahora toca el interruptor o equipo que se bloquea: la flecha apuntará ahí.',
+  sim: 'Elige un símbolo en el panel y toca donde va (se ajusta a los extremos de las líneas cercanas). Después completa sus datos.',
+  texto: 'Toca donde quieres escribir. Después escribe el texto en el panel.',
+  linea: 'Toca los puntos del conductor (se ajusta a horizontal/vertical y a los extremos cercanos). Termina con "✔ Terminar".',
+  tapa: 'Toca dos esquinas: el rectángulo blanco cubre lo que ya no corresponde (ideal para textos dibujados como líneas).',
+  borrar: 'Toca el elemento que quieres borrar (del dibujo original o agregado). Se puede deshacer.',
+  mover: 'Toca un punto de referencia del elemento y luego el destino.',
+  copiar: 'Toca un punto de referencia y luego dónde va la copia.'
+};
+async function abrirEditorPlano(id) {
+  if (!esAdmin()) { toast('Solo el administrador edita planos.'); return; }
+  const R = await cargarRef(); const hoja = R && R.hojas.find(h => h.id === id);
+  if (!hoja) { toast('Plano no disponible sin señal.'); return; }
+  let base;
+  try { base = await basePlano(hoja); if (base.tipo === 'img') await imgDataPlano(base); } catch (err) { toast(err.message, 5000); return; }
+  const e = plaVigente(id), bo = (PLADATA.borradores || {})[id], pa = (PLADATA.porAprobar || {})[id], local = ls.get('plaLocal:' + id, null);
+  const revNueva = (e ? e.rev : 0) + 1;
+  let m, origen = '';
+  if (local && local.m && local.m.rev === revNueva && (!bo || (local.guardado || '') > (bo.iso || ''))) { m = local.m; origen = 'Se recuperó lo que estabas editando en este teléfono.'; }
+  else if (bo) { m = JSON.parse(JSON.stringify(bo.modelo)); origen = `Borrador Rev. ${bo.rev} guardado por ${bo.por || '—'} (${bo.fecha || ''}).`; }
+  else if (pa) { m = JSON.parse(JSON.stringify(pa.modelo)); m.estado = 'BORRADOR'; m.firmas = {}; }
+  else if (e) { m = JSON.parse(JSON.stringify(e.modelo)); Object.assign(m, { rev: revNueva, estado: 'BORRADOR', descRev: '', firmas: {} }); delete m.fechaEmision; delete m.rechazo; origen = `Nueva revisión a partir de la Rev. ${e.rev} vigente.`; }
+  else { m = modeloPlanoBase(hoja, base, 1); origen = base.pb.length ? `Se convirtieron ${base.pb.length} punto(s) de bloqueo del plano original al símbolo estándar: completa el equipo de cada uno.` : 'Plano importado del DWG. Agrega los puntos de bloqueo.'; }
+  Object.assign(m, { rev: revNueva, estado: 'BORRADOR' });
+  ['del', 'add', 'pb'].forEach(k => { m[k] = m[k] || []; }); ['txt', 'mv', 'caj'].forEach(k => { m[k] = m[k] || {}; });
+  if (m.rechazo) origen = `⚠ Devuelto por ${m.rechazo.por} (${m.rechazo.cargo}) el ${m.rechazo.fecha}: ${m.rechazo.obs}` + (origen ? ' · ' + origen : '');
+  if (pa) origen = `Esta revisión está enviada a aprobación (Rev. ${pa.rev}). Para corregirla, el aprobador debe devolverla.` + (origen ? ' · ' + origen : '');
+  PE = { hoja, base, m, T: transformPlano(base), modo: 'sel', sel: [], pend: [], undo: [], view: { x: 0, y: 0, w: 420, h: 297 }, orto: true, bloqueado: !!pa, simTipo: 'int' };
+  $('#pe-titulo').textContent = 'Plano eléctrico · ' + (hoja.plano && hoja.plano !== 'PDF' ? hoja.plano + ' · ' : '') + hoja.titulo;
+  $('#pe-sub').textContent = `${CODIGO_PLA(id)} · Rev. ${m.rev} en edición${e ? ' · vigente: Rev. ' + e.rev : ' · vigente: Rev. 0 (importado)'}`;
+  $('#pe-aviso').hidden = !origen; $('#pe-aviso').textContent = origen;
+  $('#pe-descrev').value = m.descRev || ''; $('#pe-verif').checked = false; $('#pe-error').textContent = '';
+  $('#btn-pe-descartar').hidden = !bo;
+  ir('plano-ed', { id });
+  setTimeout(() => { ajustarVistaPE(); renderEditorPlano(); renderCajPE(); }, 30);
+}
+function guardarLocalPla() { if (PE) ls.set('plaLocal:' + PE.m.id, { m: PE.m, guardado: new Date().toISOString() }); }
+function cambioPE(fn) {
+  if (!PE || PE.bloqueado) { if (PE && PE.bloqueado) toast('La revisión está esperando aprobación.'); return false; }
+  PE.undo.push(JSON.stringify(PE.m)); if (PE.undo.length > 60) PE.undo.shift();
+  fn(PE.m); guardarLocalPla();
+  const n = JSON.stringify(Object.assign({}, PE.m, { firmas: {} })).length;
+  if (n > 42000 && !PE.avisoTam) { PE.avisoTam = 1; toast('Esta revisión ya tiene muchas modificaciones. Emítela y continúa en la siguiente.', 6000); }
+  return true;
+}
+function ajustarVistaPE() {
+  if (!PE) return;
+  const box = $('#pe-lienzo'), r = box.getBoundingClientRect(), k = (r.height || 300) / (r.width || 400);
+  let w = PLA_AREA.w + 8, h = w * k; if (h < PLA_AREA.h + 8) { h = PLA_AREA.h + 8; w = h / k; }
+  PE.view = { x: PLA_AREA.x + PLA_AREA.w / 2 - w / 2, y: PLA_AREA.y + PLA_AREA.h / 2 - h / 2, w, h };
+}
+// Marcas del editor (no salen en el PDF emitido)
+function marcasPE(L, T) {
+  const tolMM = PE.view.w / 90;
+  PE.sel.forEach(s => {
+    const b = bboxRef(s); if (!b) return;
+    const [X0, Y0] = T.P(b[0], b[1]), [X1, Y1] = T.P(b[2], b[3]), g = 0.8;
+    L.rect(Math.min(X0, X1) - g, Math.min(Y0, Y1) - g, Math.abs(X1 - X0) + 2 * g, Math.abs(Y1 - Y0) + 2 * g, { c: '#D400D4', w: Math.max(0.2, tolMM * 0.1), dash: 1 });
+  });
+  if (PE.pend.length) {
+    const pts = []; for (let k = 0; k < PE.pend.length; k += 2) pts.push(T.P(PE.pend[k], PE.pend[k + 1]));
+    pts.forEach(p => L.circ(p[0], p[1], Math.max(0.6, tolMM * 0.4), { c: '#D400D4', fill: '#D400D4', w: 0.1 }));
+    if (PE.modo === 'linea' && pts.length > 1) L.poli(pts, { c: '#D400D4', w: 0.35, ab: 1 });
+    if ((PE.modo === 'area' || PE.modo === 'tapa') && PE.cursor) { const [cx_, cy_] = T.P(PE.cursor[0], PE.cursor[1]); L.rect(Math.min(pts[0][0], cx_), Math.min(pts[0][1], cy_), Math.abs(cx_ - pts[0][0]), Math.abs(cy_ - pts[0][1]), { c: '#D400D4', w: 0.2, dash: 1 }); }
   }
 }
+function svgPE() {
+  const L = construirPlano(PE.hoja, PE.base, PE.m, { editor: true, img: PE.base.data, marcas: marcasPE });
+  const v = PE.view;
+  return uniASvg(L.pags[0], { clase: 'pe-svg', viewBox: `${v.x} ${v.y} ${v.w} ${v.h}` });
+}
+function dibujarPE() { if (PE) $('#pe-svg').innerHTML = svgPE(); }
+let peRaf = 0;
+function dibujarPEPronto() { if (peRaf) return; peRaf = requestAnimationFrame(() => { peRaf = 0; dibujarPE(); }); }
+function renderEditorPlano() {
+  if (!PE) return;
+  const on = (k) => PE.modo === k || (k === 'pb' && PE.modo === 'pbFlecha') || (k === 'sel' && (PE.modo === 'mover' || PE.modo === 'copiar'));
+  $('#pe-barra').innerHTML = PE_HERR.map(([k, ico, t]) => `<button type="button" class="${on(k) ? 'on' : ''}" data-pe-modo="${k}" title="${t}"><span>${ico}</span><small>${t}</small></button>`).join('')
+    + `<button type="button" data-pe-acc="deshacer" title="Deshacer"${PE.undo.length ? '' : ' disabled'}><span>↶</span><small>Deshacer</small></button>`
+    + `<button type="button" data-pe-acc="zoom+" title="Acercar"><span>＋</span><small>Acercar</small></button><button type="button" data-pe-acc="zoom-" title="Alejar"><span>－</span><small>Alejar</small></button>`
+    + `<button type="button" data-pe-acc="ajustar" title="Ver todo"><span>⤢</span><small>Ver todo</small></button>`;
+  $('#pe-ayuda').textContent = PE.bloqueado ? 'Revisión enviada a aprobación: solo lectura.' : (PE_AYUDA[PE.modo] || '');
+  renderPanelPE(); renderListaPB(); dibujarPE();
+}
+// ---------- Geometría de los elementos ----------
+// ref: { k: 'pb' | 'add' | 'b' (dibujo original), i }
+function bbE(e) {
+  if (e[0] === 't') return null;
+  const p = e[3]; let b = [Infinity, Infinity, -Infinity, -Infinity];
+  for (let k = 0; k < p.length; k += 2) { if (p[k] < b[0]) b[0] = p[k]; if (p[k] > b[2]) b[2] = p[k]; if (p[k + 1] < b[1]) b[1] = p[k + 1]; if (p[k + 1] > b[3]) b[3] = p[k + 1]; }
+  return b;
+}
+function bboxRef(s) {
+  const m = PE.m, T = PE.T;
+  if (s.k === 'pb') { const p = m.pb[s.i]; if (!p) return null; const r = PB_ALTO * 0.75 / T.s; return [p.x - r, p.y - r, p.x + r, p.y + r * 0.6]; }
+  if (s.k === 'add') {
+    const a = m.add[s.i]; if (!a) return null;
+    if (a.k === 'tapa') return [Math.min(a.x, a.x2), Math.min(a.y, a.y2), Math.max(a.x, a.x2), Math.max(a.y, a.y2)];
+    if (a.k === 't') { const hh = a.hm / T.s, l = String(a.s).split('\n'), w = Math.max(...l.map(x => x.length)) * hh * 0.78, n = l.length;
+      return a.rot ? [a.x - hh, a.y - w, a.x + hh * 1.6 * (n - 1) + hh * 0.3, a.y] : [a.x, a.y - hh, a.x + w, a.y + hh * 1.6 * (n - 1) + hh * 0.3]; }
+    if (a.k === 'l') { const xs = a.p.filter((_, k) => k % 2 === 0), ys = a.p.filter((_, k) => k % 2 === 1); return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)]; }
+    if (a.k === 'sym') { const ex = rotExt(extSim(a), a.rot); return [a.x + ex[0] / T.s, a.y + ex[1] / T.s, a.x + ex[2] / T.s, a.y + ex[3] / T.s]; }
+    if (a.k === 'g') { let b = [Infinity, Infinity, -Infinity, -Infinity]; (a.e || []).forEach(e => { const q = e[0] === 't' ? cajaTexto(e, e[7]).bb : bbE(e); b = [Math.min(b[0], q[0]), Math.min(b[1], q[1]), Math.max(b[2], q[2]), Math.max(b[3], q[3])]; }); return b; }
+  }
+  if (s.k === 'b') { const e = entBase(PE.base, m, s.i); if (!e) return null; return e[0] === 't' ? cajaTexto(e, (m.txt || {})[s.i] ?? e[7]).bb : bbE(e); }
+  return null;
+}
+function cajaTexto(e, s) {
+  const h = e[4], lineas = String(s).split('\n'), w = Math.max(...lineas.map(l => l.length)) * h * 0.78, al = Math.floor(e[6] / 10), va = e[6] % 10;
+  const u0 = al === 1 ? -w / 2 : al === 2 ? -w : 0, b0 = va === 2 ? h / 2 : va === 3 ? h : 0;
+  const v0 = b0 - h * 1.05, v1 = b0 + h * 1.6 * (lineas.length - 1) + h * 0.35;
+  const a = e[5] * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a);
+  const P = (u, v) => [e[2] + u * ca - v * sa, e[3] + u * sa + v * ca];
+  const cs = [P(u0, v0), P(u0 + w, v0), P(u0 + w, v1), P(u0, v1)];
+  return { u0, w, v0, v1, ca, sa, bb: [Math.min(...cs.map(c => c[0])), Math.min(...cs.map(c => c[1])), Math.max(...cs.map(c => c[0])), Math.max(...cs.map(c => c[1]))] };
+}
+const distSeg = (px, py, x1, y1, x2, y2) => { const dx = x2 - x1, dy = y2 - y1, l = dx * dx + dy * dy; let t = l ? ((px - x1) * dx + (py - y1) * dy) / l : 0; t = Math.max(0, Math.min(1, t)); return Math.hypot(px - x1 - t * dx, py - y1 - t * dy); };
+function distPoli(p, x, y, cerrado) { let d = Infinity; for (let k = 0; k + 3 < p.length; k += 2) d = Math.min(d, distSeg(x, y, p[k], p[k + 1], p[k + 2], p[k + 3])); if (cerrado && p.length >= 6) d = Math.min(d, distSeg(x, y, p[p.length - 2], p[p.length - 1], p[0], p[1])); return d; }
+function enTexto(e, s, x, y, tol) {
+  const c = cajaTexto(e, s), dx = x - e[2], dy = y - e[3], u = dx * c.ca + dy * c.sa, v = -dx * c.sa + dy * c.ca;
+  return u >= c.u0 - tol && u <= c.u0 + c.w + tol && v >= c.v0 - tol && v <= c.v1 + tol;
+}
+const dentroBB = (b, x, y, t = 0) => b && x >= b[0] - t && x <= b[2] + t && y >= b[1] - t && y <= b[3] + t;
+// Elemento más cercano al punto (unidades del plano)
+function tocarPE(x, y, tol) {
+  const m = PE.m, b = PE.base, T = PE.T;
+  for (let i = m.pb.length - 1; i >= 0; i--) { const p = m.pb[i], r = PB_ALTO * 0.7 / T.s; if (Math.hypot(x - p.x, (y - p.y) * 1.1) < r + tol) return { k: 'pb', i }; }
+  let mejor = null, dmin = Infinity;
+  for (let i = m.add.length - 1; i >= 0; i--) {
+    const a = m.add[i]; let d = Infinity;
+    if (a.k === 'l') d = distPoli(a.p, x, y);
+    else if (a.k === 'g') (a.e || []).forEach(e => { d = Math.min(d, e[0] === 't' ? (enTexto(e, e[7], x, y, tol * 0.6) ? 0 : Infinity) : distPoli(e[3], x, y, !!e[2])); });
+    else if (a.k === 't' || a.k === 'sym') d = dentroBB(bboxRef({ k: 'add', i }), x, y, tol) ? (a.k === 'sym' ? 0.05 * tol : 0) : Infinity;
+    else if (a.k === 'tapa') d = dentroBB(bboxRef({ k: 'add', i }), x, y) ? tol * 0.9 : Infinity;
+    if (d <= tol && d < dmin) { dmin = d; mejor = { k: 'add', i }; }
+  }
+  if (mejor) return mejor;
+  if (b.tipo !== 'vec') return null;
+  const del = new Set(m.del), txt = m.txt || {};
+  for (let i = 0; i < b.e.length; i++) {
+    if (del.has(i)) continue;
+    const e = entBase(b, m, i);
+    if (e[0] === 't') { if (enTexto(e, txt[i] ?? e[7], x, y, tol * 0.6)) { const d = 0.1 * tol; if (d < dmin) { dmin = d; mejor = { k: 'b', i }; } } continue; }
+    const bb = bbE(e);
+    if (!dentroBB(bb, x, y, tol)) continue;
+    const d = e[0] === 'f' && dentroBB(bb, x, y) ? tol * 0.5 : distPoli(e[3], x, y, !!e[2]);
+    if (d <= tol && d < dmin) { dmin = d; mejor = { k: 'b', i }; }
+  }
+  return mejor;
+}
+// Todo lo que queda completamente dentro de un recuadro
+function selArea(x1, y1, x2, y2) {
+  const R = [Math.min(x1, x2), Math.min(y1, y2), Math.max(x1, x2), Math.max(y1, y2)], m = PE.m, out = [];
+  const dentro = (b) => b && b[0] >= R[0] && b[1] >= R[1] && b[2] <= R[2] && b[3] <= R[3];
+  m.pb.forEach((p, i) => { if (dentroBB(R, p.x, p.y)) out.push({ k: 'pb', i }); });
+  m.add.forEach((a, i) => { if (dentro(bboxRef({ k: 'add', i }))) out.push({ k: 'add', i }); });
+  if (PE.base.tipo === 'vec') { const del = new Set(m.del); PE.base.e.forEach((e, i) => { if (!del.has(i) && dentro(bboxRef({ k: 'b', i }))) out.push({ k: 'b', i }); }); }
+  return out;
+}
+// Ajuste a extremos cercanos del dibujo y a los bornes de los símbolos (para que todo quede conectado)
+function ajustarPunto(x, y, tol) {
+  const b = PE.base, m = PE.m; let best = null, dmin = tol;
+  const prueba = (px, py) => { const d = Math.hypot(px - x, py - y); if (d < dmin) { dmin = d; best = [px, py]; } };
+  if (b.tipo === 'vec') { const del = new Set(m.del); b.e.forEach((e0, i) => { if (e0[0] === 't' || del.has(i)) return; const p = entBase(b, m, i)[3]; prueba(p[0], p[1]); prueba(p[p.length - 2], p[p.length - 1]); }); }
+  m.add.forEach(a => {
+    if (a.k === 'l') { prueba(a.p[0], a.p[1]); prueba(a.p[a.p.length - 2], a.p[a.p.length - 1]); }
+    else if (a.k === 'sym') bornesSim(a, PE.T).forEach(q => prueba(q[0], q[1]));
+    else if (a.k === 'g') (a.e || []).forEach(e => { if (e[0] !== 't') { const p = e[3]; prueba(p[0], p[1]); prueba(p[p.length - 2], p[p.length - 1]); } });
+  });
+  return best || [x, y];
+}
+// Mover / copiar / borrar un conjunto de elementos
+function desplazarRef(m, s, dx, dy) {
+  if (s.k === 'pb') { const p = m.pb[s.i]; p.x += dx; p.y += dy; if (p.ax != null) { p.ax += dx; p.ay += dy; } }
+  else if (s.k === 'b') { const d = m.mv[s.i] || [0, 0]; m.mv[s.i] = [Math.round((d[0] + dx) * 100) / 100, Math.round((d[1] + dy) * 100) / 100]; }
+  else if (s.k === 'add') {
+    const a = m.add[s.i];
+    if (a.k === 'l') a.p = a.p.map((v, k) => v + (k % 2 ? dy : dx));
+    else if (a.k === 'tapa') { a.x += dx; a.x2 += dx; a.y += dy; a.y2 += dy; }
+    else if (a.k === 'g') a.e = a.e.map(e => desplazar(e, dx, dy));
+    else { a.x += dx; a.y += dy; }
+  }
+}
+function copiarRefs(m, refs, dx, dy) {
+  const nuevos = [], geo = [];
+  refs.forEach(s => {
+    if (s.k === 'pb') { const p = JSON.parse(JSON.stringify(m.pb[s.i])); p.x += dx; p.y += dy; if (p.ax != null) { p.ax += dx; p.ay += dy; } p.origen = 'nuevo'; m.pb.push(p); nuevos.push({ k: 'pb', i: m.pb.length - 1 }); }
+    else if (s.k === 'add') { const a = JSON.parse(JSON.stringify(m.add[s.i])); m.add.push(a); desplazarRef(m, { k: 'add', i: m.add.length - 1 }, dx, dy); nuevos.push({ k: 'add', i: m.add.length - 1 }); }
+    else if (s.k === 'b') { const e = entBase(PE.base, m, s.i), t = e[0] === 't' && m.txt[s.i] != null ? Object.assign([], e, { 7: m.txt[s.i] }) : e; geo.push(desplazar(t, dx, dy).map(v => Array.isArray(v) ? v.map(r => Math.round(r * 50) / 50) : (typeof v === 'number' ? Math.round(v * 100) / 100 : v))); }
+  });
+  if (geo.length) { m.add.push({ k: 'g', e: geo }); nuevos.push({ k: 'add', i: m.add.length - 1 }); }
+  return nuevos;
+}
+function borrarRefs(refs) {
+  cambioPE(m => {
+    const pb = refs.filter(s => s.k === 'pb').map(s => s.i).sort((a, b) => b - a), ad = refs.filter(s => s.k === 'add').map(s => s.i).sort((a, b) => b - a);
+    pb.forEach(i => m.pb.splice(i, 1)); ad.forEach(i => m.add.splice(i, 1));
+    refs.filter(s => s.k === 'b').forEach(s => { if (!m.del.includes(s.i)) m.del.push(s.i); });
+  });
+  PE.sel = []; renderEditorPlano();
+}
+// ---------- Interacción (mouse y pantalla táctil) ----------
+const PEP = { ptrs: new Map(), ini: null, mov: false, pinch: null };
+function puntoPapel(ev) {
+  const svg = $('#pe-svg svg'); if (!svg) return null;
+  const r = svg.getBoundingClientRect(), v = PE.view;
+  return [v.x + (ev.clientX - r.left) / r.width * v.w, v.y + (ev.clientY - r.top) / r.height * v.h];
+}
+function zoomPE(k, cxp, cyp) {
+  const v = PE.view, nw = Math.max(12, Math.min(900, v.w * k)), f = nw / v.w;
+  const cx = cxp ?? v.x + v.w / 2, cy = cyp ?? v.y + v.h / 2;
+  PE.view = { x: cx - (cx - v.x) * f, y: cy - (cy - v.y) * f, w: nw, h: v.h * f };
+  dibujarPEPronto();
+}
+$('#pe-lienzo').addEventListener('wheel', (e) => { if (!PE) return; e.preventDefault(); const p = puntoPapel(e); if (p) zoomPE(e.deltaY > 0 ? 1.18 : 1 / 1.18, p[0], p[1]); }, { passive: false });
+$('#pe-lienzo').addEventListener('pointerdown', (e) => {
+  if (!PE) return;
+  $('#pe-lienzo').setPointerCapture(e.pointerId);
+  PEP.ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+  if (PEP.ptrs.size === 2) { const [a, b] = [...PEP.ptrs.values()]; PEP.pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), view: Object.assign({}, PE.view) }; PEP.mov = true; return; }
+  PEP.ini = { x: e.clientX, y: e.clientY, view: Object.assign({}, PE.view) }; PEP.mov = false;
+});
+$('#pe-lienzo').addEventListener('pointermove', (e) => {
+  if (!PE) return;
+  if ((PE.modo === 'area' || PE.modo === 'tapa') && PE.pend.length === 2 && !PEP.ptrs.size && e.pointerType === 'mouse') { const p = puntoPapel(e); if (p) { PE.cursor = PE.T.inv(p[0], p[1]); dibujarPEPronto(); } }
+  if (!PEP.ptrs.has(e.pointerId)) return;
+  PEP.ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+  const r = $('#pe-lienzo').getBoundingClientRect();
+  if (PEP.pinch && PEP.ptrs.size === 2) {
+    const [a, b] = [...PEP.ptrs.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]), v0 = PEP.pinch.view;
+    const k = PEP.pinch.d / Math.max(10, d), nw = Math.max(12, Math.min(900, v0.w * k)), f = nw / v0.w;
+    const mx = ((a[0] + b[0]) / 2 - r.left) / r.width, my = ((a[1] + b[1]) / 2 - r.top) / r.height;
+    const cx = v0.x + mx * v0.w, cy = v0.y + my * v0.h;
+    PE.view = { x: cx - mx * nw, y: cy - my * v0.h * f, w: nw, h: v0.h * f };
+    dibujarPEPronto(); return;
+  }
+  if (!PEP.ini) return;
+  const dx = e.clientX - PEP.ini.x, dy = e.clientY - PEP.ini.y;
+  if (!PEP.mov && Math.hypot(dx, dy) > 8) PEP.mov = true;
+  if (PEP.mov) {   // arrastrar siempre mueve la vista; tocar sin arrastrar usa la herramienta
+    const v0 = PEP.ini.view; PE.view = Object.assign({}, v0, { x: v0.x - dx / r.width * v0.w, y: v0.y - dy / r.height * v0.h }); dibujarPEPronto();
+  }
+});
+function finPuntero(e) {
+  if (!PE) return;
+  const eraPinch = !!PEP.pinch;
+  PEP.ptrs.delete(e.pointerId);
+  if (PEP.ptrs.size < 2) PEP.pinch = null;
+  if (eraPinch) { PEP.ini = null; return; }
+  if (e.type === 'pointerup' && PEP.ini && !PEP.mov) tocarLienzo(e);
+  PEP.ini = null;
+}
+['pointerup', 'pointercancel'].forEach(t => $('#pe-lienzo').addEventListener(t, finPuntero));
+function tocarLienzo(ev) {
+  const pp = puntoPapel(ev); if (!pp) return;
+  const T = PE.T, [x, y] = T.inv(pp[0], pp[1]);
+  const r = $('#pe-lienzo').getBoundingClientRect(), tol = 14 * PE.view.w / r.width / T.s;   // 14 px de tolerancia
+  const modo = PE.modo;
+  if (modo === 'ver') return;
+  const fuera = pp[0] < PLA_AREA.x || pp[0] > PLA_AREA.x + PLA_AREA.w || pp[1] < PLA_AREA.y || pp[1] > PLA_AREA.y + PLA_AREA.h;
+  if (fuera) {
+    if (modo === 'sel' && pp[1] > PLA_AREA.y + PLA_AREA.h) { $('#pe-caj').scrollIntoView({ behavior: 'smooth', block: 'start' }); toast('Los datos del recuadro se editan en "Recuadro del plano".'); return; }
+    if (['pb', 'pbFlecha', 'texto', 'linea', 'tapa', 'mover', 'copiar', 'sim'].includes(modo)) { toast('Fuera del área del dibujo. El recuadro y las tablas se completan en los formularios de abajo.'); return; }
+  }
+  if (PE.bloqueado || modo === 'sel') { const s = tocarPE(x, y, tol); PE.sel = s ? [s] : []; renderEditorPlano(); return; }
+  if (modo === 'area') {
+    PE.pend.push(x, y);
+    if (PE.pend.length >= 4) { const [x1, y1, x2, y2] = PE.pend; PE.pend = []; PE.cursor = null; PE.sel = selArea(x1, y1, x2, y2); if (!PE.sel.length) toast('No hay elementos completos dentro del recuadro.'); PE.modo = 'sel'; }
+    renderEditorPlano(); return;
+  }
+  if (modo === 'pb') {
+    cambioPE(m => m.pb.push({ x, y, equipo: '', tablero: '', idTablero: '', ubic: '', tipo: TIPOS_BLOQUEO[0], origen: 'nuevo' }));
+    PE.sel = [{ k: 'pb', i: PE.m.pb.length - 1 }]; PE.modo = 'pbFlecha'; renderEditorPlano(); return;
+  }
+  if (modo === 'pbFlecha') {
+    const s = PE.sel[0]; if (!s || s.k !== 'pb') { PE.modo = 'sel'; renderEditorPlano(); return; }
+    const [ax, ay] = ajustarPunto(x, y, tol * 0.8);
+    cambioPE(m => { m.pb[s.i].ax = ax; m.pb[s.i].ay = ay; });
+    PE.modo = 'sel'; renderEditorPlano(); setTimeout(() => { const i = $('#pe-panel [data-pb-k="equipo"]'); if (i && !i.value) i.focus(); }, 50); return;
+  }
+  if (modo === 'sim') {
+    const S = SIMB[PE.simTipo]; if (!S) return;
+    let [sx, sy] = [x, y];
+    const b0 = (S.b || [])[0];   // el borne superior se ajusta al extremo de línea más cercano
+    if (b0) { const [ax, ay] = ajustarPunto(x + b0[0] / T.s, y + b0[1] / T.s, tol); if (ax !== x + b0[0] / T.s || ay !== y + b0[1] / T.s) { sx = ax - b0[0] / T.s; sy = ay - b0[1] / T.s; } }
+    const a = { k: 'sym', s: PE.simTipo, x: sx, y: sy, rot: 0, id: '', d1: '', d2: '', d3: '' };
+    if (PE.simTipo === 'barra') a.lg = 40; if (PE.simTipo === 'tablero') { a.ancho = 50; a.alto = 36; }
+    cambioPE(m => m.add.push(a)); PE.sel = [{ k: 'add', i: PE.m.add.length - 1 }]; PE.modo = 'sel'; renderEditorPlano();
+    setTimeout(() => { const i = $('#pe-panel [data-add-k="id"]'); if (i) i.focus(); }, 50); return;
+  }
+  if (modo === 'mover' || modo === 'copiar') {
+    if (!PE.sel.length) { PE.modo = 'sel'; renderEditorPlano(); return; }
+    const [px, py] = ajustarPunto(x, y, tol * 0.8);
+    PE.pend.push(px, py);
+    if (PE.pend.length >= 4) {
+      let [x1, y1, x2, y2] = PE.pend; PE.pend = [];
+      if (PE.orto) { if (Math.abs(x2 - x1) > Math.abs(y2 - y1) * 3) y2 = y1; else if (Math.abs(y2 - y1) > Math.abs(x2 - x1) * 3) x2 = x1; }
+      const dx = x2 - x1, dy = y2 - y1, refs = PE.sel.slice();
+      if (modo === 'mover') cambioPE(m => refs.forEach(s => desplazarRef(m, s, dx, dy)));
+      else { let nuevos = []; cambioPE(m => { nuevos = copiarRefs(m, refs, dx, dy); }); PE.sel = nuevos; }
+      PE.modo = 'sel';
+    }
+    renderEditorPlano(); return;
+  }
+  if (modo === 'texto') {
+    cambioPE(m => m.add.push({ k: 't', x, y, s: 'TEXTO', hm: 2.5 }));
+    PE.sel = [{ k: 'add', i: PE.m.add.length - 1 }]; PE.modo = 'sel'; renderEditorPlano();
+    setTimeout(() => { const i = $('#pe-panel [data-add-k="s"]'); if (i) { i.focus(); i.select(); } }, 50); return;
+  }
+  if (modo === 'linea') {
+    let [px, py] = ajustarPunto(x, y, tol * 0.8);
+    const n = PE.pend.length;
+    if (n >= 2 && PE.orto && px === x && py === y) { const lx = PE.pend[n - 2], ly = PE.pend[n - 1]; if (Math.abs(px - lx) > Math.abs(py - ly)) py = ly; else px = lx; }
+    PE.pend.push(px, py); renderPanelPE(); dibujarPE(); return;
+  }
+  if (modo === 'tapa') {
+    PE.pend.push(x, y);
+    if (PE.pend.length >= 4) { const [x1, y1, x2, y2] = PE.pend; PE.pend = []; PE.cursor = null; if (Math.abs(x2 - x1) > tol / 3 && Math.abs(y2 - y1) > tol / 3) { cambioPE(m => m.add.push({ k: 'tapa', x: x1, y: y1, x2, y2 })); PE.sel = [{ k: 'add', i: PE.m.add.length - 1 }]; } }
+    renderEditorPlano(); return;
+  }
+  if (modo === 'borrar') {
+    const s = tocarPE(x, y, tol); if (!s) { toast('No hay nada que borrar ahí. Acerca la vista.'); return; }
+    borrarRefs([s]); return;
+  }
+}
+// ---------- Paneles ----------
+const nombresTableros = () => tablerosActivos().map(t => ({ id: t.id, n: nombreTab(t) || t.id, u: t.ubicacion || '' }));
+const accComunes = (ro, extra = '') => `<div class="pe-acc">${extra}<button type="button" data-pe-acc="mover"${ro}>✥ Mover</button><button type="button" data-pe-acc="copiar"${ro}>⧉ Copiar</button>
+  <button type="button" class="peligro" data-pe-acc="borrarSel"${ro}>🗑 Borrar</button><button type="button" data-pe-acc="listo">✔ Listo</button></div>`;
+function renderPanelPE() {
+  const box = $('#pe-panel'), m = PE.m, ro = PE.bloqueado ? ' disabled' : '', sel = PE.sel;
+  if (PE.modo === 'linea') {
+    box.innerHTML = `<h3>Línea / conductor nuevo</h3><p class="muted">${PE.pend.length / 2} punto(s).</p>
+      <label class="chk"><input type="checkbox" id="pe-orto"${PE.orto ? ' checked' : ''}> Solo horizontal / vertical</label>
+      <label class="chk"><input type="checkbox" id="pe-dash"${PE.dash ? ' checked' : ''}> Línea segmentada</label>
+      <div class="grid2"><button type="button" class="big primary" data-pe-acc="finLinea"${PE.pend.length >= 4 ? '' : ' disabled'}>✔ Terminar</button><button type="button" class="big" data-pe-acc="cancelar">✖ Cancelar</button></div>`;
+    return;
+  }
+  if (PE.modo === 'sim') {
+    box.innerHTML = `<h3>Insertar símbolo</h3><p class="muted" style="margin:0 0 8px">Simbología normalizada (IEC 60617 / RIC N°18). Elige uno y toca el plano.</p>
+      <div class="pe-paleta">${Object.keys(SIMB).map(k => `<button type="button" class="${PE.simTipo === k ? 'on' : ''}" data-pe-sim="${k}" title="${esc(SIMB[k].n)}">${iconoSim(k)}<small>${esc(SIMB[k].n)}</small></button>`).join('')}</div>`;
+    return;
+  }
+  if ((PE.modo === 'tapa' || PE.modo === 'area') && PE.pend.length) { box.innerHTML = `<h3>${PE.modo === 'tapa' ? 'Tapar' : 'Seleccionar área'}</h3><p class="muted">Toca la esquina opuesta.</p><button type="button" class="big" data-pe-acc="cancelar">✖ Cancelar</button>`; return; }
+  if (PE.modo === 'mover' || PE.modo === 'copiar') {
+    box.innerHTML = `<h3>${PE.modo === 'mover' ? 'Mover' : 'Copiar'} ${sel.length} elemento(s)</h3><p class="muted">${PE.pend.length ? 'Ahora toca el destino.' : 'Toca un punto de referencia (por ejemplo, el extremo de una línea).'}</p>
+      <label class="chk"><input type="checkbox" id="pe-orto"${PE.orto ? ' checked' : ''}> Solo horizontal / vertical</label>
+      <button type="button" class="big" data-pe-acc="cancelar">✖ Cancelar</button>`;
+    return;
+  }
+  if (!sel.length) {
+    const nDel = m.del.length, nTxt = Object.keys(m.txt).length, nMv = Object.keys(m.mv).length, nSym = m.add.filter(a => a.k === 'sym').length;
+    box.innerHTML = `<h3>Modificaciones de esta revisión</h3>
+      <p class="muted">${m.pb.length} punto(s) de bloqueo · ${nSym} símbolo(s) · ${m.add.length - nSym} otro(s) elemento(s) agregado(s) · ${nTxt} texto(s) corregido(s) · ${nMv} elemento(s) movido(s) · ${nDel} borrado(s) del original.</p>
+      <p class="muted">Lo agregado o modificado se ve en <b style="color:${COL_NUEVO}">azul</b> mientras editas; en el PDF sale en negro.</p>
+      ${nDel ? `<button type="button" class="big" data-pe-acc="restaurarTodo"${ro}>↺ Restaurar los ${nDel} elemento(s) borrado(s)</button>` : ''}`;
+    return;
+  }
+  if (sel.length > 1) {
+    const c = { pb: 0, add: 0, b: 0 }; sel.forEach(s => c[s.k]++);
+    box.innerHTML = `<h3>${sel.length} elementos seleccionados</h3><p class="muted">${c.b} del plano original · ${c.add} agregado(s) · ${c.pb} punto(s) de bloqueo.</p>` + accComunes(ro);
+    return;
+  }
+  const s = sel[0];
+  if (s.k === 'pb') {
+    const p = m.pb[s.i]; if (!p) { PE.sel = []; return renderPanelPE(); }
+    const tabs = nombresTableros();
+    box.innerHTML = `<h3 style="color:var(--rojo)">⚠ PB-${s.i + 1} · Punto de bloqueo</h3>
+      ${p.origen === 'plano' ? '<p class="muted" style="margin:0 0 6px">Venía dibujado en el plano original; se convirtió al símbolo estándar.</p>' : ''}
+      <label>Equipo / dispositivo que se bloquea *</label><input data-pb-k="equipo" class="may" value="${esc(p.equipo || '')}" placeholder="Ej.: Q0 INTERRUPTOR GENERAL NSX400F"${ro}>
+      <label>Tablero</label><input data-pb-k="tablero" class="may" list="pe-dl-tab" value="${esc(p.tablero || '')}" placeholder="Ej.: TDF N°94"${ro}>
+      <datalist id="pe-dl-tab">${tabs.map(t => `<option value="${esc(t.n)}">${esc(t.id + (t.u ? ' · ' + t.u : ''))}</option>`).join('')}</datalist>
+      <label>Ubicación</label><input data-pb-k="ubic" class="may" value="${esc(p.ubic || '')}" placeholder="Ej.: CCDD N°3 CALLE 33 ACCESO 6"${ro}>
+      <label>Tipo de bloqueo</label><select data-pb-k="tipo"${ro}>${opc(TIPOS_BLOQUEO, p.tipo || TIPOS_BLOQUEO[0])}</select>`
+      + accComunes(ro, `<button type="button" data-pe-acc="flecha"${ro}>➜ ${p.ax != null ? 'Cambiar flecha' : 'Indicar equipo (flecha)'}</button>
+        ${p.ax != null ? `<button type="button" data-pe-acc="sinFlecha"${ro}>Quitar flecha</button>` : ''}${s.i > 0 ? `<button type="button" data-pe-acc="subirPB"${ro}>▲ Numerar antes</button>` : ''}`);
+    return;
+  }
+  if (s.k === 'add') {
+    const a = m.add[s.i]; if (!a) { PE.sel = []; return renderPanelPE(); }
+    if (a.k === 'sym') {
+      const S = SIMB[a.s], at = S.at;
+      box.innerHTML = `<h3>${iconoSim(a.s).replace('<svg ', '<svg class="pe-ico" ')} ${esc(S.n)}</h3>
+        ${at.map((lab, i) => lab ? `<label>${esc(lab)}</label><input data-add-k="${['id', 'd1', 'd2', 'd3'][i]}" class="may" value="${esc(a[['id', 'd1', 'd2', 'd3'][i]] || '')}"${i === 2 && /Marca/.test(lab) ? ' list="dl-marcas"' : ''}${ro}>` : '').join('')}
+        ${a.s === 'barra' ? `<label>Largo (mm en el plano)</label><input type="number" data-add-k="lg" value="${a.lg || 40}" min="8" max="300"${ro}>` : ''}
+        ${a.s === 'tablero' ? `<div class="grid2"><div><label>Ancho (mm)</label><input type="number" data-add-k="ancho" value="${a.ancho || 40}" min="10" max="380"${ro}></div><div><label>Alto (mm)</label><input type="number" data-add-k="alto" value="${a.alto || 30}" min="10" max="190"${ro}></div></div>` : ''}
+        <datalist id="dl-marcas">${Object.keys(CATALOGO).map(n => `<option value="${esc(n)}">`).join('')}</datalist>`
+        + accComunes(ro, `<button type="button" data-pe-acc="rotar"${ro}>↻ Girar 90°</button>`);
+      return;
+    }
+    if (a.k === 't') { box.innerHTML = `<h3>Texto agregado</h3><textarea data-add-k="s" class="may" rows="2"${ro}>${esc(a.s)}</textarea>
+      <div class="grid2"><div><label>Tamaño</label><select data-add-k="hm"${ro}>${[['1.8', 'Pequeño (1,8 mm)'], ['2.5', 'Normal (2,5 mm)'], ['3.5', 'Grande (3,5 mm)'], ['5', 'Título (5 mm)']].map(([v, t]) => `<option value="${v}"${+v === +a.hm ? ' selected' : ''}>${t}</option>`).join('')}</select></div>
+      <div><label>Orientación</label><select data-add-k="rot"${ro}><option value="0"${!a.rot ? ' selected' : ''}>Horizontal</option><option value="90"${a.rot == 90 ? ' selected' : ''}>Vertical</option></select></div></div>
+      <label class="chk"><input type="checkbox" data-add-k="b"${a.b ? ' checked' : ''}${ro}> Negrita</label>` + accComunes(ro); return; }
+    box.innerHTML = `<h3>${a.k === 'l' ? 'Línea / conductor agregado' : a.k === 'g' ? 'Copia de elementos del plano' : 'Tapa (rectángulo blanco)'}</h3>
+      ${a.k === 'l' ? `<label class="chk"><input type="checkbox" data-add-k="dash"${a.dash ? ' checked' : ''}${ro}> Línea segmentada</label>` : a.k === 'tapa' ? '<p class="muted">Cubre lo que quedó debajo. En el PDF no tiene borde.</p>' : `<p class="muted">${(a.e || []).length} elemento(s).</p>`}` + accComunes(ro);
+    return;
+  }
+  if (s.k === 'b') {
+    const e = PE.base.e[s.i], mov = m.mv[s.i];
+    if (e[0] === 't') {
+      const v = m.txt[s.i] ?? e[7];
+      box.innerHTML = `<h3>Texto del plano original</h3>
+        <label>Contenido${m.txt[s.i] != null ? ' (corregido)' : ''}</label><textarea data-bt-k="s" class="may" rows="2"${ro}>${esc(v)}</textarea>
+        ${m.txt[s.i] != null ? `<p class="muted" style="margin:4px 0 0">Original: ${esc(e[7])}</p>` : ''}`
+        + accComunes(ro, (m.txt[s.i] != null ? `<button type="button" data-pe-acc="restaurarTxt"${ro}>↺ Texto original</button>` : '') + (mov ? `<button type="button" data-pe-acc="restaurarPos"${ro}>↺ Posición original</button>` : ''));
+      return;
+    }
+    box.innerHTML = `<h3>Elemento del plano original</h3><p class="muted">Línea o símbolo del dibujo importado del DWG. Para tomar un tablero o símbolo completo usa ⬚ Seleccionar área.</p>`
+      + accComunes(ro, mov ? `<button type="button" data-pe-acc="restaurarPos"${ro}>↺ Posición original</button>` : '');
+  }
+}
+function renderListaPB() {
+  const m = PE.m;
+  $('#pe-pbs').innerHTML = m.pb.length ? m.pb.map((p, i) => `<li><div class="info"><b style="color:var(--rojo)">PB-${i + 1} · ${esc(p.equipo || 'POR IDENTIFICAR')}</b>
+    <small>${esc([p.tablero, p.ubic, p.tipo].filter(Boolean).join(' · '))}${p.ax == null ? ' · sin flecha' : ''}</small></div>
+    <button type="button" class="btn-pdf" data-pe-ir-pb="${i}">Ver</button></li>`).join('')
+    : '<li><div class="info"><small>Este plano aún no tiene puntos de bloqueo. Usa la herramienta ⚠ Punto de bloqueo.</small></div></li>';
+}
+// Recuadro del plano: datos editables (por defecto, los del rótulo original)
+const CAJ_CAMPOS = [['titulo', 'Título del plano (descripción)', 1], ['instalacion', 'Instalación / destino'], ['ubicacion', 'Ubicación (nivel, calle, zanja, sector)'],
+  ['proyecto', 'Proyecto N°'], ['planoOrig', 'Plano original (N°)'], ['escala', 'Escala'], ['lamina', 'Lámina N°'], ['laminas', 'Total de láminas'],
+  ['obra', 'Obra / contrato'], ['cliente', 'Cliente'], ['notas', 'Notas', 2], ['referencias', 'Planos y documentos de referencia', 2]];
+function renderCajPE() {
+  if (!PE) return;
+  const C = cajPlano(PE.hoja, PE.base, PE.m), ro = PE.bloqueado ? ' disabled' : '', orig = (PE.base.cab || {}).originales || [];
+  $('#pe-caj-campos').innerHTML = CAJ_CAMPOS.map(([k, lab, tipo]) => `<div class="${tipo ? 'ancho' : ''}"><label>${esc(lab)}</label>${tipo === 2
+    ? `<textarea data-caj-k="${k}" class="may" rows="3"${ro}>${esc(C[k] || '')}</textarea>` : `<input data-caj-k="${k}" class="may" value="${esc(C[k] || '')}"${ro}>`}</div>`).join('')
+    + (orig.length ? `<p class="muted ancho" style="margin:10px 0 0">Rótulo original del DWG: ${esc(orig.join(' · '))}</p>` : '');
+}
+$('#pe-caj-campos').addEventListener('input', (e) => {
+  const el = e.target.closest('[data-caj-k]'); if (!el || !PE || PE.bloqueado) return;
+  const k = el.dataset.cajK, v = el.value.toLocaleUpperCase('es-CL'), clave = 'caj' + k;
+  if (PE._editando !== clave) { cambioPE(m => { m.caj[k] = v; }); PE._editando = clave; } else { PE.m.caj[k] = v; guardarLocalPla(); }
+  dibujarPEPronto();
+});
+$('#pe-caj-campos').addEventListener('focusout', () => { if (PE) PE._editando = null; });
+function centrarEn(x, y) { const [X, Y] = PE.T.P(x, y), v = PE.view, w = Math.min(v.w, 90), h = v.h * w / v.w; PE.view = { x: X - w / 2, y: Y - h / 2, w, h }; }
+$('#pe-barra').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-pe-modo]');
+  if (b && PE) { PE.modo = b.dataset.peModo; PE.pend = []; PE.cursor = null; if (!['sel'].includes(PE.modo)) PE.sel = []; renderEditorPlano(); }
+});
+$('#pe-panel').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-pe-sim]'); if (!b || !PE) return;
+  PE.simTipo = b.dataset.peSim; renderPanelPE(); toast('Toca el plano donde va: ' + SIMB[PE.simTipo].n, 2500);
+});
+document.addEventListener('click', (e) => {
+  if (!PE) return;
+  const ir_ = e.target.closest('[data-pe-ir-pb]');
+  if (ir_) { const i = +ir_.dataset.peIrPb, p = PE.m.pb[i]; PE.sel = [{ k: 'pb', i }]; PE.modo = 'sel'; centrarEn(p.x, p.y); renderEditorPlano(); $('#pe-lienzo').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+  const a = e.target.closest('[data-pe-acc]'); if (!a) return;
+  const acc = a.dataset.peAcc, sel = PE.sel, s = sel[0];
+  if (acc === 'deshacer') { const u = PE.undo.pop(); if (u) { PE.m = JSON.parse(u); PE.sel = []; guardarLocalPla(); renderCajPE(); } renderEditorPlano(); }
+  else if (acc === 'zoom+') zoomPE(1 / 1.4);
+  else if (acc === 'zoom-') zoomPE(1.4);
+  else if (acc === 'ajustar') { ajustarVistaPE(); dibujarPE(); }
+  else if (acc === 'cancelar') { PE.pend = []; PE.cursor = null; if (PE.modo === 'mover' || PE.modo === 'copiar') PE.modo = 'sel'; renderEditorPlano(); }
+  else if (acc === 'finLinea') { const p = PE.pend.slice(); PE.pend = []; if (p.length >= 4) { cambioPE(m => m.add.push({ k: 'l', p, w: 0.3, dash: PE.dash ? 1 : 0 })); PE.sel = [{ k: 'add', i: PE.m.add.length - 1 }]; PE.modo = 'sel'; } renderEditorPlano(); }
+  else if (acc === 'listo') { PE.sel = []; renderEditorPlano(); }
+  else if (acc === 'borrarSel' && sel.length) { if (sel.length > 3 && !confirm(`¿Borrar ${sel.length} elementos?`)) return; borrarRefs(sel); }
+  else if ((acc === 'mover' || acc === 'copiar') && sel.length) { PE.modo = acc; PE.pend = []; renderEditorPlano(); }
+  else if (acc === 'rotar' && s && s.k === 'add') { cambioPE(m => { const x = m.add[s.i]; x.rot = ((x.rot || 0) + 90) % 360; }); renderEditorPlano(); }
+  else if (acc === 'flecha' && s) { PE.modo = 'pbFlecha'; renderEditorPlano(); }
+  else if (acc === 'sinFlecha' && s) { cambioPE(m => { delete m.pb[s.i].ax; delete m.pb[s.i].ay; }); renderEditorPlano(); }
+  else if (acc === 'subirPB' && s && s.i > 0) { cambioPE(m => { const t = m.pb[s.i]; m.pb[s.i] = m.pb[s.i - 1]; m.pb[s.i - 1] = t; }); PE.sel = [{ k: 'pb', i: s.i - 1 }]; renderEditorPlano(); }
+  else if (acc === 'restaurarTxt' && s) { cambioPE(m => { delete m.txt[s.i]; }); renderEditorPlano(); }
+  else if (acc === 'restaurarPos' && s) { cambioPE(m => { delete m.mv[s.i]; }); renderEditorPlano(); }
+  else if (acc === 'restaurarTodo') { if (confirm('¿Restaurar todos los elementos borrados del plano original?')) { cambioPE(m => { m.del = []; }); renderEditorPlano(); } }
+});
+$('#pe-panel').addEventListener('input', (e) => {
+  if (!PE || PE.bloqueado) return;
+  const el = e.target, s = PE.sel[0]; if (!s || PE.sel.length !== 1) return;
+  let v = el.type === 'checkbox' ? el.checked : el.value;
+  if (el.classList.contains('may') && typeof v === 'string') v = v.toLocaleUpperCase('es-CL');
+  const clave = (el.dataset.pbK || el.dataset.addK || el.dataset.btK) + s.k + s.i;
+  const aplicar = (fn) => { if (PE._editando !== clave) { cambioPE(fn); PE._editando = clave; } else { fn(PE.m); guardarLocalPla(); } };
+  if (el.dataset.pbK) {
+    const k = el.dataset.pbK;
+    aplicar(m => {
+      m.pb[s.i][k] = v;
+      if (k === 'tablero') {
+        const t = nombresTableros().find(t => t.n.toUpperCase() === String(v).toUpperCase() || t.id === String(v).toUpperCase());
+        m.pb[s.i].idTablero = t ? t.id : '';
+        if (t && !m.pb[s.i].ubic && t.u) { m.pb[s.i].ubic = t.u.toLocaleUpperCase('es-CL'); const u = $('#pe-panel [data-pb-k="ubic"]'); if (u) u.value = m.pb[s.i].ubic; }
+      }
+    });
+    renderListaPB(); dibujarPEPronto();
+  } else if (el.dataset.addK) {
+    const k = el.dataset.addK;
+    aplicar(m => { m.add[s.i][k] = ['hm', 'rot', 'lg', 'ancho', 'alto'].includes(k) ? +v : (k === 'b' || k === 'dash' ? (v ? 1 : 0) : v); }); dibujarPEPronto();
+  } else if (el.dataset.btK) {
+    const e0 = PE.base.e[s.i]; aplicar(m => { if (v === e0[7]) delete m.txt[s.i]; else m.txt[s.i] = v; }); dibujarPEPronto();
+  }
+});
+$('#pe-panel').addEventListener('change', (e) => {
+  const el = e.target; if (!PE) return;
+  if (el.id === 'pe-orto') PE.orto = el.checked;
+  else if (el.id === 'pe-dash') PE.dash = el.checked;
+  PE._editando = null;
+});
+$('#pe-panel').addEventListener('focusout', () => { if (PE) PE._editando = null; });
+$('#pe-descrev').addEventListener('input', () => { if (PE && !PE.bloqueado) { PE.m.descRev = $('#pe-descrev').value.trim().toLocaleUpperCase('es-CL'); guardarLocalPla(); } });
+// ---------- Guardar, descargar, emitir ----------
+const modeloPlaLimpio = () => { const m = JSON.parse(JSON.stringify(PE.m)); m.descRev = $('#pe-descrev').value.trim().toLocaleUpperCase('es-CL'); m.titulo = cajPlano(PE.hoja, PE.base, m).titulo; return m; };
+$('#btn-pe-guardar').addEventListener('click', async () => {
+  if (!PE || PE.bloqueado) return;
+  const btn = $('#btn-pe-guardar'); btn.disabled = true;
+  try {
+    const j = await accionAdmin({ accion: 'guardarPlano', modelo: modeloPlaLimpio() });
+    guardarPlaData(j); ls.set('plaLocal:' + PE.m.id, null); $('#btn-pe-descartar').hidden = false; toast('Borrador guardado ✔');
+  } catch (err) { toast('No se pudo guardar: ' + err.message + '. Queda guardado en este teléfono.', 6000); }
+  finally { btn.disabled = false; }
+});
+$('#btn-pe-descartar').addEventListener('click', async () => {
+  if (!PE || !confirm('¿Descartar el borrador del plano? Se pierden los cambios no emitidos.')) return;
+  try { const j = await accionAdmin({ accion: 'descartarPlano', id: PE.m.id }); guardarPlaData(j); ls.set('plaLocal:' + PE.m.id, null); toast('Borrador descartado'); PE = null; ir('planos'); }
+  catch (err) { toast('No se pudo: ' + err.message, 5000); }
+});
+$('#btn-pe-pdf').addEventListener('click', async () => {
+  if (!PE) return;
+  try { const doc = uniAPdf(construirPlano(PE.hoja, PE.base, modeloPlaLimpio())); verDocumento({ titulo: 'Vista previa · ' + PE.hoja.titulo, codigo: CODIGO_PLA(PE.hoja.id) + ' · Rev. ' + PE.m.rev, blobLocal: doc.output('blob'), mime: 'application/pdf', nombre: nombreArchPla(PE.hoja, PE.m, 'pdf') }); }
+  catch (err) { toast(err.message, 5000); }
+});
+$('#btn-pe-dxf').addEventListener('click', () => { if (PE) descargarBlob(dxfABlob(uniADxf(construirPlano(PE.hoja, PE.base, modeloPlaLimpio()))), nombreArchPla(PE.hoja, PE.m, 'dxf')); });
+$('#btn-pe-volver').addEventListener('click', () => { PE = null; ir('planos'); });
+function validarPlano(m) {
+  const err = [], av = [];
+  if (!String(m.descRev || '').trim()) err.push('Escribe la descripción de la revisión.');
+  m.pb.forEach((p, i) => { if (!p.equipo) err.push(`Falta el equipo del PB-${i + 1}.`); if (p.ax == null) av.push(`PB-${i + 1} sin flecha al equipo.`); if (!p.tablero) av.push(`PB-${i + 1} sin tablero.`); });
+  (m.add || []).forEach(a => { if (a.k === 'sym' && !String(a.id || '').trim()) av.push(`${SIMB[a.s] ? SIMB[a.s].n : 'Símbolo'} sin identificación.`); });
+  if (!m.pb.length) av.push('El plano no tiene puntos de bloqueo.');
+  if (JSON.stringify(Object.assign({}, m, { firmas: {} })).length > 47000) err.push('La revisión tiene demasiadas modificaciones: divide el trabajo en dos revisiones.');
+  return { err, av };
+}
+$('#btn-pe-emitir').addEventListener('click', () => {
+  if (!PE || PE.bloqueado) return;
+  requiereFirma(() => { if (!PE) return; if ($('#v-plano-ed').hidden) ir('plano-ed', { id: PE.m.id }); enviarAprobacionPlano(); }, 'el plano se firma como elaboró y revisó');
+});
+async function enviarAprobacionPlano() {
+  const m = modeloPlaLimpio(), v = validarPlano(m), err = $('#pe-error'); err.textContent = '';
+  if (v.err.length) { err.textContent = 'Resuelve primero: ' + v.err.join(' '); return; }
+  if (!$('#pe-verif').checked) { err.textContent = 'Confirma que verificaste los puntos de bloqueo y las modificaciones.'; return; }
+  if (!navigator.onLine) { err.textContent = 'Se necesita señal para enviar a aprobación.'; return; }
+  if (!confirm(`Enviar ${CODIGO_PLA(m.id)} Rev. ${m.rev} a aprobación.\n\nPuntos de bloqueo:\n${m.pb.map((p, i) => `PB-${i + 1}: ${p.equipo} (${p.tablero || '—'})`).join('\n') || '—'}\n\n${v.av.length ? 'Avisos:\n' + v.av.slice(0, 8).join('\n') + '\n\n' : ''}Lo firmarás como elaboró y revisó.`)) return;
+  const fz = await pedirFirma('Firmar plano (elaboró y revisó)', `${m.titulo} · Rev. ${m.rev}`);
+  if (!fz) return;
+  const btn = $('#btn-pe-emitir'); btn.disabled = true; btn.textContent = 'Enviando…';
+  try {
+    m.verificado = { por: fz.nombre, fecha: fz.fecha };
+    m.codigoFirma = await codigoFirma([m.id, m.rev, JSON.stringify(m.pb), fz.usuario, fz.iso]);
+    const j = await accionAdmin({ accion: 'enviarPlano', modelo: m, token: sesion().token });
+    guardarPlaData(j); ls.set('plaLocal:' + m.id, null);
+    toast(`Enviado a aprobación · Rev. ${j.rev} ✔`, 4000);
+    PE = null; ir('planos');
+  } catch (e2) { err.textContent = 'No se pudo enviar: ' + e2.message; }
+  finally { btn.disabled = false; btn.textContent = '✍ Firmar y enviar a aprobación'; }
+}
+// ---------- Aprobación de planos ----------
+async function verPlanoPorAprobar(id) {
+  const x = (PLADATA.porAprobar || {})[id]; if (!x) return;
+  try {
+    const R = await cargarRef(), hoja = R.hojas.find(h => h.id === id);
+    const doc = await pdfPlano(hoja, x.modelo);
+    verDocumento({ titulo: 'Por aprobar · ' + hoja.titulo, codigo: CODIGO_PLA(id) + ' · Rev. ' + x.rev, blobLocal: doc.output('blob'), mime: 'application/pdf', nombre: nombreArchPla(hoja, x.modelo, 'pdf') });
+  } catch (err) { toast(err.message, 5000); }
+}
+async function aprobarPlano(id) {
+  const x = (PLADATA.porAprobar || {})[id]; if (!x) return;
+  if (!puedeAprobar()) { toast('Solo un Jefe de terreno o Jefe de departamento puede aprobar.'); return; }
+  const el = (x.modelo.firmas || {}).elaboro || {};
+  if (el.usuario && el.usuario === sesion().usuario) { toast('No puedes aprobar un plano que elaboraste tú.', 5000); return; }
+  if (!navigator.onLine) { toast('Se necesita señal para aprobar.'); return; }
+  if (!confirm(`Aprobar y liberar ${CODIGO_PLA(id)} Rev. ${x.rev}: ${x.modelo.titulo}\n\nPuntos de bloqueo:\n${(x.modelo.pb || []).map((p, i) => `PB-${i + 1}: ${p.equipo} (${p.tablero || '—'})`).join('\n') || '—'}\n\nReemplaza a la revisión vigente. ¿Lo revisaste completo?`)) return;
+  const fz = await pedirFirma('Aprobar y liberar plano', `${x.modelo.titulo} · Rev. ${x.rev}`);
+  if (!fz) return;
+  try {
+    toast('Aprobando…', 3000);
+    const R = await cargarRef(), hoja = R.hojas.find(h => h.id === id);
+    const m = JSON.parse(JSON.stringify(x.modelo));
+    m.firmas.aprobo = { nombre: fz.nombre, cargo: fz.cargo, usuario: fz.usuario, rut: fz.rut, fecha: fz.fecha, img: fz.img };
+    m.estado = 'EMITIDO'; m.fechaEmision = new Date().toLocaleDateString('en-CA');
+    const pdf = (await pdfPlano(hoja, m)).output('datauristring').split(',')[1];
+    const j = await postPersonal({ accion: 'aprobarPlano', token: sesion().token, id, rev: x.rev, pdf }, 180000);
+    guardarPlaData(Object.assign({}, j, { borradores: PLADATA.borradores }));
+    toast(`Plano aprobado y liberado · Rev. ${j.rev} ✔`, 4500);
+    renderAprobar(); renderAvisoAprobar();
+  } catch (err) { toast('No se pudo aprobar: ' + err.message, 6000); }
+}
+async function rechazarPlano(id) {
+  const x = (PLADATA.porAprobar || {})[id]; if (!x) return;
+  const obs = prompt('¿Qué se debe corregir en el plano? (queda registrado y vuelve a quien lo elaboró)');
+  if (!obs || !obs.trim()) return;
+  try {
+    const j = await postPersonal({ accion: 'rechazarPlano', token: sesion().token, id, rev: x.rev, obs });
+    guardarPlaData(Object.assign({}, j, { borradores: PLADATA.borradores }));
+    toast('Devuelto con observaciones', 4000); renderAprobar(); renderAvisoAprobar();
+  } catch (err) { toast('No se pudo: ' + err.message, 6000); }
+}
+document.addEventListener('click', async (e) => {
+  const v = e.target.closest('[data-aprpl-ver]'); if (v) { verPlanoPorAprobar(v.dataset.aprplVer); return; }
+  const ok = e.target.closest('[data-aprpl-ok]'); if (ok) { requiereFirma(() => aprobarPlano(ok.dataset.aprplOk), 'la aprobación queda firmada por ti'); return; }
+  const no = e.target.closest('[data-aprpl-no]'); if (no) { rechazarPlano(no.dataset.aprplNo); return; }
+  const ed = e.target.closest('[data-pl-editar]'); if (ed) { abrirEditorPlano(ed.dataset.plEditar); return; }
+  const dx = e.target.closest('[data-pl-dxf]');
+  if (dx) { try { const R = await cargarRef(), h = R.hojas.find(x => x.id === dx.dataset.plDxf); const base = await basePlano(h); await dxfPlano(h, modeloVigente(h, base)); } catch (err) { toast('No se pudo: ' + err.message, 5000); } }
+});
+
 let plNivel = 'Todos';
 async function renderPlanos() {
   $('#pl-info').textContent = 'Cargando planos…';
@@ -3519,11 +4521,21 @@ async function renderPlanos() {
     (!q || [h.plano, h.titulo].concat(h.tableros).concat(R.tableros.filter(x => x.hoja === h.id).map(x => x.tagRef || '')).join(' ').toUpperCase().includes(q) || (qk && R.tableros.some(x => x.hoja === h.id && x.clave === qk))));
   $('#pl-lista').innerHTML = ['Producción', 'Acarreo', 'Tipos'].map(n => {
     const hs = hojas.filter(h => h.nivel === n); if (!hs.length) return '';
-    return `<li class="sub">${n === 'Tipos' ? 'Tableros tipo (fabricante)' : n} · ${hs.length} plano(s)</li>` + hs.map(h => `<li class="plano"><div class="info"><b>${esc(h.plano)} · ${esc(h.titulo || 'Sin título')}</b>
-      <small>${(h.tableros = h.tableros.filter(n => /\d/.test(n))).length ? esc(h.tableros.slice(0, 8).join(' · ')) + (h.tableros.length > 8 ? ' …' : '') : esc(h.archivo)}</small></div>
-      <button type="button" class="btn-pdf" data-plano="${esc(h.id)}">Ver</button></li>`).join('');
+    return `<li class="sub">${n === 'Tipos' ? 'Tableros tipo (fabricante)' : n} · ${hs.length} plano(s)</li>` + hs.map(h => {
+      const e = plaVigente(h.id), bo = (PLADATA.borradores || {})[h.id], pa = (PLADATA.porAprobar || {})[h.id], adm = esAdmin();
+      const est = pa ? `<span class="pl-est apr">Rev. ${pa.rev} por aprobar</span>` : '';
+      const vig = e ? `<span class="pl-est vig">Rev. ${e.rev} vigente · ${esc(e.fecha || '')}</span>` : '<span class="pl-est imp">Rev. 0 · importado del DWG</span>';
+      const nPB = e ? (e.modelo.pb || []).length : null;
+      return `<li class="plano con-adm"><div class="info"><b>${esc(h.plano && h.plano !== 'PDF' ? h.plano + ' · ' : '')}${esc(h.titulo || 'Sin título')}</b>
+      <small>${(h.tableros = h.tableros.filter(n => /\d/.test(n))).length ? esc(h.tableros.slice(0, 8).join(' · ')) + (h.tableros.length > 8 ? ' …' : '') : esc(h.archivo)}${nPB != null ? ' · ' + nPB + ' PB' : ''}</small>
+      <div>${vig} ${est} ${adm && bo ? `<span class="pl-est bor">Borrador Rev. ${bo.rev}</span>` : ''}</div></div>
+      <div class="acc-adm"><button type="button" class="btn-pdf" data-plano="${esc(h.id)}">📄 Ver plano</button>
+      ${adm ? `<button type="button" data-pl-editar="${esc(h.id)}">✏️ ${bo ? 'Seguir editando' : 'Editar plano'}</button>` : ''}
+      ${adm && h.vec ? `<button type="button" class="btn-pdf" data-pl-dxf="${esc(h.id)}">⤓ DXF</button>` : ''}
+      ${pa ? `<button type="button" class="btn-pdf" data-aprpl-ver="${esc(h.id)}">Revisión por aprobar</button>` : ''}</div></li>`;
+    }).join('');
   }).join('') || '<li><div class="info"><small>Sin resultados.</small></div></li>';
-  $('#pl-info').textContent = `Fuente: ${R.fuente}. Los planos de Acarreo están como imagen (sus textos están dibujados como líneas en el DWG).`;
+  $('#pl-info').textContent = `Fuente: ${R.fuente}. Los planos que venían en PDF se editan sobre la imagen (puntos de bloqueo, textos, líneas y tapas).`;
 }
 $('#pl-buscar').addEventListener('input', () => renderPlanos());
 document.addEventListener('click', async (e) => {
@@ -3642,7 +4654,7 @@ function renderUniFicha(t) {
   const refs = refsDeTablero(t), gref = REF ? gomDe(claveTablero(t)) : null;
   if (gref) html += `<p style="margin:10px 0 0"><b>Referencia del plano mina:</b> ${esc(gref.nombre)}${gref.tag ? ' · TAG ' + esc(gref.tag) : ''}${gref.ubic ? ' · ' + esc(gref.ubic) : ''} · ${esc(gref.sector)}
     <br><span class="muted">Información del plano, no actualizada: solo referencial. Los datos vigentes son los registrados en GEO ELEC.</span></p>`;
-  if (refs.length) html += `<p style="margin:10px 0 0"><b>Plano de referencia:</b> ${[...new Map(refs.map(r => [r.hoja.id, r.hoja])).values()]
+  if (refs.length) html += `<p style="margin:10px 0 0"><b>Plano eléctrico:</b> ${[...new Map(refs.map(r => [r.hoja.id, r.hoja])).values()]
     .map(h => `<button type="button" class="link-btn" data-plano="${esc(h.id)}">${esc(h.plano)} · ${esc(h.titulo)}</button>`).join(' · ')}</p>`;
   if (adm) html += `<div class="acc-adm" style="margin-top:12px"><button type="button" data-uni-editar="${esc(t.id)}">📐 ${bo ? 'Continuar borrador Rev. ' + bo.rev : e ? 'Nueva revisión del diagrama' : 'Confeccionar diagrama en GEO ELEC'}</button></div>`;
   $('#fi-uni').innerHTML = html;
@@ -4078,9 +5090,9 @@ async function enviarAprobacionUni() {
 
 // ---------- Aprobación (Jefe de terreno / Jefe de departamento) ----------
 function renderAvisoAprobar() {
-  const n = Object.keys(UNIDATA.porAprobar || {}).length, b = $('#ini-aprobar');
-  b.hidden = !(n && (puedeAprobar() || esAdmin()));
-  b.textContent = `📝 ${n} diagrama(s) unilineal(es) ${puedeAprobar() ? 'por aprobar' : 'esperando aprobación'} →`;
+  const nu = Object.keys(UNIDATA.porAprobar || {}).length, np = Object.keys((typeof PLADATA !== 'undefined' && PLADATA.porAprobar) || {}).length, b = $('#ini-aprobar');
+  b.hidden = !((nu + np) && (puedeAprobar() || esAdmin()));
+  b.textContent = `📝 ${[nu ? nu + ' unilineal(es)' : '', np ? np + ' plano(s)' : ''].filter(Boolean).join(' y ')} ${puedeAprobar() ? 'por aprobar' : 'esperando aprobación'} →`;
 }
 function renderAprobar() {
   const pa = UNIDATA.porAprobar || {}, ids = Object.keys(pa), puede = puedeAprobar();
@@ -4091,8 +5103,17 @@ function renderAprobar() {
       <div class="acc-adm"><button type="button" class="btn-pdf" data-apr-ver="${esc(id)}">📄 Revisar diagrama</button>
       ${puede ? `<button type="button" class="btn-pdf" data-apr-ok="${esc(id)}">✍ Aprobar y liberar</button><button type="button" data-apr-no="${esc(id)}">↩ Devolver con observaciones</button>` : ''}
       <button type="button" class="btn-pdf" data-ficha-id="${esc(id)}">Ficha</button></div></li>`;
-  }).join('') : '<li><div class="info"><small>No hay diagramas pendientes de aprobación.</small></div></li>';
-  if (ids.length && !puede) $('#apr-lista').insertAdjacentHTML('beforeend', '<li><div class="info"><small>Solo un Jefe de terreno o Jefe de departamento (con su sesión iniciada) puede aprobar.</small></div></li>');
+  }).join('') : '';
+  const pp = PLADATA.porAprobar || {}, idp = Object.keys(pp);
+  $('#apr-lista').insertAdjacentHTML('beforeend', idp.map(id => {
+    const x = pp[id], m = x.modelo, el = (m.firmas || {}).elaboro || {};
+    return `<li class="con-adm"><div class="info"><b>📐 Plano ${esc(m.plano && m.plano !== 'PDF' ? m.plano + ' · ' : '')}${esc(m.titulo || id)} · Rev. ${x.rev}</b>
+      <small>${esc(CODIGO_PLA(id))} · ${esc(m.descRev || '')} · ${(m.pb || []).length} punto(s) de bloqueo<br>Elaboró y revisó: ${esc(el.nombre || '—')} (${esc(el.cargo || '')}) · ${esc(el.fecha || x.fecha || '')}</small></div>
+      <div class="acc-adm"><button type="button" class="btn-pdf" data-aprpl-ver="${esc(id)}">📄 Revisar plano</button>
+      ${puede ? `<button type="button" class="btn-pdf" data-aprpl-ok="${esc(id)}">✍ Aprobar y liberar</button><button type="button" data-aprpl-no="${esc(id)}">↩ Devolver con observaciones</button>` : ''}</div></li>`;
+  }).join(''));
+  if (!ids.length && !idp.length) $('#apr-lista').innerHTML = '<li><div class="info"><small>No hay documentos pendientes de aprobación.</small></div></li>';
+  if ((ids.length || idp.length) && !puede) $('#apr-lista').insertAdjacentHTML('beforeend', '<li><div class="info"><small>Solo un Jefe de terreno o Jefe de departamento (con su sesión iniciada) puede aprobar.</small></div></li>');
 }
 async function verPorAprobar(id) {
   const x = (UNIDATA.porAprobar || {})[id]; if (!x) return;
@@ -4382,7 +5403,7 @@ async function activarAdmin() {
     const nombre = (prompt('Tu nombre (queda en el registro de cambios):', ls.get('adminNombre', '') || ls.get('realizadoPor', '')) || '').trim();
     if (!nombre) { toast('Se necesita el nombre para registrar los cambios.'); return; }
     ls.set('claveAdmin', clave); ls.set('adminNombre', nombre.toLocaleUpperCase('es-CL'));
-    toast('Modo administrador activo ✔'); renderAdminUI(); cargarUni(true);
+    toast('Modo administrador activo ✔'); renderAdminUI(); cargarUni(true); cargarPlanos(true);
   } catch (err) { toast('No se pudo validar: ' + err.message, 4000); }
 }
 function renderAdminUI() {
@@ -4670,7 +5691,7 @@ function editarDocumento(d) {
 // --- Panel ---
 async function renderAdmin() {
   if (!esAdmin()) return;
-  cargarPersonal(); renderAdminUni(); cargarUni(true);
+  cargarPersonal(); renderAdminUni(); cargarUni(true); cargarPlanos(true);
   if (!$('#zip-desde').value) {   // por defecto: los últimos 12 meses
     const h = new Date(), d = new Date(h.getFullYear() - 1, h.getMonth(), h.getDate());
     $('#zip-desde').value = d.toLocaleDateString('en-CA'); $('#zip-hasta').value = h.toLocaleDateString('en-CA');
