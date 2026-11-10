@@ -108,6 +108,10 @@
     border: 0; border-radius: 50%; background: rgba(0,0,0,.65); color: #fff; font-size: 16px; line-height: 1; }
   .fila-btn { display: flex; gap: 8px; flex-wrap: wrap; }
   .btn-foto.sec { background: #fff; color: var(--tinta); border: 1px solid var(--borde); }
+  .drop-on { outline: 3px dashed #0077A8 !important; outline-offset: 3px; background-color: rgba(0, 119, 168, 0.06); border-radius: 10px; }
+  .drop-on label.btn-foto.sec { border-color: #0077A8; background: #E6F4FA; }
+  label.btn-foto.drop-ok { box-shadow: 0 0 0 3px #2E8B57 !important; }
+  @media (hover: hover) and (pointer: fine) { label.btn-foto.sec::after { content: ' · o arrastra / Ctrl+V'; font-size: 11px; font-weight: 600; opacity: .6; margin-left: 4px; } }
   .item-foto { margin-top: 10px; }
   .item-foto .btn-foto { min-height: 42px; font-size: 14px; }
   .foto .prev { margin-top: 10px; display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
@@ -206,7 +210,10 @@
   .vis-top button { min-height: 42px; min-width: 42px; padding: 0 10px; background: transparent; color: #fff; border: 1px solid #555; font-size: 18px; }
   .vis-tit { flex: 1; min-width: 0; } .vis-tit b, .vis-tit small { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .vis-tit small { opacity: .75; font-size: 12px; }
-  #vis-cuerpo { flex: 1; overflow: auto; padding: 8px; -webkit-overflow-scrolling: touch; }
+  #vis-cuerpo { flex: 1; overflow: auto; padding: 8px; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; overscroll-behavior: contain; }
+  #vis-cuerpo .vis-hoja { display: inline-block; min-width: 100%; }
+  #vis-cuerpo canvas { height: auto; }
+  #vis-ayuda { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); background: rgba(0,0,0,.7); color: #fff; font-size: 12.5px; padding: 6px 12px; border-radius: 999px; pointer-events: none; transition: opacity .5s; white-space: nowrap; }
   #vis-cuerpo canvas, #vis-cuerpo img { display: block; margin: 0 auto 8px; background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.4); }
   #vis-cuerpo .vis-msg { color: #fff; text-align: center; padding: 40px 16px; }
   #vis-cuerpo .vis-msg button { margin-top: 14px; }
@@ -628,7 +635,7 @@
         <button type="button" data-uev="pdf"><span>📄</span><small>Vista PDF</small></button>
       </div>
       <div class="pe-lienzo ue-lienzo" id="ue-lienzo"><div id="ue-prev" style="width:100%;height:100%"></div></div>
-      <p class="muted" style="margin:6px 2px 10px">El plano se redibuja solo con cada dato. Arrastra para mover, usa la rueda o pellizca para acercar. Toca un componente (recuadro azul) para ir a sus datos en el panel.</p>
+      <p class="muted" style="margin:6px 2px 10px">El plano se redibuja solo con cada dato. Rueda o dos dedos para recorrer, Ctrl + rueda o pellizco para acercar, doble clic para ampliar. Toca un componente (recuadro azul) para ir a sus datos en el panel.</p>
     </div><div class="pe-side">
       <div class="card"><h3>🧩 Esquema del tablero (componentes)</h3>
         <p class="muted" style="margin:4px 0 8px">Mismos datos que el plano tipo: alimentación y circuitos del origen, protecciones, diferenciales, transformadores, barras, salidas y puntos de bloqueo.</p>
@@ -1355,10 +1362,12 @@
     <button type="button" id="vis-cerrar" aria-label="Cerrar">✕</button>
     <div class="vis-tit"><b id="vis-titulo"></b><small id="vis-sub"></small></div>
     <button type="button" id="vis-menos" aria-label="Alejar">−</button>
+    <button type="button" id="vis-ajustar" aria-label="Ajustar al ancho" style="font-size:13px;min-width:56px">100%</button>
     <button type="button" id="vis-mas" aria-label="Acercar">+</button>
     <button type="button" id="vis-desc" aria-label="Descargar">⤓</button>
   </div>
   <div id="vis-cuerpo"></div>
+  <div id="vis-ayuda"></div>
 </div>
 
 <!-- ============ CÁMARA DE LA APP ============ -->
@@ -1393,7 +1402,7 @@ const CONFIG = {
 };
 
 // Versión visible al pie de la pantalla de inicio (sirve para confirmar que el teléfono tiene la última)
-const VERSION_APP = 'v39 · 10-11-2026';
+const VERSION_APP = 'v41 · 10-11-2026';
 const NIVELES = ['UCL', 'Producción', 'Acarreo', 'SNV'];
 const SEN = 'Cuadro de señalética (riesgo eléctrico, potencia, nivel de tensión, punto de bloqueo, maniobra RCP, logo empresa, personal autorizado, diagrama unilineal, carga de fuego, programa de mantenimiento)';
 const BASE_TD = ['Orden y aseo en el sector', 'Iluminación', 'Número de TAG', 'Soporte o anclaje del tablero en buen estado',
@@ -1776,9 +1785,20 @@ function refrescarEstadoChkd() {
       if (!j.ok) { ls.set('chkdConsulta', { hora: new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }), error: j.error || 'error del servidor' }); if (!$('#v-chkd').hidden) renderChkd(); return false; }
       const t = chkdLocal(s.usuario); let cambio = false;
       const porId = {}; Object.values(t).forEach(dia => Object.values(dia || {}).forEach(r => { if (r && r.id) porId[r.id] = r; }));
-      (j.mios || []).forEach(m => {
+      const vistos = {};
+      (j.mios || []).forEach(m => {   // vienen del más reciente al más antiguo
         let loc = porId[m.id];
-        if (!loc) { const f = String(m.fecha || '').slice(0, 10), c = (t[f] || {})[m.codigo]; if (c && !c.revision) loc = c; }   // mismo día y checklist
+        const f = String(m.fecha || '').slice(0, 10), clave = f + '|' + m.codigo, primero = !vistos[clave]; vistos[clave] = 1;
+        if (!loc) { const c = (t[f] || {})[m.codigo]; if (c && !c.revision) loc = c; }   // mismo día y checklist, aún sin respuesta
+        // Hecho en otro equipo (teléfono / escritorio): se trae completo para verlo, validarlo y descargar su PDF aquí
+        if (!loc && primero && m.datos && CHKD[m.codigo]) {
+          const c = (t[f] || {})[m.codigo];
+          if (!c || (c.revision && (m.hora || '') >= (c.hora || ''))) {
+            const nuevo = Object.assign({}, m.datos, { id: m.id, fecha: f, hora: m.hora || m.datos.hora, codigo: m.codigo, deOtroEquipo: true });
+            if (nuevo.firma && !nuevo.firma.img && j.firmaYo) nuevo.firma = Object.assign({}, nuevo.firma, { img: j.firmaYo });
+            (t[f] = t[f] || {})[m.codigo] = nuevo; loc = nuevo; nuevo.revision = ''; cambio = true;
+          }
+        }
         if (loc && (loc.revision !== m.revision || (loc.motivo || '') !== (m.motivo || '') || loc.reviso !== m.reviso)) {
           Object.assign(loc, { revision: m.revision || 'PENDIENTE', reviso: m.reviso || '', revCargo: m.revCargo || '', fRev: m.fRev || '', revCod: m.revCod || '', motivo: m.motivo || '' }); cambio = true;
         }
@@ -2035,7 +2055,7 @@ $('#v-chkd').addEventListener('click', async (e) => {
 const nombreChkd = (r) => `${r.codigo}_${r.fecha}_${r.usuario}.pdf`;
 // ---- Envío al servidor ----
 let enviandoChkd = false;
-setInterval(() => { if (!$('#v-chkd').hidden && sesionActiva() && !chkDiarioListo() && chkDiarioFirmado()) refrescarEstadoChkd(); }, 30000);
+setInterval(() => { if (!$('#v-chkd').hidden && sesionActiva() && !chkDiarioListo()) refrescarEstadoChkd(); }, 30000);
 async function enviarChkDiarios() {
   if (enviandoChkd || !navigator.onLine || !configurado() || !window.jspdf) return;
   const s = sesion(); if (!s || !sesionActiva()) return;
@@ -2187,7 +2207,7 @@ function pdfChkDiario0(r, opt = {}) {
   else { rect(M, y, AN, hob); txt(C.epp ? 'Obs:' : 'OBSERVACIONES:', M + 1.5, y + 3.8, { b: 1, pt: 7 }); doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.text(lob, M + 1.5, y + 7.4); y += hob + 2; }
   // Firmas
   const rev = opt.reviso || null;
-  salto(C.epp ? 30 : horiz ? 29 : 37);
+  salto(C.epp ? 30 : C.multi ? 8 : horiz ? 29 : 37);   // ELEC-009 lleva las firmas en la cabecera: solo falta la línea de validación
   if (C.epp) {
     const fila = (l, v, l2, img, f2) => { rect(M, y, AN * 0.6, 10); txt(l, M + 1.5, y + 6, { b: 1, pt: 7 }); txt(v, M + 34, y + 6, { pt: 7 }); rect(M + AN * 0.6, y, AN * 0.4, 10); txt(l2, M + AN * 0.6 + 1.5, y + 6, { b: 1, pt: 7 }); firmaEn(img, M + AN * 0.6 + 14, y + 0.6, 26, 8.6); if (f2) txt(f2, M + AN - 1.5, y + 8.8, { pt: 5.4, al: 'right' }); y += 10; };
     rect(M, y, AN * 0.6, 7); txt('Obra:', M + 1.5, y + 4.8, { b: 1, pt: 7 }); txt(OBRA_CHKD, M + 34, y + 4.8, { pt: 7 }); rect(M + AN * 0.6, y, AN * 0.4, 7); txt('Fecha:', M + AN * 0.6 + 1.5, y + 4.8, { b: 1, pt: 7 }); txt(fDMA(r.fecha) + ' ' + (r.hora || ''), M + AN * 0.6 + 14, y + 4.8, { pt: 7 }); y += 7;
@@ -5401,7 +5421,7 @@ let PE = null;
 const PE_HERR = [['ver', '✋', 'Mano (mover vista)'], ['sel', '👆', 'Seleccionar'], ['area', '⬚', 'Seleccionar área'], ['pb', '⚠', 'Punto de bloqueo'], ['sim', '⎓', 'Símbolo'],
   ['texto', 'T', 'Texto'], ['linea', '╱', 'Línea / conductor'], ['tapa', '▭', 'Tapar'], ['borrar', '🗑', 'Borrar']];
 const PE_AYUDA = {
-  ver: 'Arrastra para mover el plano. Pellizca o usa la rueda del mouse para acercar.',
+  ver: 'Arrastra o usa la rueda para recorrer el plano. Pellizca o Ctrl + rueda para acercar o alejar.',
   sel: 'Toca un elemento para modificarlo; arrástralo para moverlo. En un plano tipo, toca un componente del esquema para editar sus datos. Teclado: Supr borra, Ctrl+Z / Ctrl+Y, Ctrl+D duplica, flechas desplazan.',
   area: 'Toca dos esquinas: se seleccionan todos los elementos dentro del recuadro (por ejemplo, un tablero completo) para moverlos, copiarlos o borrarlos.',
   pb: 'Toca donde va el símbolo de punto de bloqueo. Luego toca el interruptor o equipo que se bloquea para dibujar la flecha.',
@@ -5627,7 +5647,13 @@ function zoomPE(k, cxp, cyp) {
   PE.view = { x: cx - (cx - v.x) * f, y: cy - (cy - v.y) * f, w: nw, h: v.h * f };
   dibujarPEPronto();
 }
-$('#pe-lienzo').addEventListener('wheel', (e) => { if (!PE) return; e.preventDefault(); const p = puntoPapel(e); if (p) zoomPE(e.deltaY > 0 ? 1.18 : 1 / 1.18, p[0], p[1]); }, { passive: false });
+$('#pe-lienzo').addEventListener('wheel', (e) => {
+  if (!PE) return; e.preventDefault();
+  if (e.ctrlKey || e.metaKey) { const p = puntoPapel(e); if (p) zoomPE(Math.exp(e.deltaY * (e.deltaMode ? 0.05 : 0.0025)), p[0], p[1]); return; }
+  const svg = $('#pe-svg svg'); if (!svg) return;
+  const r = svg.getBoundingClientRect(), v = PE.view, k = e.deltaMode ? 16 : 1, dx = (e.shiftKey && !e.deltaX ? e.deltaY : e.deltaX) * k, dy = e.shiftKey ? 0 : e.deltaY * k;
+  PE.view = Object.assign({}, v, { x: v.x + dx * v.w / r.width, y: v.y + dy * v.h / r.height }); dibujarPEPronto();
+}, { passive: false });
 $('#pe-lienzo').addEventListener('pointerdown', (e) => {
   if (!PE) return;
   $('#pe-lienzo').setPointerCapture(e.pointerId);
@@ -6878,7 +6904,13 @@ $('#ue-barra').addEventListener('click', async (e) => {
   else if (a === 'pdf') { try { const doc = await pdfUni(UE.m, true); verDocumento({ titulo: 'Vista previa (borrador)', codigo: CODIGO_UNI(UE.m.id) + ' · Rev. ' + UE.m.rev, blobLocal: doc.output('blob'), mime: 'application/pdf', nombre: nombreArchUni(UE.m, 'pdf', 1) }); } catch (err) { toast(err.message, 5000); } }
 });
 const lzU = $('#ue-lienzo');
-lzU.addEventListener('wheel', (e) => { if (!UE) return; e.preventDefault(); zoomUEV(e.deltaY < 0 ? 1.15 : 1 / 1.15, e.clientX, e.clientY); }, { passive: false });
+lzU.addEventListener('wheel', (e) => {
+  if (!UE) return; e.preventDefault();
+  if (e.ctrlKey || e.metaKey) { zoomUEV(Math.exp(-e.deltaY * (e.deltaMode ? 0.05 : 0.0025)), e.clientX, e.clientY); return; }
+  const { vb, s } = escalaUEV(), k = e.deltaMode ? 16 : 1, dx = (e.shiftKey && !e.deltaX ? e.deltaY : e.deltaX) * k, dy = e.shiftKey ? 0 : e.deltaY * k;
+  UEV.vb = [vb[0] + dx * s, vb[1] + dy * s, vb[2], vb[3]]; dibujarVistaUni();
+}, { passive: false });
+lzU.addEventListener('dblclick', (e) => { if (UE && !e.target.closest('[data-zona]')) zoomUEV(1.8, e.clientX, e.clientY); });
 lzU.addEventListener('pointerdown', (e) => { UEV.ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); UEV.mov = 0; if (UEV.ptrs.size === 2) UEV.dist = null; });
 lzU.addEventListener('pointermove', (e) => {
   const p0 = UEV.ptrs.get(e.pointerId); if (!p0) return;
@@ -7788,9 +7820,10 @@ async function verDocumento(d) {
 const tipoDe = (d, blob) => (blob && blob.type) || d.mime || '';
 async function dibujarVisor(tk) {
   const d = VIS.doc, mime = tipoDe(d, VIS.blob), cuerpo = $('#vis-cuerpo');
-  const ancho = Math.max(200, cuerpo.clientWidth - 16) * VIS.zoom;
+  VIS.base = Math.max(200, cuerpo.clientWidth - 16); VIS.pdf = null; VIS.resZ = VIS.zoom;
+  const ancho = VIS.base * VIS.zoom; etqZoomVis();
   if (/^image\//.test(mime)) {
-    cuerpo.innerHTML = `<img src="${VIS.url}" alt="" style="width:${Math.round(ancho)}px;max-width:none">`; return;
+    cuerpo.innerHTML = `<div class="vis-hoja"><img src="${VIS.url}" alt="" draggable="false" style="width:${Math.round(ancho)}px;max-width:none"></div>`; ayudaVis(); return;
   }
   if (/pdf/.test(mime)) {
     cuerpo.innerHTML = '<div class="vis-msg">Abriendo PDF…</div>';
@@ -7798,18 +7831,14 @@ async function dibujarVisor(tk) {
       await cargarPdfJs();
       const pdf = await window.pdfjsLib.getDocument({ data: new Uint8Array(await VIS.blob.arrayBuffer()) }).promise;
       if (tk !== VIS.token) return;
-      cuerpo.innerHTML = '';
-      const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+      cuerpo.innerHTML = '<div class="vis-hoja"></div>'; VIS.pdf = pdf;
+      const hoja = cuerpo.firstChild;
       for (let n = 1; n <= pdf.numPages; n++) {
         if (tk !== VIS.token) return;
-        const pag = await pdf.getPage(n);
-        const base = pag.getViewport({ scale: 1 });
-        const vp = pag.getViewport({ scale: (ancho / base.width) * dpr });
-        const c = document.createElement('canvas'); c.width = Math.floor(vp.width); c.height = Math.floor(vp.height);
-        c.style.width = Math.round(ancho) + 'px';
-        cuerpo.appendChild(c);
-        await pag.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+        const c = document.createElement('canvas'); c.style.width = Math.round(VIS.base * VIS.zoom) + 'px'; hoja.appendChild(c);
+        await renderPagVis(pdf, n, c, VIS.zoom);
       }
+      ayudaVis();
     } catch (err) {
       if (tk === VIS.token) cuerpo.innerHTML = `<div class="vis-msg">No se pudo mostrar el PDF (${esc(err.message)}).<br><button type="button" class="big" onclick="descargarVisor()">Descargar archivo</button></div>`;
     }
@@ -7843,9 +7872,62 @@ function cerrarVisor(desdeHist = false) {
 }
 $('#vis-cerrar').addEventListener('click', () => cerrarVisor());
 $('#vis-desc').addEventListener('click', descargarVisor);
-const ZOOMS = [1, 1.5, 2, 3];
-$('#vis-mas').addEventListener('click', () => { const i = ZOOMS.indexOf(VIS.zoom); if (i < ZOOMS.length - 1 && VIS.blob) { VIS.zoom = ZOOMS[i + 1]; dibujarVisor(++VIS.token); } });
-$('#vis-menos').addEventListener('click', () => { const i = ZOOMS.indexOf(VIS.zoom); if (i > 0 && VIS.blob) { VIS.zoom = ZOOMS[i - 1]; dibujarVisor(++VIS.token); } });
+// ---- Zoom del visor: se recorre con la rueda / el dedo (scroll) y se acerca con pellizco, Ctrl+rueda, doble toque o + / − ----
+const ZMIN = 0.5, ZMAX = 6;
+async function renderPagVis(pdf, n, c, z) {
+  const pag = await pdf.getPage(n), base = pag.getViewport({ scale: 1 }), dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  let k = (VIS.base * z / base.width) * dpr; k = Math.min(k, 4600 / base.width, 4600 / base.height);   // límite de memoria en teléfonos
+  const vp = pag.getViewport({ scale: k });
+  const tmp = document.createElement('canvas'); tmp.width = Math.floor(vp.width); tmp.height = Math.floor(vp.height);
+  await pag.render({ canvasContext: tmp.getContext('2d'), viewport: vp }).promise;
+  c.width = tmp.width; c.height = tmp.height; c.getContext('2d').drawImage(tmp, 0, 0);
+}
+const etqZoomVis = () => { const b = $('#vis-ajustar'); if (b) b.textContent = Math.round(VIS.zoom * 100) + '%'; };
+function ayudaVis() {
+  const a = $('#vis-ayuda'); if (!a) return;
+  a.textContent = matchMedia('(pointer: coarse)').matches ? 'Desliza para recorrer · pellizca para acercar · doble toque = zoom' : 'Rueda para recorrer · Ctrl + rueda para acercar · doble clic = zoom';
+  a.style.opacity = 1; clearTimeout(VIS.tAy); VIS.tAy = setTimeout(() => { a.style.opacity = 0; }, 3500);
+}
+function zoomVis(z, cx, cy) {
+  const c = $('#vis-cuerpo'); if (!VIS.blob || !VIS.base) return;
+  z = Math.max(ZMIN, Math.min(ZMAX, z)); if (Math.abs(z - VIS.zoom) < 0.001) return;
+  const r = c.getBoundingClientRect(), fx = (cx ?? r.left + r.width / 2) - r.left, fy = (cy ?? r.top + r.height / 2) - r.top;
+  const ratio = z / VIS.zoom, sx = c.scrollLeft + fx, sy = c.scrollTop + fy;
+  VIS.zoom = z;
+  c.querySelectorAll('.vis-hoja canvas, .vis-hoja img').forEach(el => { el.style.width = Math.round(VIS.base * z) + 'px'; });
+  c.scrollLeft = sx * ratio - fx; c.scrollTop = sy * ratio - fy;
+  etqZoomVis();
+  clearTimeout(VIS.tRes);   // al terminar de hacer zoom se vuelve a dibujar el PDF con más detalle
+  if (VIS.pdf && z > VIS.resZ * 1.2) VIS.tRes = setTimeout(async () => {
+    const tk = VIS.token, pdf = VIS.pdf, zz = VIS.zoom, cs = [...c.querySelectorAll('.vis-hoja canvas')];
+    for (let n = 0; n < cs.length; n++) { if (tk !== VIS.token || pdf !== VIS.pdf) return; await renderPagVis(pdf, n + 1, cs[n], zz); }
+    if (tk === VIS.token) VIS.resZ = zz;
+  }, 400);
+}
+$('#vis-mas').addEventListener('click', () => zoomVis(VIS.zoom * 1.3));
+$('#vis-menos').addEventListener('click', () => zoomVis(VIS.zoom / 1.3));
+$('#vis-ajustar').addEventListener('click', () => zoomVis(1));
+const cuerpoVis = $('#vis-cuerpo');
+cuerpoVis.addEventListener('wheel', (e) => { if (!e.ctrlKey && !e.metaKey) return; e.preventDefault(); zoomVis(VIS.zoom * Math.exp(-e.deltaY * (e.deltaMode ? 0.05 : 0.0025)), e.clientX, e.clientY); }, { passive: false });
+cuerpoVis.addEventListener('dblclick', (e) => zoomVis(VIS.zoom < 1.7 ? 2.5 : 1, e.clientX, e.clientY));
+const PZ = { d: 0, z: 1, t: 0, x: 0, y: 0 };
+const dist2 = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+cuerpoVis.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 2) { PZ.d = dist2(e.touches); PZ.z = VIS.zoom; e.preventDefault(); }
+  else if (e.touches.length === 1) {   // doble toque
+    const t = e.touches[0], now = Date.now();
+    if (now - PZ.t < 300 && Math.hypot(t.clientX - PZ.x, t.clientY - PZ.y) < 30) { e.preventDefault(); zoomVis(VIS.zoom < 1.7 ? 2.5 : 1, t.clientX, t.clientY); PZ.t = 0; }
+    else { PZ.t = now; PZ.x = t.clientX; PZ.y = t.clientY; }
+  }
+}, { passive: false });
+cuerpoVis.addEventListener('touchmove', (e) => {
+  if (e.touches.length !== 2 || !PZ.d) return; e.preventDefault();
+  const t = e.touches; zoomVis(PZ.z * dist2(t) / PZ.d, (t[0].clientX + t[1].clientX) / 2, (t[0].clientY + t[1].clientY) / 2);
+}, { passive: false });
+cuerpoVis.addEventListener('touchend', (e) => { if (e.touches.length < 2) PZ.d = 0; });
+// Gestos de Safari (iPhone / iPad / Mac)
+cuerpoVis.addEventListener('gesturestart', (e) => { e.preventDefault(); PZ.z = VIS.zoom; });
+cuerpoVis.addEventListener('gesturechange', (e) => { e.preventDefault(); zoomVis(PZ.z * e.scale, e.clientX, e.clientY); });
 
 // ===================== CHECKLIST DE MANTENCIÓN EN PDF (formato GEOVITA) =====================
 // Se genera en el teléfono al guardar una mantención (funciona sin señal), con las respuestas del
@@ -8205,6 +8287,66 @@ document.addEventListener('click', (e) => {
   const h = (fichaActual.hist || [])[+b.dataset.chkpdf]; if (h) verChecklistHist(h, fichaActual);
 });
 
+// ===================== ARRASTRAR Y SOLTAR / PEGAR (Ctrl+V) ARCHIVOS =====================
+// Cualquier botón de foto o archivo acepta: arrastrar el archivo encima, o copiar una imagen (Ctrl+C) y pegarla (Ctrl+V).
+const aceptaArch = (inp, f) => {
+  const acc = (inp.accept || '').split(',').map(x => x.trim().toLowerCase()).filter(Boolean); if (!acc.length) return true;
+  const t = (f.type || '').toLowerCase(), n = (f.name || '').toLowerCase();
+  return acc.some(a => a.startsWith('.') ? n.endsWith(a) : a.endsWith('/*') ? t.startsWith(a.slice(0, -1)) : t === a);
+};
+const visibleEl = (el) => !!(el && el.offsetParent !== null && el.getClientRects().length);
+function zonaArchivo(el) {   // contenedor con los botones de archivo más cercano al elemento
+  for (let n = el, k = 0; n && n !== document.body && k < 6; n = n.parentElement, k++) {
+    if (n.matches && n.matches('#visor, #camara')) return null;
+    if (n.querySelector && n.querySelector('label.btn-foto input[type=file]')) return n;
+  }
+  return null;
+}
+function inputDeZona(zona, files) {
+  const ins = [...zona.querySelectorAll('label.btn-foto input[type=file]')].filter(i => !i.disabled && visibleEl(i.closest('label')));
+  const ok = (i) => files.some(f => aceptaArch(i, f));
+  return ins.filter(i => !i.hasAttribute('capture') && i.multiple && ok(i))[0] || ins.filter(i => !i.hasAttribute('capture') && ok(i))[0] || ins.filter(ok)[0] || null;
+}
+function entregarArchivos(inp, files) {
+  const sirven = files.filter(f => aceptaArch(inp, f));
+  if (!sirven.length) { toast('Ese tipo de archivo no se acepta aquí' + (inp.accept ? ' (' + inp.accept.replace(/application\//g, '').replace(/image\/\*/g, 'imagen') + ')' : '') + '.', 4000); return false; }
+  const dt = new DataTransfer(); (inp.multiple ? sirven : sirven.slice(0, 1)).forEach(f => dt.items.add(f));
+  inp.files = dt.files; inp.dispatchEvent(new Event('change', { bubbles: true }));
+  const lab = inp.closest('label'); if (lab) { lab.classList.add('drop-ok'); setTimeout(() => lab.classList.remove('drop-ok'), 1200); }
+  return true;
+}
+const DROP = { zona: null, ultima: null, t: 0 };
+const marcarZona = (z) => { if (DROP.zona === z) return; if (DROP.zona) DROP.zona.classList.remove('drop-on'); DROP.zona = z; if (z) z.classList.add('drop-on'); };
+const conArchivos = (e) => e.dataTransfer && [...(e.dataTransfer.types || [])].includes('Files');
+document.addEventListener('dragover', (e) => { if (!conArchivos(e)) return; e.preventDefault(); const z = zonaArchivo(e.target); marcarZona(z); e.dataTransfer.dropEffect = z ? 'copy' : 'none'; });
+document.addEventListener('dragleave', (e) => { if (!e.relatedTarget || !document.contains(e.relatedTarget)) marcarZona(null); });
+document.addEventListener('drop', (e) => {
+  if (!conArchivos(e)) return; e.preventDefault();
+  const z = zonaArchivo(e.target); marcarZona(null);
+  const files = [...e.dataTransfer.files]; if (!z || !files.length) { if (files.length) toast('Suelta el archivo sobre un botón de foto o "Elegir archivo".'); return; }
+  const inp = inputDeZona(z, files); if (inp) { DROP.ultima = z; entregarArchivos(inp, files); } else toast('Ese tipo de archivo no se acepta aquí.');
+});
+// Recordar el último botón de archivo usado o señalado (para saber dónde pegar)
+['pointerover', 'focusin', 'click'].forEach(ev => document.addEventListener(ev, (e) => { const z = e.target.closest && e.target.closest('label.btn-foto') && zonaArchivo(e.target); if (z) { DROP.ultima = z; DROP.t = Date.now(); } }, true));
+document.addEventListener('paste', (e) => {
+  const cd = e.clipboardData; if (!cd) return;
+  let files = [...(cd.files || [])];
+  if (!files.length) files = [...(cd.items || [])].filter(i => i.kind === 'file').map(i => i.getAsFile()).filter(Boolean);
+  if (!files.length) return;
+  const a = document.activeElement, enTexto = a && (a.matches('textarea') || (a.matches('input') && !['file', 'checkbox', 'radio', 'button'].includes(a.type)));
+  if (enTexto && cd.getData('text/plain')) return;   // pegar texto en un campo: normal
+  if (!$('#visor').hidden || !$('#camara').hidden) return;
+  const pz = Date.now();
+  files = files.map((f, k) => f.name && f.name !== 'image.png' ? f : new File([f], 'pegado_' + new Date(pz).toISOString().replace(/[-:T]/g, '').slice(0, 14) + (k ? '_' + k : '') + '.' + ((f.type.split('/')[1] || 'png').replace('jpeg', 'jpg')), { type: f.type || 'image/png' }));
+  let zonas = [...document.querySelectorAll('main section:not([hidden]) label.btn-foto, .modal:not([hidden]) label.btn-foto, [role=dialog]:not([hidden]) label.btn-foto')].filter(visibleEl).map(l => zonaArchivo(l)).filter(Boolean);
+  zonas = [...new Set(zonas)];
+  const z = DROP.ultima && document.contains(DROP.ultima) && zonas.includes(DROP.ultima) ? DROP.ultima : zonas.length === 1 ? zonas[0] : null;
+  if (!z) { toast(zonas.length ? 'Pasa el mouse o toca el botón de foto/archivo donde quieres pegar y vuelve a presionar Ctrl+V.' : 'En esta pantalla no hay dónde adjuntar una imagen.', 4500); return; }
+  const inp = inputDeZona(z, files); if (!inp) { toast('Ese tipo de archivo no se acepta aquí.'); return; }
+  e.preventDefault();
+  if (entregarArchivos(inp, files)) toast(`${files.length > 1 ? files.length + ' archivos pegados' : 'Imagen pegada'} ✔`, 2200);
+});
+
 // ===================== CÁMARA DE LA APP =====================
 // Todos los botones "Tomar foto" usan esta cámara (getUserMedia). Así se abre la cámara aunque el
 // navegador ignore capture="environment" (computadores y algunos Android abren el explorador de archivos).
@@ -8315,7 +8457,7 @@ if (idInicial) { VISTA_GUARDADA = null; abrirFicha(idInicial); }
 else if (!restaurarVista()) VISTA_GUARDADA = null;
 sincronizar();
 setInterval(() => sincronizar(), 60000);
-document.addEventListener('visibilitychange', () => { if (!document.hidden) sincronizar(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { sincronizar(); if (sesionActiva()) refrescarEstadoChkd(); } });
 </script>
 </body>
 </html>

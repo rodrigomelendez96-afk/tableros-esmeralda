@@ -1,6 +1,6 @@
 // Service worker: permite abrir la app sin señal (también al escanear un QR).
 // Si cambias index.html, sube el número de versión para que los teléfonos actualicen.
-const VERSION = 'tableros-esm-v39';
+const VERSION = 'tableros-esm-v41';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png',
   './favicon.png', './logo-globo.png', './logo-geovita.png',
   './lib/jsQR.js', './lib/qrcode.js', './lib/jspdf.umd.min.js',
