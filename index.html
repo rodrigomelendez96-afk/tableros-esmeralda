@@ -324,6 +324,40 @@
   .chip-ref.on { background: var(--tinta); color: #fff; border-color: var(--tinta); }
   ul.lista li.plano { flex-wrap: nowrap; }
   ul.lista li.plano.con-adm { flex-wrap: wrap; }
+  /* Checklists diarios: formato del documento */
+  .cd-prog { height: 8px; background: var(--borde, #DADDE1); border-radius: 99px; overflow: hidden; } .cd-prog i { display: block; height: 100%; width: 0; background: #1B7A3A; transition: width .25s; }
+  .aviso-chkd { border-radius: 10px; padding: 8px 10px; font-weight: 700; font-size: 14px; margin: 10px 0; } .aviso-chkd.ok { background: #DFF3E4; color: #135C2A; } .aviso-chkd.no { background: #F8D7DA; color: #8A1C24; }
+  .badge.warn { background: #FFF1CC; color: #7A4F00; }
+  .tile-chkd { border-color: #1B7A3A; }
+  .cd-hoja { background: #fff; color: #111; border: 1.5px solid #222; font-size: 13px; margin: 0 0 8px; overflow-x: auto; }
+  .cd-hoja table { width: 100%; border-collapse: collapse; }
+  .cd-hoja td, .cd-hoja th { border: 1px solid #333; padding: 5px 6px; vertical-align: middle; text-align: left; }
+  .cd-cab .cd-logo { width: 22%; text-align: center; } .cd-cab .cd-logo img { max-width: 120px; width: 100%; }
+  .cd-cab .cd-tit { text-align: center; font-size: 13px; } .cd-cab .cd-tit .b { font-weight: 800; } .cd-cab .cd-cod { width: 28%; font-size: 11px; }
+  .cd-barra-r { height: 14px; background: #C00000; border-left: 1px solid #333; border-right: 1px solid #333; } .cd-barra-g { height: 12px; background: #808080; border: 1px solid #333; border-top: 0; }
+  .cd-obra { text-align: center; font-weight: 800; padding: 6px; border-bottom: 1px solid #333; }
+  .cd-t th { background: #F2F2F2; font-size: 12px; width: 34%; } .cd-t input, .cd-t select, .cd-t textarea { width: 100%; min-height: 36px; font-size: 14px; padding: 5px 8px; margin: 0; }
+  .cd-items .cd-h th { background: #C00000; color: #fff; text-align: center; font-weight: 800; font-size: 12px; width: auto; }
+  .cd-items .cd-h2 th { background: #F2F2F2; text-align: center; font-size: 12px; width: auto; }
+  .cd-items .cd-n { width: 34px; text-align: center; font-weight: 700; } .cd-items .cd-txt { font-size: 13px; line-height: 1.3; }
+  .cd-items .cd-op-h { width: 52px; text-align: center; font-size: 11px; }
+  .cd-items .cd-op { width: 52px; height: 44px; text-align: center; font-size: 22px; font-weight: 900; cursor: pointer; user-select: none; color: #111; background: #fff; }
+  .cd-items .cd-op:hover { background: #F4F4F4; } .cd-items .cd-op.on { background: #E8F1FF; } .cd-items .cd-op.dis { background: #F4F4F4; cursor: default; }
+  .cd-items tr.cd-mala td { background: #FFF4E5; } .cd-items tr.cd-mala .cd-op.on { background: #FFD8A8; }
+  .cd-items .cd-sec td { background: #4FC3F7; font-weight: 800; font-size: 12px; } .cd-items .cd-sec .cd-op-h { text-align: center; }
+  .cd-items .cd-obs-h { width: 28%; } .cd-items .cd-obs-c input { min-height: 34px; font-size: 13px; }
+  .cd-items .cd-resp { width: 92px; font-size: 11px; text-align: center; }
+  .cd-obs-in { margin-top: 6px !important; border-color: #D9822B !important; }
+  .cd-inv { color: #8A5A00; font-weight: 700; }
+  .cd-na { text-align: center; font-weight: 800; margin: 4px 0; font-size: 12px; }
+  .cd-firmas td { vertical-align: top; width: 50%; } .cd-firmas small { display: block; color: #666; font-size: 10.5px; margin-top: 4px; } .cd-firmas .cd-ph { color: #888; font-size: 12px; }
+  .cd-retiro { margin: 8px 6px; font-size: 14px; }
+  @media (max-width: 699px) { .cd-items .cd-resp { display: none; } .cd-items .cd-op, .cd-items .cd-op-h { width: 44px; } .cd-hoja { font-size: 12.5px; } .cd-cab .cd-cod { font-size: 10px; } .cd-items .cd-obs-h, .cd-items .cd-obs-c { width: 30%; } }
+  .ue-circ-g { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px; margin-top: 6px; }
+  .ue-circ-f { display: grid; grid-template-columns: 26px 1fr 1.4fr 58px; gap: 4px; align-items: center; }
+  .ue-circ-f b { text-align: center; font-size: 13px; color: var(--gris); }
+  .ue-circ-f input { min-height: 38px; padding: 6px 8px; font-size: 14px; }
+  .ue-circ-f.sel { grid-template-columns: 26px 1fr; background: #FDECEC; border-radius: 8px; padding: 6px; font-weight: 700; color: var(--rojo); }
   /* Ficha del personal autorizado */
   .fp-estado { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
   .fp-acred { font-weight: 800; border-radius: 10px; padding: 8px 12px; font-size: 14px; }
@@ -373,6 +407,7 @@
 
     <h3 class="sec-tit">Tableros eléctricos</h3>
     <div class="tiles">
+      <button type="button" class="tile tile-chkd" id="tile-chkd-btn"><span class="t-ico">✅</span><b>Checklists diarios</b><small id="tile-chkd"></small></button>
       <button type="button" class="tile" data-tab-go="MANT"><span class="t-ico">🔧</span><b>Mantenciones</b><small id="tile-mant"></small></button>
       <button type="button" class="tile" data-tab-go="INSP"><span class="t-ico">🔍</span><b>Inspecciones</b><small id="tile-insp"></small></button>
       <button type="button" class="tile" data-ir="etiquetas"><span class="t-ico">🏷️</span><b>Etiquetas QR</b><small id="tile-etq"></small></button>
@@ -678,8 +713,43 @@
       </div>
       <p class="error" id="pers-error"></p>
     </div>
-    <button class="big primary" id="btn-pe-guardar">Crear usuario y contraseña</button>
+    <button class="big primary" id="btn-pers-guardar">Crear usuario y contraseña</button>
     <button class="big" id="btn-pe-cancel">Cancelar</button>
+  </section>
+
+  <!-- ============ CHECKLISTS DIARIOS PREVIOS A LA ACTIVIDAD ============ -->
+  <section id="v-chkd" hidden>
+    <div class="card">
+      <h2>✅ Checklists diarios previos a la actividad</h2>
+      <p class="muted" style="margin:4px 0 6px">Cada día, antes de cualquier mantención o inspección eléctrica, completa y firma: EPP específicos, herramientas manuales, herramientas eléctricas e instrumento de medición. Quedan guardados por día.</p>
+      <p style="margin:0 0 6px;font-weight:700" id="cd-fecha"></p>
+      <div class="cd-prog"><i id="cd-barra"></i></div>
+      <p class="aviso-chkd" id="cd-aviso"></p>
+      <ul class="lista" id="cd-lista"></ul>
+      <p class="muted" id="cd-envio" style="margin:8px 0 0"></p>
+      <button type="button" class="big primary" id="cd-continuar" hidden>Continuar con la actividad →</button>
+    </div>
+    <div class="card" id="cd-rev-card" hidden>
+      <h3>🖊 Revisión del supervisor</h3>
+      <p class="muted" style="margin:0 0 8px">Checklists diarios del personal pendientes de tu firma (últimos 10 días). Revisa el PDF y firma los seleccionados.</p>
+      <div id="cd-rev"><button type="button" class="big" id="btn-cd-rev">Ver checklists por revisar</button></div>
+    </div>
+    <div class="card"><h3>Días anteriores (este teléfono)</h3><ul class="lista" id="cd-hist"></ul></div>
+    <button class="big" data-ir="inicio">Volver al inicio</button>
+  </section>
+  <section id="v-chkdf" hidden>
+    <div class="card cd-top">
+      <h2 id="cdf-titulo"></h2>
+      <p class="muted" id="cdf-sub" style="margin:2px 0 6px"></p>
+      <div class="cd-prog"><i id="cdf-barra"></i></div><p class="muted" id="cdf-prog" style="margin:4px 0 0"></p>
+      <p class="muted" style="margin:6px 0 0">Toca la casilla de cada ítem (✕). Lo que respondas se va llenando en el formato. Si un ítem tiene observación, descríbela.</p>
+      <button type="button" class="big" id="btn-cdf-todo" style="margin-top:8px">✔ Marcar conformes los no respondidos</button>
+    </div>
+    <div id="cdf-hoja"></div>
+    <datalist id="cd-dl-sup"></datalist>
+    <p class="error" id="cdf-error" style="margin:10px 2px"></p>
+    <button type="button" class="big primary" id="btn-cdf-guardar">✍ Firmar y guardar checklist del día</button>
+    <button type="button" class="big" id="btn-cdf-cancelar">Cancelar</button>
   </section>
 
   <!-- ============ FICHA DEL PERSONAL AUTORIZADO ============ -->
@@ -1262,7 +1332,7 @@ const CONFIG = {
 };
 
 // Versión visible al pie de la pantalla de inicio (sirve para confirmar que el teléfono tiene la última)
-const VERSION_APP = 'v29 · 10-11-2026';
+const VERSION_APP = 'v31 · 10-11-2026';
 const NIVELES = ['UCL', 'Producción', 'Acarreo', 'SNV'];
 const SEN = 'Cuadro de señalética (riesgo eléctrico, potencia, nivel de tensión, punto de bloqueo, maniobra RCP, logo empresa, personal autorizado, diagrama unilineal, carga de fuego, programa de mantenimiento)';
 const BASE_TD = ['Orden y aseo en el sector', 'Iluminación', 'Número de TAG', 'Soporte o anclaje del tablero en buen estado',
@@ -1516,6 +1586,423 @@ $('#btn-clave-ok').addEventListener('click', async () => {
     toast('Contraseña cambiada ✔'); volver();
   } catch (e) { err.textContent = e.message; } finally { btn.disabled = false; }
 });
+
+// ===================== CHECKLISTS DIARIOS PREVIOS A LA ACTIVIDAD =====================
+// Antes de cualquier mantención o inspección, cada eléctrico completa y firma cada día: herramientas manuales (OOCC-001),
+// herramientas eléctricas (ELEC-001), instrumento de medición (ELEC-009) y EPP específicos (ELEC-023). Sin esto la app no deja avanzar.
+const CHKD = {
+  'OOCC-001': { codigo: 'RE-4600030339-OOCC-001', rev: '0', fechaDoc: '05-08-2025', corto: 'Herramientas manuales', icono: '🔨', semana: true, horiz: true,
+    titulo: ['SISTEMA INTEGRADO DE GESTIÓN', 'CHECK LIST HERRAMIENTAS MANUALES', 'Geovita S.A.'], ops: ['SI', 'NO', 'N.A'], otros: 4, resp: true,
+    secciones: [{ items: [
+      '¿Los mangos se encuentran firmes, sin trizaduras o con astillas?', '¿Cabezas de martillos, macetas y combos sin rebabas ni cabeza roma?',
+      '¿Alicates, tenazas o caimanes sin mandíbulas gastadas o sueltas?', '¿Alicates, tenazas o caimanes sin filo o mellado en la parte cortante?',
+      '¿La hoja de sierras y serrucho se encuentran bien colocadas y sin torceduras?', '¿Los dientes de hoja de sierras y serrucho se encuentran bien afilados?',
+      '¿Las bocas de llaves y dados se encuentran libres de deformaciones y grietas?', '¿Las hojas de destornilladores están sin melladuras o torcidas?',
+      '¿Los vástagos de destornilladores están bien templados y sin torceduras?', '¿Los puntos y cinceles presentan cabezas sin saltaduras o rebordes?',
+      '¿Los mangos de puntos y cinceles son suficientemente largos? (mínimo 15 cm)', '¿Las limas y escofinas cuentan con mangos?',
+      '¿Las puntas de las limas se encuentran libres de trizaduras o con grasa?', '¿Las hojas de llanas y espátulas se encuentran sin curvaturas, agrietadas o rotas?',
+      '¿Las hojas de cuchillos están bien afiladas y sin melladuras?', '¿Cuchillos cuentan con vainas de protección?'].map((t, i) => ({ n: String(i + 1), t })) }] },
+  'ELEC-001': { codigo: 'RE-4600030339-ELEC-001', rev: '0', fechaDoc: '05-08-2025', corto: 'Herramientas eléctricas', icono: '🔌',
+    titulo: ['SISTEMA INTEGRADO DE GESTIÓN', 'CHECK LIST HERRAMIENTAS ELECTRICAS', 'Geovita S.A.'], ops: ['SI', 'NO', 'N/A'], otros: 3, resp: true,
+    secciones: [{ items: [
+      '¿El enchufe es tipo industrializado y se encuentra en buenas condiciones de uso?', '¿Los interruptores se encuentran en buenas condiciones?',
+      '¿Los diferenciales y automáticos se encuentran en buenas condiciones de uso?', '¿Los cables se encuentran en buenas condiciones de uso?',
+      '¿Las conexiones se encuentran bien hechas?', '¿Los conductores poseen cable con protección a tierra?',
+      '¿La carcasa de la herramienta se encuentra en buenas condiciones de uso?', '¿La herramienta cuenta con mango de sujeción?',
+      '¿La herramienta cuenta con el código de color del mes?', '¿Se ha realizado mantención a la herramienta?',
+      'Si corresponde ¿Parada de emergencia se encuentra en estado óptimo?'].map((t, i) => ({ n: String(i + 1), t })) }] },
+  'ELEC-009': { codigo: 'RE-4600030339-ELEC-009', rev: '0', fechaDoc: '26-11-2025', corto: 'Instrumento de medición (multímetro)', icono: '📟', multi: true,
+    titulo: ['REGISTRO DE INSPECCION Y MANTENIMIENTO', 'DE EQUIPOS DE MEDICIÓN'], obra: 'OBRA ESMERALDA CENTRAL - CONTRATO N°4600030339',
+    ops: ['ACEPTABLE', 'REPARABLE', 'N/A'], obsCol: true,
+    cab: [['marca', 'MARCA', 'Fluke'], ['modelo', 'MODELO', '376 FC'], ['rangoI', 'RANGO DE CORRIENTE AC', '0 – 1000 A'], ['rangoV', 'RANGO DE VOLTAJE AC', '0 – 1000 V'],
+      ['continuidad', 'CONTINUIDAD', 'Sí, con señal sonora'], ['instrumento', 'INSTRUMENTO DE MEDICIÓN', 'Multímetro / pinza amperimétrica'], ['tag', 'N° DE TAG DEL EQUIPO', 'TAG-ELE-015']],
+    secciones: [{ items: ['Verificar estado y N° de TAG del equipo', 'Revisar estado de funda protectora', 'Verificar condiciones de almacenamiento',
+      'Verificar limpieza general del equipo y sus partes', 'Revisar integridad de carcasa', 'Revisar estado de la pantalla', 'Revisar retroiluminación de pantalla (si aplica)',
+      'Revisar estado de selector rotativo', 'Verificar funcionamiento de botón HOLD', 'Revisar estado de pulsadores', 'Revisar estado de la pinza amperimétrica',
+      'Revisar estado de sondas de medición', 'Revisar estado de puntas de medición', 'Revisar estado de conectores de medición', 'Revisar vida útil de las baterías',
+      'Revisar estado de fusibles', 'Verificar presencia de certificado'].map((t, i) => ({ n: String(i + 1), t })) }] },
+  'ELEC-023': { codigo: 'RE-4600030339-ELEC-023', rev: '1', fechaDoc: '', corto: 'EPP específicos personal electricista', icono: '🦺', epp: true,
+    titulo: ['CHECK LIST EPP ESPECÍFICOS PERSONAL ELECTRICISTA'], ops: ['SI', 'NO', 'NA'], obsCol: true,
+    secciones: [
+      { n: '1', t: 'CARETA FACIAL', items: [{ n: '1.1', t: 'La careta se encuentra en buen estado, sin deformaciones.' }] },
+      { n: '2', t: 'BOTAS DE SEGURIDAD DIELÉCTRICAS', items: [{ n: '2.1', t: 'Está en buen estado la cubierta sin picaduras, grietas o trizaduras.' }, { n: '2.2', t: 'Son adecuadas para el riesgo.' }] },
+      { n: '3', t: 'GUANTES DE SEGURIDAD DIELÉCTRICOS (Cat.0)', items: [{ n: '3.1', t: 'Se realiza inflado con bomba manual para evidenciar posibles pinchazos o rasgaduras.' },
+        { n: '3.2', t: 'El material se encuentra libre de desgaste, deformación o desgarro.' }, { n: '3.3', t: 'Presenta deterioro general.', inv: 1 }] },
+      { n: '4', t: 'BUZO IGNÍFUGO (Cat.2)', items: [{ n: '4.1', t: 'Costuras se encuentran libres de cortes, rotura del tejido deshilachadas o destrenzadas.' },
+        { n: '4.2', t: 'El material presenta quemaduras o corrosión por exposición a alta temperatura, corrosivos y/o químicos.', inv: 1 }, { n: '4.3', t: 'Estado general en buenas condiciones.' }] },
+      { n: '5', t: 'SOBRE GUANTES DE PROTECCIÓN MECÁNICA', items: [{ n: '5.1', t: 'Costuras se encuentran libres de cortes, rotura del tejido deshilachadas o destrenzadas.' }, { n: '5.2', t: 'Son adecuados para el riesgo.' }] },
+      { n: '6', t: 'BALACLAVA IGNÍFUGA', items: [{ n: '6.1', t: 'Las costuras presentan desgaste o rajadura.', inv: 1 }] }] }
+};
+const CHKD_ORDEN = ['ELEC-023', 'OOCC-001', 'ELEC-001', 'ELEC-009'];
+const OBRA_CHKD = 'Obras PREMIN Mina central-sur N°4600030339';
+const diaISO = (d = new Date()) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const diaSemana = (iso) => { const d = new Date(iso + 'T12:00'); return ((d.getDay() + 6) % 7) + 1; };   // lunes = 1 … domingo = 7
+const lunesDe = (iso) => { const d = new Date(iso + 'T12:00'); d.setDate(d.getDate() - diaSemana(iso) + 1); return diaISO(d); };
+const NOMBRE_DIA = ['', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+const itemsChkd = (C) => C.secciones.flatMap(s => s.items);
+const buenaChkd = (C, it) => it.inv ? C.ops[1] : C.ops[0];
+const esMalaChkd = (C, it, v) => !!v && v !== C.ops[2] && v !== buenaChkd(C, it);
+// Almacén local por usuario: { 'aaaa-mm-dd': { 'ELEC-023': registro, … } } (últimos 35 días)
+const chkdLocal = (u) => ls.get('chkd:' + u, {});
+function guardarChkdLocal(u, r) {
+  const t = chkdLocal(u); (t[r.fecha] = t[r.fecha] || {})[r.codigo] = r;
+  const lim = diaISO(new Date(Date.now() - 35 * 864e5)); Object.keys(t).forEach(f => { if (f < lim) delete t[f]; });
+  ls.set('chkd:' + u, t);
+}
+const chkdHoy = () => { const s = sesion(); return s ? (chkdLocal(s.usuario)[diaISO()] || {}) : {}; };
+const chkDiarioListo = () => CHKD_ORDEN.every(k => chkdHoy()[k]);
+let chkdSiguiente = null;
+function exigirChkDiario(sig) { chkdSiguiente = sig || null; ir('chkd'); }
+// ---- Hub: estado del día ----
+function renderChkd() {
+  const s = sesion(); if (!s) return;
+  const hoy = chkdHoy(), n = CHKD_ORDEN.filter(k => hoy[k]).length, cola = ls.get('chkdCola', []);
+  $('#cd-fecha').textContent = `${NOMBRE_DIA[diaSemana(diaISO())]} ${fDMA(diaISO())} · ${n} de ${CHKD_ORDEN.length} completados`;
+  $('#cd-barra').style.width = (n / CHKD_ORDEN.length * 100) + '%';
+  $('#cd-lista').innerHTML = CHKD_ORDEN.map(k => {
+    const C = CHKD[k], r = hoy[k], pend = r && cola.some(x => x.id === r.id);
+    return `<li class="con-adm"><div class="info"><b>${C.icono} ${esc(C.corto)}</b><small>${esc(C.codigo)} · Rev. ${esc(C.rev)}</small>
+      ${r ? `<small style="display:block;font-weight:700;color:${r.nObs ? '#8A5A00' : '#135C2A'}">${r.nObs ? '⚠ ' + r.nObs + ' ítem(s) con observación' : '✔ Conforme'} · firmado ${esc(r.hora)}${pend ? ' · pendiente de envío' : ' · enviado'}</small>` : ''}</div>
+      <span class="badge ${r ? (r.nObs ? 'warn' : 'ok') : 'no'}">${r ? 'listo' : 'pendiente'}</span>
+      <div class="acc-adm">${r ? `<button type="button" class="btn-pdf" data-cd-pdf="${k}">📄 Ver PDF</button>` : `<button type="button" class="primary" data-cd-abrir="${k}">✍ Completar</button>`}</div></li>`;
+  }).join('');
+  const listo = n === CHKD_ORDEN.length;
+  $('#cd-continuar').hidden = !listo || !chkdSiguiente;
+  $('#cd-aviso').innerHTML = listo ? '✔ Checklists del día completos: puedes realizar mantenciones e inspecciones hoy.'
+    : '⛔ Hasta completar y firmar los 4 checklists de hoy no podrás iniciar mantenciones ni inspecciones.';
+  $('#cd-aviso').className = 'aviso-chkd ' + (listo ? 'ok' : 'no');
+  // historial de los últimos días
+  const t = chkdLocal(s.usuario), dias = Object.keys(t).filter(f => f !== diaISO()).sort().reverse().slice(0, 14);
+  $('#cd-hist').innerHTML = dias.length ? dias.map(f => `<li class="con-adm"><div class="info"><b>${esc(NOMBRE_DIA[diaSemana(f)])} ${esc(fDMA(f))}</b>
+      <small>${CHKD_ORDEN.map(k => (t[f][k] ? '✔ ' : '✖ ') + CHKD[k].corto.split(' ')[0] + (CHKD[k].corto.includes('eléctricas') ? ' eléctricas' : CHKD[k].corto.includes('manuales') ? ' manuales' : '')).join(' · ')}</small></div>
+      <div class="acc-adm">${CHKD_ORDEN.filter(k => t[f][k]).map(k => `<button type="button" class="btn-pdf" data-cd-pdf="${k}" data-cd-fecha="${f}">${CHKD[k].icono}</button>`).join('')}</div></li>`).join('')
+    : '<li><div class="info"><small>Aún no hay días anteriores en este teléfono.</small></div></li>';
+  $('#cd-rev-card').hidden = !CARGOS_REVISAN.test((perfilSesion() || {}).cargo || '');
+  $('#cd-envio').textContent = cola.length ? `${cola.length} checklist(s) pendiente(s) de envío: se envían solos al tener señal.` : '';
+}
+const CARGOS_REVISAN = /SUPERVISOR|JEFE|PREVENCI/i;
+function renderTileChkd() {
+  const el = $('#tile-chkd'); if (!el) return;
+  if (!sesionActiva()) { el.textContent = 'Previos a cada jornada · ingresa con tu usuario'; return; }
+  const n = CHKD_ORDEN.filter(k => chkdHoy()[k]).length;
+  el.innerHTML = n === CHKD_ORDEN.length ? '<span class="verde">Hoy: completos ✔</span>' : `<span class="rojo">Hoy: ${n} de ${CHKD_ORDEN.length} · pendientes</span>`;
+}
+// ---- Formulario con el formato original ----
+let CDF = null;   // { k, r (registro en edición) }
+function abrirChkdForm(k) {
+  const s = sesion(), p = perfilSesion() || {}, C = CHKD[k], ult = ls.get('chkdUlt:' + s.usuario, {});
+  const hoy = diaISO();
+  CDF = { k, r: { id: 'CD-' + uuid().slice(0, 13), codigo: k, codDoc: C.codigo, titulo: C.titulo.filter(x => !/SISTEMA INTEGRADO|Geovita S\.A\./.test(x)).join(' '),
+    fecha: hoy, hora: '', usuario: s.usuario, nombre: p.nombre, rut: p.rut, cargo: p.cargo, area: ult.area || (p.nivel && p.nivel !== 'Transversal' ? p.nivel : ''),
+    supervisor: ult.supervisor || '', resp: {}, obs: {}, otros: Array.from({ length: C.otros || 0 }, () => ({ t: '', v: '', obs: '' })), obsGen: '',
+    cab: Object.assign({}, (ult.cab || {})), retiro: false } };
+  $('#cdf-titulo').textContent = C.icono + ' ' + C.corto;
+  $('#cdf-sub').textContent = `${C.codigo} · ${NOMBRE_DIA[diaSemana(hoy)]} ${fDMA(hoy)}${C.semana ? ' · DÍA ' + diaSemana(hoy) + ' de la semana' : ''}`;
+  $('#cdf-error').textContent = '';
+  const sups = new Set(ls.get('chkdSup', [])); ls.get('personal', []).filter(x => CARGOS_REVISAN.test(x.cargo || '') && x.estado === 'ACTIVO').forEach(x => sups.add(x.nombre));
+  $('#cd-dl-sup').innerHTML = [...sups].map(n => `<option value="${esc(n)}">`).join('');
+  ir('chkdf'); renderChkdForm();
+}
+const celOp = (key, v, ops, cls = '') => ops.map(o => `<td class="cd-op${v === o ? ' on' : ''}${cls}" data-cd-k="${key}" data-cd-v="${esc(o)}" role="button" tabindex="0" aria-label="${esc(o)}">${v === o ? '✕' : ''}</td>`).join('');
+function renderChkdForm() {
+  if (!CDF) return;
+  const C = CHKD[CDF.k], r = CDF.r, abrev = (() => { const p = (r.nombre || '').split(' ').filter(Boolean); return p.length ? (p[0][0] + '. ' + (p.length > 2 ? p[p.length - 2] : p[1] || '')).trim() : ''; })();
+  const cabecera = `<table class="cd-cab"><tr><td class="cd-logo" rowspan="3"><img src="logo-geovita.png" alt="GEOVITA"></td>
+      <td class="cd-tit" rowspan="3">${C.titulo.map((t, i) => `<div class="${i === C.titulo.length - 1 && /Geovita/.test(t) ? '' : 'b'}">${esc(t)}</div>`).join('')}</td>
+      <td class="cd-cod">${C.epp ? 'Código: ' : 'Código: '}${esc(C.codigo)}</td></tr><tr><td class="cd-cod">REV: ${esc(C.rev)}</td></tr><tr><td class="cd-cod">${C.epp ? 'Página 1 de 1' : 'FECHA: ' + esc(C.fechaDoc)}</td></tr></table>`;
+  const area = `<select data-cd-campo="area"><option value="">Seleccione…</option>${opc(NIVELES.concat(['Superficie', 'Taller', 'Otra']), r.area)}</select>`;
+  const sup = `<input data-cd-campo="supervisor" class="may" list="cd-dl-sup" value="${esc(r.supervisor)}" placeholder="Nombre del supervisor de turno">`;
+  let cuerpo = '';
+  if (C.multi) {
+    cuerpo = `<div class="cd-obra">${esc(C.obra)}</div>
+      <table class="cd-t cd-multi"><tbody>${C.cab.map(([k, l, ph]) => `<tr><th>${esc(l)}</th><td><input data-cd-cab="${k}" value="${esc(r.cab[k] || '')}" placeholder="${esc(ph)}"></td></tr>`).join('')}
+      <tr><th>SUPERVISOR DE TURNO</th><td>${sup}</td></tr><tr><th>MANTENCIÓN REALIZADA POR</th><td><b>${esc(r.nombre)}</b></td></tr>
+      <tr><th>FECHA MANTENCIÓN</th><td><b>${esc(fDMA(r.fecha))}</b> · Mant. diaria previa a la actividad</td></tr><tr><th>ÁREA</th><td>${area}</td></tr></tbody></table>`;
+  } else if (C.epp) {
+    cuerpo = `<table class="cd-t"><tbody><tr><th>Obra</th><td>${esc(OBRA_CHKD)}</td></tr><tr><th>Área</th><td>${area}</td></tr></tbody></table>`;
+  } else {
+    cuerpo = `<div class="cd-barra-r"></div><div class="cd-barra-g"></div>
+      <table class="cd-t"><tbody><tr><th>OBRA O CONTRATO</th><td>${esc(OBRA_CHKD)}</td></tr><tr><th>ÁREA</th><td>${area}</td></tr><tr><th>SUPERVISOR DE TURNO</th><td>${sup}</td></tr></tbody></table>`;
+  }
+  // tabla de ítems
+  const thOps = C.ops.map(o => `<th class="cd-op-h">${esc(o)}</th>`).join('');
+  const colsExtra = C.obsCol ? '<th class="cd-obs-h">OBSERVACIONES</th>' : C.resp ? '<th class="cd-resp">Responsable ejecución</th><th class="cd-resp">Fecha</th>' : '';
+  const filaItem = (it, key) => {
+    const v = r.resp[key] || '', mala = esMalaChkd(C, it, v);
+    return `<tr class="${mala ? 'cd-mala' : ''}"><td class="cd-n">${esc(it.n)}</td><td class="cd-txt">${esc(it.t)}${it.inv ? ' <small class="cd-inv">(responder SI si presenta el problema)</small>' : ''}
+        ${mala ? `<input class="cd-obs-in" data-cd-obs="${key}" value="${esc(r.obs[key] || '')}" placeholder="Describe la observación (obligatorio)">` : ''}</td>${celOp(key, v, C.ops)}
+      ${C.obsCol ? `<td class="cd-obs-c">${C.obsCol && !mala ? `<input data-cd-obs="${key}" value="${esc(r.obs[key] || '')}" placeholder="—">` : ''}</td>` : C.resp ? `<td class="cd-resp">${v ? esc(abrev) : ''}</td><td class="cd-resp">${v ? esc(fDMA(r.fecha)) : ''}</td>` : ''}</tr>`;
+  };
+  let filas = '';
+  C.secciones.forEach(sc => {
+    if (sc.t) filas += `<tr class="cd-sec"><td class="cd-n">${esc(sc.n)}</td><td>${esc(sc.t)}</td>${C.ops.map(o => `<td class="cd-op-h">${esc(o)}</td>`).join('')}${C.obsCol ? '<td>OBSERVACIONES</td>' : ''}</tr>`;
+    sc.items.forEach(it => { filas += filaItem(it, it.n); });
+  });
+  (r.otros || []).forEach((o, i) => {
+    const key = 'o' + i, v = o.v || '', mala = v === C.ops[1];
+    filas += `<tr class="${mala ? 'cd-mala' : ''}"><td class="cd-n">${i ? '' : '+'}</td><td class="cd-txt"><input data-cd-otro="${i}" value="${esc(o.t)}" placeholder="${i ? '' : 'Otros: '}otra herramienta o elemento (opcional)">
+        ${mala ? `<input class="cd-obs-in" data-cd-otroobs="${i}" value="${esc(o.obs || '')}" placeholder="Describe la observación (obligatorio)">` : ''}</td>${o.t ? celOp(key, v, C.ops) : C.ops.map(() => '<td class="cd-op dis"></td>').join('')}
+      ${C.resp ? `<td class="cd-resp">${v ? esc(abrev) : ''}</td><td class="cd-resp">${v ? esc(fDMA(r.fecha)) : ''}</td>` : ''}</tr>`;
+  });
+  const tabla = `<table class="cd-t cd-items"><thead><tr class="cd-h">${C.multi ? '<th class="cd-n">ITEM</th><th>DESCRIPCIÓN DE ACTIVIDAD</th>' : C.epp ? '<th class="cd-n"></th><th></th>' : '<th class="cd-n"></th><th>ELEMENTOS A INSPECCIONAR</th>'}
+      ${C.epp ? C.ops.map(() => '<th class="cd-op-h"></th>').join('') + '<th class="cd-obs-h"></th>' : thOps + colsExtra}</tr>
+      ${C.semana ? `<tr class="cd-h2"><th colspan="2"></th><th colspan="3">DÍA ${diaSemana(r.fecha)} · ${esc(fDMA(r.fecha))}</th>${C.resp ? '<th class="cd-resp" colspan="2"></th>' : ''}</tr>` : ''}
+      ${C.multi ? `<tr class="cd-h2"><th colspan="2">INSTRUMENTO DE MEDICIÓN: <span id="cd-instr">${esc(r.cab.instrumento || '')}</span></th><th colspan="3">CONDICIÓN</th><th></th></tr>` : ''}</thead><tbody>${filas}</tbody></table>
+      <p class="cd-na">${C.ops[2]}: NO APLICABLE</p>`;
+  const malas = cuentaMalasChkd(C, r);
+  const pie = `<table class="cd-t"><tbody><tr><th>${C.multi ? 'OBSERVACIONES GENERALES' : C.epp ? 'Obs' : 'OBSERVACIONES'}</th><td><textarea data-cd-campo="obsGen" rows="2" placeholder="Observaciones generales (opcional)">${esc(r.obsGen)}</textarea></td></tr></tbody></table>
+    ${malas ? `<label class="chk cd-retiro"><input type="checkbox" data-cd-campo="retiro"${r.retiro ? ' checked' : ''}><span>Los elementos con observación fueron <b>retirados de uso o reemplazados</b> antes de trabajar.</span></label>` : ''}
+    <table class="cd-t cd-firmas"><tbody><tr class="cd-h"><th>${C.epp ? 'TRABAJADOR' : 'REALIZÓ'}</th><th>${C.epp ? 'SUPERVISOR' : 'REVISÓ'}</th></tr>
+      <tr><td><small>NOMBRE</small><b>${esc(r.nombre)}</b><small>CARGO</small><b>${esc(r.cargo)}</b><small>FIRMA · FECHA</small><span class="cd-ph">Se firma al guardar · ${esc(fDMA(r.fecha))}</span></td>
+      <td><small>NOMBRE</small>${C.multi ? '<b>' + esc(r.supervisor || '—') + '</b>' : sup}<small>FIRMA · FECHA</small><span class="cd-ph">La firma el supervisor en la app (revisión)</span></td></tr></tbody></table>`;
+  $('#cdf-hoja').innerHTML = `<div class="cd-hoja${C.horiz ? ' horiz' : ''}">${cabecera}${cuerpo}${tabla}${pie}</div>`;
+  const total = itemsChkd(C).length + (r.otros || []).filter(o => o.t).length, hechos = itemsChkd(C).filter(it => r.resp[it.n]).length + (r.otros || []).filter(o => o.t && o.v).length;
+  $('#cdf-prog').textContent = `${hechos} de ${total} respondidos${malas ? ' · ' + malas + ' con observación' : ''}`;
+  $('#cdf-barra').style.width = (total ? hechos / total * 100 : 0) + '%';
+}
+const cuentaMalasChkd = (C, r) => itemsChkd(C).filter(it => esMalaChkd(C, it, r.resp[it.n])).length + (r.otros || []).filter(o => o.t && o.v === C.ops[1]).length;
+$('#cdf-hoja').addEventListener('click', (e) => {
+  const c = e.target.closest('[data-cd-k]'); if (!c || !CDF) return;
+  const k = c.dataset.cdK, v = c.dataset.cdV;
+  if (k.startsWith('o')) { const o = CDF.r.otros[+k.slice(1)]; o.v = o.v === v ? '' : v; }
+  else CDF.r.resp[k] = CDF.r.resp[k] === v ? '' : v;
+  renderChkdForm();
+});
+$('#cdf-hoja').addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('[data-cd-k]')) { e.preventDefault(); e.target.click(); } });
+$('#cdf-hoja').addEventListener('input', (e) => {
+  if (!CDF) return; const el = e.target, r = CDF.r;
+  if (el.dataset.cdCampo) { r[el.dataset.cdCampo] = el.type === 'checkbox' ? el.checked : (el.classList.contains('may') ? el.value.toLocaleUpperCase('es-CL') : el.value); }
+  else if (el.dataset.cdCab) r.cab[el.dataset.cdCab] = el.value;
+  else if (el.dataset.cdObs) r.obs[el.dataset.cdObs] = el.value;
+  else if (el.dataset.cdOtroobs) r.otros[+el.dataset.cdOtroobs].obs = el.value;
+  else if (el.dataset.cdOtro) { const o = r.otros[+el.dataset.cdOtro], antes = !!o.t; o.t = el.value; if (antes !== !!o.t) { if (!o.t) o.v = ''; const pos = el.selectionStart; renderChkdForm(); const n = $(`[data-cd-otro="${el.dataset.cdOtro}"]`); if (n) { n.focus(); n.setSelectionRange(pos, pos); } } }
+});
+$('#cdf-hoja').addEventListener('input', (e) => { if (e.target.dataset.cdCab === 'instrumento' && $('#cd-instr')) $('#cd-instr').textContent = e.target.value; });
+$('#btn-cdf-todo').addEventListener('click', () => {
+  if (!CDF) return; const C = CHKD[CDF.k];
+  if (!confirm('Marcar todos los ítems sin responder como conformes (SI / ACEPTABLE, y NO en los ítems que preguntan por un problema)?\n\nRevisa igual cada elemento: cambia los que no cumplan.')) return;
+  itemsChkd(C).forEach(it => { if (!CDF.r.resp[it.n]) CDF.r.resp[it.n] = buenaChkd(C, it); });
+  renderChkdForm();
+});
+$('#btn-cdf-guardar').addEventListener('click', async () => {
+  if (!CDF) return; const C = CHKD[CDF.k], r = CDF.r, err = $('#cdf-error'); err.textContent = '';
+  const faltan = [], sin = itemsChkd(C).filter(it => !r.resp[it.n]).map(it => it.n);
+  if (sin.length) faltan.push('responder ítem(s) ' + sin.join(', '));
+  (r.otros || []).forEach((o, i) => { if (o.t && !o.v) faltan.push('responder "' + o.t + '"'); if (o.t && o.v === C.ops[1] && !String(o.obs || '').trim()) faltan.push('observación de "' + o.t + '"'); });
+  itemsChkd(C).forEach(it => { if (esMalaChkd(C, it, r.resp[it.n]) && !String(r.obs[it.n] || '').trim()) faltan.push('observación del ítem ' + it.n); });
+  if (!r.area) faltan.push('área');
+  if (!C.epp && !String(r.supervisor || '').trim()) faltan.push('supervisor de turno');
+  if (C.multi) C.cab.forEach(([k, l]) => { if (!String(r.cab[k] || '').trim()) faltan.push(l.toLowerCase()); });
+  const malas = cuentaMalasChkd(C, r);
+  if (malas && !r.retiro) faltan.push('confirmar que los elementos con observación fueron retirados o reemplazados');
+  if (faltan.length) { err.textContent = 'Falta: ' + faltan.join('; ') + '.'; err.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+  const fz = await pedirFirma('Firmar ' + C.corto, `${C.codigo} · ${fDMA(r.fecha)}${malas ? ' · ' + malas + ' con observación' : ' · conforme'}`);
+  if (!fz) return;
+  r.hora = fz.fecha.split(' ')[1] || ''; r.nObs = malas; r.resultado = malas ? 'CON OBSERVACIONES' : 'CONFORME';
+  r.equipo = C.multi ? [r.cab.instrumento, r.cab.marca, r.cab.modelo, r.cab.tag].filter(Boolean).join(' · ') : '';
+  r.detalle = itemsChkd(C).filter(it => esMalaChkd(C, it, r.resp[it.n])).map(it => it.n + ' ' + it.t + ': ' + r.obs[it.n])
+    .concat((r.otros || []).filter(o => o.t && o.v === C.ops[1]).map(o => o.t + ': ' + o.obs)).join(' | ');
+  r.firma = { fecha: fz.fecha, iso: fz.iso, codigo: await codigoFirma([r.id, r.codigo, r.fecha, fz.usuario, fz.iso, JSON.stringify(r.resp), JSON.stringify(r.otros)]), img: fz.img };
+  guardarChkdLocal(r.usuario, r);
+  if (r.supervisor) ls.set('chkdSup', [...new Set([r.supervisor].concat(ls.get('chkdSup', [])))].slice(0, 12));
+  ls.set('chkdUlt:' + r.usuario, { area: r.area, supervisor: r.supervisor, cab: C.multi ? r.cab : (ls.get('chkdUlt:' + r.usuario, {}).cab || {}) });
+  const cola = ls.get('chkdCola', []); cola.push({ id: r.id, usuario: r.usuario, fecha: r.fecha, codigo: r.codigo }); ls.set('chkdCola', cola);
+  CDF = null; toast(`${C.corto}: firmado ✔`);
+  ir('chkd'); renderChkd(); renderTileChkd();
+  if (navigator.onLine) enviarChkDiarios();
+});
+$('#btn-cdf-cancelar').addEventListener('click', () => { if (!CDF || confirm('¿Salir sin guardar este checklist?')) { CDF = null; ir('chkd'); } });
+$('#v-chkd').addEventListener('click', async (e) => {
+  const a = e.target.closest('[data-cd-abrir]'); if (a) { abrirChkdForm(a.dataset.cdAbrir); return; }
+  const p = e.target.closest('[data-cd-pdf]');
+  if (p) {
+    if (!window.jspdf) { toast('El generador de PDF aún está cargando.'); return; }
+    const s = sesion(), f = p.dataset.cdFecha || diaISO(), r = (chkdLocal(s.usuario)[f] || {})[p.dataset.cdPdf]; if (!r) return;
+    verDocumento({ titulo: CHKD[r.codigo].corto, codigo: CHKD[r.codigo].codigo + ' · ' + fDMA(r.fecha), blobLocal: pdfChkDiario(r).output('blob'), mime: 'application/pdf', nombre: nombreChkd(r) });
+    return;
+  }
+  if (e.target.closest('#cd-continuar')) { const sig = chkdSiguiente; chkdSiguiente = null; if (sig) sig(); return; }
+  if (e.target.closest('#btn-cd-rev')) cargarRevisionChkd();
+  const vr = e.target.closest('[data-cdr-ver]');
+  if (vr) { const x = (CDR.pend || []).find(z => z.id === vr.dataset.cdrVer); if (x) verDocumento({ titulo: CHKD[x.codigo] ? CHKD[x.codigo].corto : x.titulo, codigo: x.nombre + ' · ' + fDMA(x.fecha), blobLocal: pdfChkDiario(x.datos).output('blob'), mime: 'application/pdf', nombre: nombreChkd(x.datos) }); return; }
+  if (e.target.closest('#btn-cdr-firmar')) firmarRevisionChkd();
+  const tg = e.target.closest('#cdr-todos'); if (tg) document.querySelectorAll('[data-cdr-sel]').forEach(c => { c.checked = tg.checked; });
+});
+const nombreChkd = (r) => `${r.codigo}_${r.fecha}_${r.usuario}.pdf`;
+// ---- Envío al servidor ----
+let enviandoChkd = false;
+async function enviarChkDiarios() {
+  if (enviandoChkd || !navigator.onLine || !configurado() || !window.jspdf) return;
+  const s = sesion(); if (!s || !sesionActiva()) return;
+  enviandoChkd = true;
+  try {
+    let cola = ls.get('chkdCola', []);
+    for (const c of cola.slice()) {
+      if (c.usuario !== s.usuario) continue;
+      const r = (chkdLocal(c.usuario)[c.fecha] || {})[c.codigo];
+      if (r && r.id === c.id) {
+        const pdf = (pdfChkDiario(r).output('datauristring') || '').split(',')[1];
+        const reg = JSON.parse(JSON.stringify(r)); if (reg.firma) delete reg.firma.img;
+        await postPersonal({ accion: 'checklistDiario', token: s.token, registro: reg, pdf }, 120000);
+      }
+      cola = ls.get('chkdCola', []).filter(x => x.id !== c.id); ls.set('chkdCola', cola);
+    }
+  } catch (e) { console.warn('checklists diarios', e.message); }
+  finally { enviandoChkd = false; if (!$('#v-chkd').hidden) renderChkd(); }
+}
+// ---- Revisión del supervisor / jefe ----
+let CDR = { pend: [] };
+async function cargarRevisionChkd() {
+  const box = $('#cd-rev'); box.innerHTML = '<p class="muted">Cargando…</p>';
+  try {
+    const r = await fetchT(CONFIG.SCRIPT_URL + '?accion=chkDiarios&clave=' + encodeURIComponent(CONFIG.CLAVE) + '&token=' + encodeURIComponent(sesion().token) + '&dias=10', {}, 60000);
+    const j = await r.json(); if (!j.ok) throw new Error(j.error || 'error');
+    CDR.pend = j.pendientes || [];
+    if (!CDR.pend.length) { box.innerHTML = '<p class="muted">No hay checklists pendientes de revisión.</p>'; return; }
+    box.innerHTML = `<label class="chk"><input type="checkbox" id="cdr-todos"> Seleccionar todos (${CDR.pend.length})</label><ul class="lista">${CDR.pend.map(x => `<li class="con-adm"><div class="info">
+        <label class="chk" style="margin:0"><input type="checkbox" data-cdr-sel="${esc(x.id)}"> <b>${esc(x.nombre)}</b></label>
+        <small>${esc(fDMA(x.fecha))} ${esc(x.hora)} · ${esc(CHKD[x.codigo] ? CHKD[x.codigo].corto : x.titulo)}${x.supervisor ? ' · sup. ' + esc(x.supervisor) : ''}</small></div>
+        <span class="badge ${x.nObs ? 'warn' : 'ok'}">${x.nObs ? x.nObs + ' obs.' : 'conforme'}</span><div class="acc-adm"><button type="button" class="btn-pdf" data-cdr-ver="${esc(x.id)}">📄 Ver</button></div></li>`).join('')}</ul>
+      <button type="button" class="big primary" id="btn-cdr-firmar">✍ Firmar revisión de los seleccionados</button>`;
+  } catch (err) { box.innerHTML = `<p class="error">No se pudo cargar: ${esc(err.message)}</p>`; }
+}
+async function firmarRevisionChkd() {
+  const ids = [...document.querySelectorAll('[data-cdr-sel]:checked')].map(c => c.dataset.cdrSel);
+  if (!ids.length) { toast('Selecciona al menos un checklist.'); return; }
+  const fz = await pedirFirma('Revisar checklists diarios', `${ids.length} checklist(s) del personal`); if (!fz) return;
+  const firma = { fecha: fz.fecha, codigo: await codigoFirma([ids.join(','), fz.usuario, fz.iso]) }, pdfs = {};
+  ids.forEach(id => { const x = CDR.pend.find(z => z.id === id); if (x) pdfs[id] = pdfChkDiario(x.datos, { reviso: Object.assign({ nombre: fz.nombre, cargo: fz.cargo, img: fz.img }, firma) }).output('datauristring').split(',')[1]; });
+  const btn = $('#btn-cdr-firmar'); btn.disabled = true; btn.textContent = 'Enviando…';
+  try { const j = await postPersonal({ accion: 'revisarChkDiario', token: sesion().token, ids, firma, pdfs }, 180000); toast(`${(j.revisados || []).length} checklist(s) revisado(s) ✔`); cargarRevisionChkd(); }
+  catch (err) { toast('No se pudo enviar la revisión: ' + err.message, 5000); btn.disabled = false; btn.textContent = '✍ Firmar revisión de los seleccionados'; }
+}
+// ---- PDF con el formato del documento ----
+function pdfChkDiario0(r, opt = {}) {
+  const C = CHKD[r.codigo], { jsPDF } = window.jspdf, horiz = !!C.horiz;
+  const doc = new jsPDF({ unit: 'mm', format: 'letter', orientation: horiz ? 'landscape' : 'portrait' });
+  const W = horiz ? 279.4 : 215.9, M = 10, AN = W - 2 * M, ROJO = [192, 0, 0], GRISB = [128, 128, 128], CIAN = [79, 195, 247], N = [20, 20, 20];
+  let y = M;
+  const PH = horiz ? 215.9 : 279.4, salto = (h) => { if (y + h > PH - 9) { doc.addPage(); y = M; } };
+  const rect = (x, yy, w, h, fill) => { doc.setDrawColor(0); doc.setLineWidth(0.2); if (fill) { doc.setFillColor(...fill); doc.rect(x, yy, w, h, 'FD'); } else doc.rect(x, yy, w, h); };
+  const txt = (t, x, yy, o = {}) => { doc.setFont('helvetica', o.b ? 'bold' : 'normal'); doc.setFontSize(o.pt || 7.5); doc.setTextColor(...(o.c || N)); doc.text(String(t ?? ''), x, yy, { align: o.al || 'left', maxWidth: o.mw }); };
+  const lineas = (t, w, pt) => { doc.setFontSize(pt); return doc.splitTextToSize(String(t || ''), w); };
+  const X = (x, yy, w, h) => { doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...N); doc.text('X', x + w / 2, yy + h / 2 + 1.2, { align: 'center' }); };
+  const firmaEn = (img, x, yy, w, h) => { if (!img) return; try { doc.addImage(img, 'PNG', x, yy, w, h, undefined, 'FAST'); } catch (e) {} };
+  // Encabezado
+  const hc = horiz ? 17 : 21, wl = 38, wc = 52;
+  rect(M, y, wl, hc); if (logoListo()) { const lh = 9, lw = Math.min(wl - 6, lh * LOGO.naturalWidth / LOGO.naturalHeight); doc.addImage(LOGO, 'PNG', M + (wl - lw) / 2, y + (hc - lh) / 2, lw, lh); }
+  rect(M + wl, y, AN - wl - wc, hc);
+  C.titulo.forEach((t, i) => { let pt = C.titulo.length > 2 ? 10 : 10.5; doc.setFont('helvetica', 'bold'); doc.setFontSize(pt); while (pt > 6 && doc.getTextWidth(t) > AN - wl - wc - 4) { pt -= 0.5; doc.setFontSize(pt); }
+    txt(t, M + wl + (AN - wl - wc) / 2, y + hc / 2 - (C.titulo.length - 1) * (horiz ? 2 : 2.4) + i * (horiz ? 4 : 4.8) + 1.2, { b: !/Geovita/.test(t), pt, al: 'center' }); });
+  [['Código: ' + C.codigo], ['REV: ' + C.rev], [C.epp ? 'Página 1 de 1' : 'FECHA: ' + C.fechaDoc]].forEach(([t], i) => { rect(M + AN - wc, y + i * hc / 3, wc, hc / 3); txt(t, M + AN - wc + 1.5, y + i * hc / 3 + 4.5, { pt: 6.8 }); });
+  y += hc;
+  if (!C.multi && !C.epp) { rect(M, y, AN, horiz ? 3 : 4, ROJO); rect(M, y + (horiz ? 3 : 4), AN, horiz ? 2.5 : 3.5, GRISB); y += horiz ? 7 : 9.5; }
+  else y += 2;
+  const caja2 = (l, v, x, w, h = 6) => { rect(x, y, w, h); txt(l, x + 1.5, y + 4, { b: 1, pt: 6.8 }); txt(v, x + 1.5 + Math.min(42, doc.getTextWidth(l + ' ') + 2), y + 4, { pt: 7, mw: w - 46 }); };
+  if (C.multi) {
+    txt(C.obra, M + AN / 2, y + 4, { b: 1, pt: 8.5, al: 'center' }); y += 7;
+    const filas = C.cab.map(([k, l]) => [l, r.cab[k] || '']).concat([['SUPERVISOR DE TURNO', r.supervisor], ['MANTENCIÓN REALIZADA POR', r.nombre], ['FECHA MANTENCIÓN', fDMA(r.fecha) + ' · diaria previa a la actividad'], ['ÁREA', r.area]]);
+    filas.forEach(([l, v]) => { txt(l, M + 1, y + 4, { b: 1, pt: 7 }); doc.setDrawColor(0); doc.line(M + 58, y + 5, M + 140, y + 5); txt(v, M + 59, y + 4, { pt: 7.2 }); y += 6.2; });
+    // firmas a la derecha
+    const fx = M + 146, fy = y - filas.length * 6.2;
+    txt('MANTENIMIENTO', fx, fy + 4, { b: 1, pt: 7 }); rect(fx + 30, fy, 6, 6); X(fx + 30, fy, 6, 6);
+    txt('FIRMA (realizó)', fx, fy + 15, { b: 1, pt: 7 }); firmaEn(r.firma && r.firma.img, fx + 27, fy + 8, 24, 9); txt((r.firma || {}).fecha || '', fx + 27, fy + 20.5, { pt: 5.6 });
+    txt('FIRMA (supervisor)', fx, fy + 31, { b: 1, pt: 7 }); if (opt.reviso) { firmaEn(opt.reviso.img, fx + 27, fy + 24, 24, 9); txt(opt.reviso.nombre + ' · ' + opt.reviso.fecha, fx + 27, fy + 36.5, { pt: 5.4, mw: 40 }); }
+    y += 2;
+  } else if (C.epp) {
+    // EPP: el encabezado de obra y firmas va al final (como el formato)
+  } else {
+    caja2('OBRA O CONTRATO:', OBRA_CHKD, M, AN * 0.62); caja2('ÁREA', r.area, M + AN * 0.62, AN * 0.38); y += 6;
+    caja2('SUPERVISOR DE TURNO:', r.supervisor, M, AN); y += 8;
+  }
+  // Tabla de ítems
+  const semana = C.semana ? (() => { const lun = lunesDe(r.fecha), t = opt.semana || {}; return Array.from({ length: 7 }, (_, i) => { const d = new Date(lun + 'T12:00'); d.setDate(d.getDate() + i); const f = diaISO(d); return f === r.fecha ? r : t[f] || null; }); })() : null;
+  const wOp = C.multi ? 15 : 8.5, nOps = C.ops.length;
+  const wN = C.multi || C.epp ? 9 : 0;
+  const wObs = C.obsCol ? (C.epp ? 58 : 52) : 0, wResp = C.resp ? (semana ? 22 : 30) : 0, wF = C.resp ? (semana ? 14 : 22) : 0;
+  const wDias = semana ? 7 * 3 * 6 : nOps * wOp;
+  const wTxt = AN - wN - wDias - wObs - wResp - wF;
+  const xOps = M + wN + wTxt;
+  const cab = (h) => {
+    if (C.epp) return;
+    if (semana) { rect(M, y, wN + wTxt, h * 2, ROJO); txt('ELEMENTOS A INSPECCIONAR', M + (wN + wTxt) / 2, y + h + 1.2, { b: 1, c: [255, 255, 255], al: 'center' });
+      for (let d = 0; d < 7; d++) { const x = xOps + d * 18; rect(x, y, 18, h, ROJO); txt('DIA ' + (d + 1), x + 9, y + 3.8, { b: 1, pt: 6.5, c: [255, 255, 255], al: 'center' }); C.ops.forEach((o, i) => { rect(x + i * 6, y + h, 6, h, ROJO); txt(o, x + i * 6 + 3, y + h + 3.8, { pt: 5.2, b: 1, c: [255, 255, 255], al: 'center' }); }); }
+      rect(xOps + 126, y, wResp, h * 2, ROJO); txt('Responsable ejecución', xOps + 126 + wResp / 2, y + h + 1.2, { b: 1, pt: 6, c: [255, 255, 255], al: 'center', mw: wResp - 1 });
+      rect(xOps + 126 + wResp, y, wF, h * 2, ROJO); txt('Fecha', xOps + 126 + wResp + wF / 2, y + h + 1.2, { b: 1, pt: 6, c: [255, 255, 255], al: 'center' }); y += h * 2; return; }
+    if (C.multi) { rect(M, y, wN + wTxt, h, null); txt('INSTRUMENTO DE MEDICIÓN: ' + (r.cab.instrumento || ''), M + 2, y + 4, { b: 1, pt: 7.5 }); rect(xOps, y, nOps * wOp, h / 2 + 1, ROJO); txt('CONDICIÓN', xOps + nOps * wOp / 2, y + 3, { b: 1, pt: 6.5, c: [255, 255, 255], al: 'center' });
+      rect(xOps + nOps * wOp, y, wObs, h, ROJO); txt('OBSERVACIONES', xOps + nOps * wOp + wObs / 2, y + 4.2, { b: 1, pt: 7, c: [255, 255, 255], al: 'center' }); y += h;
+      rect(M, y, wN, 5, ROJO); txt('ITEM', M + wN / 2, y + 3.5, { b: 1, pt: 6.2, c: [255, 255, 255], al: 'center' }); rect(M + wN, y, wTxt, 5, ROJO); txt('DESCRIPCIÓN DE ACTIVIDAD', M + wN + wTxt / 2, y + 3.5, { b: 1, pt: 6.5, c: [255, 255, 255], al: 'center' });
+      C.ops.forEach((o, i) => { rect(xOps + i * wOp, y, wOp, 5, ROJO); txt(o, xOps + i * wOp + wOp / 2, y + 3.5, { pt: 5.4, b: 1, c: [255, 255, 255], al: 'center' }); }); rect(xOps + nOps * wOp, y, wObs, 5, ROJO); y += 5; return; }
+    rect(M, y, wN + wTxt + nOps * wOp + wResp + wF, h * 0.8, ROJO); txt('ESTATUS', xOps + (nOps * wOp + wResp + wF) / 2, y + 3.4, { b: 1, pt: 6.5, c: [255, 255, 255], al: 'center' }); y += h * 0.8;
+    rect(M, y, wN + wTxt, h, ROJO); txt('ELEMENTOS A INSPECCIONAR', M + (wN + wTxt) / 2, y + 4, { b: 1, c: [255, 255, 255], al: 'center' });
+    C.ops.forEach((o, i) => { rect(xOps + i * wOp, y, wOp, h, ROJO); txt(o, xOps + i * wOp + wOp / 2, y + 4, { pt: 6.5, b: 1, c: [255, 255, 255], al: 'center' }); });
+    rect(xOps + nOps * wOp, y, wResp, h, ROJO); txt('Responsable ejecución', xOps + nOps * wOp + wResp / 2, y + 4, { pt: 6.5, c: [255, 255, 255], al: 'center' });
+    rect(xOps + nOps * wOp + wResp, y, wF, h, ROJO); txt('Fecha', xOps + nOps * wOp + wResp + wF / 2, y + 4, { pt: 6.5, c: [255, 255, 255], al: 'center' }); y += h;
+  };
+  cab(6);
+  const abrev = (nm) => { const p = String(nm || '').split(' ').filter(Boolean); return p.length ? (p[0][0] + '. ' + (p.length > 2 ? p[p.length - 2] : p[1] || '')).trim() : ''; };
+  const filaItem = (n, texto, val, obs, dias, key) => {
+    const ls_ = lineas(texto, wTxt - 2.5, 7), lo = C.obsCol ? lineas(obs || '', wObs - 2.5, 6.4) : [];
+    const h = Math.max(C.horiz ? 4.6 : 6.6, ls_.length * (C.horiz ? 2.8 : 3.1) + (C.horiz ? 1.8 : 2.4), lo.length * 2.8 + 2.4);
+    salto(h);
+    if (wN) { rect(M, y, wN, h); txt(n, M + wN / 2, y + h / 2 + 1.1, { pt: 7, al: 'center' }); }
+    rect(M + wN, y, wTxt, h); doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(...N); doc.text(ls_, M + wN + 1.2, y + 3.6);
+    if (semana) {
+      for (let d = 0; d < 7; d++) { const rr = dias[d]; C.ops.forEach((o, i) => { const x = xOps + d * 18 + i * 6; rect(x, y, 6, h); if (rr && rr.__vals[key] === o) X(x, y, 6, h); }); }
+      rect(xOps + 126, y, wResp, h); rect(xOps + 126 + wResp, y, wF, h);
+      if (val) { txt(abrev(r.nombre), xOps + 126 + 1, y + h / 2 + 1, { pt: 5.6, mw: wResp - 1.5 }); txt(fDMA(r.fecha), xOps + 126 + wResp + 1, y + h / 2 + 1, { pt: 5.4 }); }
+    } else {
+      C.ops.forEach((o, i) => { rect(xOps + i * wOp, y, wOp, h); if (!C.multi && !C.epp && !val) txt(o, xOps + i * wOp + wOp / 2, y + h / 2 + 1, { pt: 5.6, al: 'center', c: [150, 150, 150] }); if (val === o) X(xOps + i * wOp, y, wOp, h); });
+      if (C.obsCol) { rect(xOps + nOps * wOp, y, wObs, h); doc.setFontSize(6.4); doc.text(lo, xOps + nOps * wOp + 1.2, y + 3.4); }
+      if (C.resp) { rect(xOps + nOps * wOp, y, wResp, h); rect(xOps + nOps * wOp + wResp, y, wF, h); if (val) { txt(abrev(r.nombre), xOps + nOps * wOp + 1.2, y + h / 2 + 1, { pt: 6.4, mw: wResp - 2 }); txt(fDMA(r.fecha), xOps + nOps * wOp + wResp + 1.2, y + h / 2 + 1, { pt: 6.4 }); } }
+    }
+    y += h;
+  };
+  const diasVals = semana ? semana.map(rr => rr ? { __vals: Object.assign({}, rr.resp, Object.fromEntries((rr.otros || []).map((o, i) => ['o' + i, o.t ? o.v : '']))) } : null) : null;
+  C.secciones.forEach(sc => {
+    if (sc.t) { const h = 5.4; rect(M, y, wN, h, CIAN); txt(sc.n, M + wN / 2, y + 3.8, { b: 1, pt: 7, al: 'center' }); rect(M + wN, y, wTxt, h, CIAN); txt(sc.t, M + wN + 1.2, y + 3.8, { b: 1, pt: 7 });
+      C.ops.forEach((o, i) => { rect(xOps + i * wOp, y, wOp, h, CIAN); txt(o, xOps + i * wOp + wOp / 2, y + 3.8, { pt: 6.2, b: 1, al: 'center' }); }); rect(xOps + nOps * wOp, y, wObs, h, CIAN); txt('OBSERVACIONES', xOps + nOps * wOp + wObs / 2, y + 3.8, { b: 1, pt: 6.4, al: 'center' }); y += h; }
+    sc.items.forEach(it => filaItem(it.n, it.t, r.resp[it.n], r.obs[it.n], diasVals, it.n));
+  });
+  (r.otros || []).forEach((o, i) => filaItem('', (i ? '' : 'Otros: ') + (o.t || ''), o.t ? o.v : '', o.obs, diasVals, 'o' + i));
+  if (!C.epp) { txt(C.ops[2] + ': NO APLICABLE', M + AN / 2, y + 3.6, { b: 1, pt: 6.8, al: 'center' }); y += 5.5; }
+  // Observaciones (incluye las de los ítems con observación)
+  const obsItems = C.obsCol ? [] : itemsChkd(C).filter(it => esMalaChkd(C, it, r.resp[it.n])).map(it => `Ítem ${it.n}: ${r.obs[it.n] || ''}`).concat((r.otros || []).filter(o => o.t && o.v === C.ops[1]).map(o => `${o.t}: ${o.obs || ''}`));
+  const obsTxt = obsItems.concat(r.obsGen ? [r.obsGen] : []).concat(r.nObs && r.retiro ? ['Elementos con observación retirados de uso o reemplazados antes de trabajar.'] : []).join(' · ') || '—';
+  const lob = lineas(obsTxt, AN - 3, 7), hob = Math.max(C.epp ? 7 : horiz ? 9 : 16, lob.length * 3.2 + 6);
+  salto(hob + 6);
+  if (C.multi) { rect(M, y, AN, 5.5, ROJO); txt('OBSERVACIONES GENERALES', M + 2, y + 3.9, { b: 1, pt: 7.5, c: [255, 255, 255] }); y += 5.5; rect(M, y, AN, hob - 3); doc.setFontSize(7); doc.setTextColor(...N); doc.text(lob, M + 1.5, y + 4); y += hob - 1; }
+  else { rect(M, y, AN, hob); txt(C.epp ? 'Obs:' : 'OBSERVACIONES:', M + 1.5, y + 3.8, { b: 1, pt: 7 }); doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.text(lob, M + 1.5, y + 7.4); y += hob + 2; }
+  // Firmas
+  const rev = opt.reviso || null;
+  salto(C.epp ? 30 : horiz ? 29 : 37);
+  if (C.epp) {
+    const fila = (l, v, l2, img, f2) => { rect(M, y, AN * 0.6, 10); txt(l, M + 1.5, y + 6, { b: 1, pt: 7 }); txt(v, M + 34, y + 6, { pt: 7 }); rect(M + AN * 0.6, y, AN * 0.4, 10); txt(l2, M + AN * 0.6 + 1.5, y + 6, { b: 1, pt: 7 }); firmaEn(img, M + AN * 0.6 + 14, y + 0.6, 26, 8.6); if (f2) txt(f2, M + AN - 1.5, y + 8.8, { pt: 5.4, al: 'right' }); y += 10; };
+    rect(M, y, AN * 0.6, 7); txt('Obra:', M + 1.5, y + 4.8, { b: 1, pt: 7 }); txt(OBRA_CHKD, M + 34, y + 4.8, { pt: 7 }); rect(M + AN * 0.6, y, AN * 0.4, 7); txt('Fecha:', M + AN * 0.6 + 1.5, y + 4.8, { b: 1, pt: 7 }); txt(fDMA(r.fecha) + ' ' + (r.hora || ''), M + AN * 0.6 + 14, y + 4.8, { pt: 7 }); y += 7;
+    fila('Nombre de supervisor:', rev ? rev.nombre : (r.supervisor || ''), 'Firma:', rev && rev.img, rev ? rev.fecha + ' · cód. ' + rev.codigo : '');
+    fila('Nombre del trabajador:', r.nombre, 'Firma:', r.firma && r.firma.img, r.firma ? r.firma.fecha + ' · cód. ' + r.firma.codigo : '');
+  } else if (!C.multi) {
+    const w2 = AN / 2, hb = horiz ? 6 : 7;
+    rect(M, y, w2, 5, ROJO); txt('REALIZÓ', M + w2 / 2, y + 3.6, { b: 1, c: [255, 255, 255], al: 'center' }); rect(M + w2, y, w2, 5, ROJO); txt('REVISÓ', M + w2 * 1.5, y + 3.6, { b: 1, c: [255, 255, 255], al: 'center' }); y += 5;
+    [['NOMBRE', r.nombre, rev ? rev.nombre : (r.supervisor || '')], ['CARGO', r.cargo, rev ? rev.cargo : '']].forEach(([l, a, b]) => { rect(M, y, 20, hb); txt(l, M + 1.5, y + 4.6, { b: 1, pt: 7 }); rect(M + 20, y, w2 - 20, hb); txt(a, M + 21.5, y + 4.6, { pt: 7 }); rect(M + w2, y, 20, hb); txt(l, M + w2 + 1.5, y + 4.6, { b: 1, pt: 7 }); rect(M + w2 + 20, y, w2 - 20, hb); txt(b, M + w2 + 21.5, y + 4.6, { pt: 7 }); y += hb; });
+    const hf = horiz ? 11 : 12;
+    rect(M, y, 20, hf); txt('FIRMA', M + 1.5, y + 7, { b: 1, pt: 7 }); rect(M + 20, y, w2 * 0.45, hf); firmaEn(r.firma && r.firma.img, M + 22, y + 1, w2 * 0.45 - 4, hf - 2);
+    rect(M + 20 + w2 * 0.45, y, w2 * 0.55 - 20, hf); txt('FECHA', M + 21.5 + w2 * 0.45, y + 4.2, { b: 1, pt: 6.6 }); txt(r.firma ? r.firma.fecha : '', M + 21.5 + w2 * 0.45, y + 8.2, { pt: 6.6 }); if (r.firma) txt('cód. ' + r.firma.codigo, M + 21.5 + w2 * 0.45, y + 11, { pt: 5.2 });
+    rect(M + w2, y, 20, hf); txt('FIRMA', M + w2 + 1.5, y + 7, { b: 1, pt: 7 }); rect(M + w2 + 20, y, w2 * 0.45, hf); if (rev) firmaEn(rev.img, M + w2 + 22, y + 1, w2 * 0.45 - 4, hf - 2);
+    rect(M + w2 + 20 + w2 * 0.45, y, w2 * 0.55 - 20, hf); txt('FECHA', M + w2 + 21.5 + w2 * 0.45, y + 4.2, { b: 1, pt: 6.6 }); if (rev) { txt(rev.fecha, M + w2 + 21.5 + w2 * 0.45, y + 8.2, { pt: 6.6 }); txt('cód. ' + rev.codigo, M + w2 + 21.5 + w2 * 0.45, y + 11, { pt: 5.2 }); }
+    y += hf;
+  }
+  if (!rev) { txt('Revisión del supervisor: pendiente (se firma en GEO ELEC).', M, y + 4.5, { pt: 6.2, c: [120, 120, 120] }); }
+  doc.setFontSize(5.8); doc.setTextColor(120, 120, 120);
+  for (let pg = 1; pg <= doc.getNumberOfPages(); pg++) { doc.setPage(pg); doc.text(`Página ${pg} de ${doc.getNumberOfPages()}`, W - M, PH - 5, { align: 'right' }); }
+  doc.text(`Documento digital GEO ELEC · ID ${r.id} · firmado por ${r.nombre} (RUT ${rutFmt(r.rut)}) el ${(r.firma || {}).fecha || ''} · código de verificación ${(r.firma || {}).codigo || ''}`, M, (horiz ? 215.9 : 279.4) - 5);
+  return doc;
+}
+// La semana del formato OOCC-001: los otros días salen de lo guardado en este teléfono
+function pdfChkDiario(r, opt = {}) {
+  if (CHKD[r.codigo] && CHKD[r.codigo].semana && !opt.semana) { const t = chkdLocal(r.usuario), sem = {}; Object.keys(t).forEach(f => { if (lunesDe(f) === lunesDe(r.fecha) && t[f][r.codigo]) sem[f] = t[f][r.codigo]; }); opt = Object.assign({}, opt, { semana: sem }); }
+  return pdfChkDiario0(r, opt);
+}
 
 // ===================== FICHA DEL PERSONAL AUTORIZADO =====================
 // Acreditación de la División, difusiones y evaluaciones de procedimientos de cada persona. La carga el administrador;
@@ -1870,7 +2357,7 @@ async function firmarDocumentoRegistro(registro, titulo) {
 }
 
 // ===================== NAVEGACIÓN =====================
-const VISTAS = ['inicio', 'fichap', 'firma', 'aprobar', 'planos', 'plano-ed', 'uni-nuevo', 'uni-ed', 'enlaces', 'enlace', 'login', 'clave', 'persona', 'cred', 'chk', 'hist', 'admin', 'admin-form', 'tableros', 'envios', 'etiquetas', 'actividad', 'rf01', 'pregunta', 'etiqueta', 'ficha', 'unilineal', 'form', 'scan', 'docs', 'subir'];
+const VISTAS = ['inicio', 'chkd', 'chkdf', 'fichap', 'firma', 'aprobar', 'planos', 'plano-ed', 'uni-nuevo', 'uni-ed', 'enlaces', 'enlace', 'login', 'clave', 'persona', 'cred', 'chk', 'hist', 'admin', 'admin-form', 'tableros', 'envios', 'etiquetas', 'actividad', 'rf01', 'pregunta', 'etiqueta', 'ficha', 'unilineal', 'form', 'scan', 'docs', 'subir'];
 // Botón / gesto "atrás" del teléfono: cada pantalla abierta queda en el historial del navegador,
 // así "atrás" vuelve a la pantalla anterior en vez de salir de la app.
 const pila = [];                 // pantallas abiertas sobre "inicio": { v, id, alInicio }
@@ -1882,6 +2369,7 @@ function ir(vista, opt = {}) {
   if (vista === 'inicio' && modoQR()) { VISTAS.forEach(v => $('#v-' + v).hidden = v !== 'ficha'); window.scrollTo(0, 0); return; }
   VISTAS.forEach(v => $('#v-' + v).hidden = v !== vista);
   document.body.classList.toggle('vista-ancha', vista === 'plano-ed');
+  if (vista === 'chkd') setTimeout(renderChkd, 0);
   if (vista === 'inicio') {
     if (pila.length && !opt.desdeHist) {
       const n = pila.length;
@@ -2107,6 +2595,7 @@ async function renderInicio() {
   const etq = ls.get('etiquetas', []).length;
   $('#tile-etq').textContent = etq ? `${etq} creada${etq > 1 ? 's' : ''} en este teléfono` : 'Etiquetas para imprimir';
   const pend = (await DB.all().catch(() => [])).length;
+  renderTileChkd();
   $('#tile-env').innerHTML = pend ? `<span class="amar">${pend} pendiente${pend > 1 ? 's' : ''}</span>` : '<span class="verde">Todo enviado</span>';
   $('#ini-pend').hidden = !pend;
   $('#ini-pend').textContent = `⏳ ${pend} registro${pend > 1 ? 's' : ''} pendiente${pend > 1 ? 's' : ''} de envío · ${$('#sync-msg').textContent}`;
@@ -2421,6 +2910,7 @@ document.addEventListener('click', (e) => {
 // ===================== RF01 · CONTROLES CRÍTICOS =====================
 let rf01Siguiente = null, rf01Hora = '';
 function exigirRF01(act, siguiente) {
+  if (!chkDiarioListo()) { exigirChkDiario(() => exigirRF01(act, siguiente)); toast('Antes de la actividad: completa y firma los checklists diarios de hoy.', 4000); return; }
   rf01Siguiente = siguiente; rf01Hora = '';
   $('#rf01-ok').checked = false; $('#btn-rf01-seguir').disabled = true;
   $('#rf01-act').textContent = 'Actividad: ' + ACT[act].nombre;
@@ -3225,6 +3715,7 @@ async function sincronizar(manual = false) {
         break; // se reintenta luego, en orden
       }
     }
+    await enviarChkDiarios();
     if (!error) { await actualizarTableros(); cargarDocs(); cargarEnlaces(); cargarUni(manual); cargarPlanos(manual); refrescarFichaPropia(); if (esAdmin()) regenerarChecklists('', true); }
   } catch (err) { error = err.message; }
   sincronizando = false; $('#btn-sync').disabled = false;
@@ -3528,6 +4019,13 @@ function simCarga(L, x, y, carga) {
   } else if (carga === 'ilum') { ln(x, y, x, y + 1.6); L.circ(x, y + 3.8, 2.2, { w: 0.3 }); const d = 1.55; ln(x - d, y + 3.8 - d, x + d, y + 3.8 + d); ln(x - d, y + 3.8 + d, x + d, y + 3.8 - d); }
   else if (carga === 'motor') { ln(x, y, x, y + 1.4); L.circ(x, y + 4, 2.6, { w: 0.3 }); L.texto(x, y + 5.2, 'M', { pt: 6, b: 1, al: 'center' }); }
   else if (carga === 'reserva') { ln(x, y, x, y + 2.5); ln(x - 1.4, y + 2.5, x + 1.4, y + 2.5); }
+  else if (carga === 'motorvdf' || carga === 'motorps') { ln(x, y, x, y + 0.8); L.rect(x - 2.2, y + 0.8, 4.4, 3, { w: 0.3 }); L.texto(x, y + 3.1, carga === 'motorvdf' ? 'VDF' : 'PS', { pt: 3.2, b: 1, al: 'center' }); ln(x, y + 3.8, x, y + 4.6); L.circ(x, y + 6.6, 2, { w: 0.3 }); L.texto(x, y + 7.5, 'M', { pt: 4.6, b: 1, al: 'center' }); }
+  else if (carga === 'bomba') { ln(x, y, x, y + 1.4); L.circ(x, y + 4, 2.6, { w: 0.3 }); L.poli([[x - 1.6, y + 5.6], [x + 1.6, y + 5.6], [x, y + 2.2]], { w: 0.25 }); }
+  else if (carga === 'trafo') { ln(x, y, x, y + 0.8); L.circ(x, y + 2.7, 1.9, { w: 0.3 }); L.circ(x, y + 5.1, 1.9, { w: 0.3 }); }
+  else if (carga === 'ups') { ln(x, y, x, y + 1); L.rect(x - 2.6, y + 1, 5.2, 3.6, { w: 0.3 }); L.texto(x, y + 3.6, 'UPS', { pt: 3.2, b: 1, al: 'center' }); }
+  else if (carga === 'condensador') { ln(x, y, x, y + 2.4); ln(x - 2.2, y + 2.4, x + 2.2, y + 2.4); ln(x - 2.2, y + 3.6, x + 2.2, y + 3.6); ln(x, y + 3.6, x, y + 5.4); }
+  else if (carga === 'spd') { ln(x, y, x, y + 1); L.rect(x - 1.6, y + 1, 3.2, 3.6, { w: 0.3 }); L.poli([[x + 0.6, y + 1.6], [x - 0.6, y + 2.9], [x + 0.6, y + 2.9], [x - 0.6, y + 4.1]], { w: 0.25 }); ln(x, y + 4.6, x, y + 5.6); ln(x - 1.4, y + 5.6, x + 1.4, y + 5.6); }
+  else if (carga === 'medicion') { ln(x, y, x, y + 1.4); L.circ(x, y + 4, 2.6, { w: 0.3 }); L.texto(x, y + 5, 'A', { pt: 5, b: 1, al: 'center' }); }
   else { ln(x, y, x, y + 3.5); L.poli([[x, y + 4.9], [x - 0.9, y + 3.1], [x + 0.9, y + 3.1]], { w: 0.2, fill: UC.N }); }
 }
 function simTierra(L, x, y, etiqueta) {
@@ -3548,10 +4046,17 @@ const ajustes = (o) => (String(o.regulable || '').toUpperCase() === 'NO'
   ? [o.calibre ? 'In ' + o.calibre + ' (fija, no regulable)' : (o.in ? 'In ' + o.in + ' (fija)' : '')]
   : [o.calibre ? 'Calibre ' + o.calibre : '', o.in ? 'In ' + o.in : '', o.isd ? 'Isd ' + o.isd : '', o.disparo || ''])
   .concat([o.curva ? 'Curva ' + o.curva : '', o.icu ? 'Icu ' + o.icu : '']).filter(Boolean).join(' · ');
+// Circuitos del tablero de origen: cantidad, cuál alimenta a este tablero (PB-1) y el detalle opcional de los demás
+function circuitosOrigen(m) {
+  const a = m.alim || {}, n = Math.max(1, Math.min(48, parseInt(a.circuitos, 10) || 1)), pos = Math.max(0, Math.min(n - 1, (parseInt(a.posicion, 10) || 1) - 1));
+  const det = Array.isArray(a.circs) ? a.circs : Object.values(a.circs || {});
+  return { n, pos, lista: Array.from({ length: n }, (_, k) => Object.assign({ id: '', destino: '', in: '' }, (a.circs || {})[k] || {}, k === pos ? { id: a.equipo || '' } : {}, { reserva: /RESERVA/i.test(((a.circs || {})[k] || {}).destino || '') })) };
+}
 function origenUni(m) { const a = m.alim || {}; return [a.nombre, a.tension].filter(Boolean).join(' · ') || 'Origen sin definir'; }
 function bloqueosUni(m) {
   const a = m.alim || {}, gnl = m.general || {}, of = m.otraFuente || {}, b = [];
-  b.push({ id: 'PB-1', rol: 'Alimentación aguas arriba', equipo: a.equipo || '', ubicacion: a.nombre || '', tipo: a.tipoBloqueo || 'Candado + tarjeta' });
+  const co = circuitosOrigen(m);
+  b.push({ id: 'PB-1', rol: 'Alimentación aguas arriba', equipo: (a.equipo || '') + (a.equipo && co.n > 1 ? ` (circuito ${co.pos + 1} de ${co.n})` : ''), ubicacion: a.nombre || '', tipo: a.tipoBloqueo || 'Candado + tarjeta' });
   b.push({ id: 'PB-2', rol: 'Interruptor general', equipo: [gnl.equipo || 'Q0', 'Interruptor general'].join(' '), ubicacion: (m.tablero || {}).nombre || '', tipo: gnl.tipoBloqueo || 'Candado + tarjeta' });
   const sc = m.sec || {};
   if (siUni(sc.tiene)) b.push({ id: 'PB-' + (b.length + 1), rol: 'Alimentación transformador T1', equipo: ((sc.qt || {}).equipo || 'Q-T1') + ' (aísla T1 y ' + (sc.nombre || 'TDF 400 V') + ')', ubicacion: (m.tablero || {}).nombre || '', tipo: (sc.qt || {}).tipoBloqueo || TIPOS_BLOQUEO[0] });
@@ -3615,32 +4120,51 @@ function construirUni(m, cx = {}) {
   const X = otra ? 96 : 122, X2 = 206;
   let y = 32;
   const cajaAR = otra ? 160 : 240;
-  // Alimentación aguas arriba
-  L.rect(20, y, cajaAR - 20, 40, { dash: 1, w: 0.3 });
-  L.texto(23, y + 4.6, 'ALIMENTACIÓN AGUAS ARRIBA', { pt: 5.8, b: 1, c: UC.GR });
+  // Alimentación aguas arriba (con la composición de circuitos del tablero de origen, si se indicó)
+  const CO = circuitosOrigen(m), dy = CO.n > 1 ? 12 : 0;
+  L.rect(20, y, cajaAR - 20, 40 + dy, { dash: 1, w: 0.3 });
+  L.texto(23, y + 4.6, 'ALIMENTACIÓN AGUAS ARRIBA' + (CO.n > 1 ? ` · TABLERO DE ORIGEN CON ${CO.n} CIRCUITOS` : ''), { pt: 5.8, b: 1, c: UC.GR });
   L.texto(23, y + 9.4, recortar(origenUni(m), cajaAR - 26, 8.2, true), { pt: 8.2, b: 1 });
-  L.linea(X, y + 11.5, X, y + 15, { w: 0.4 });
-  const ym1 = simInterruptor(L, X, y + 15);
-  lineasInfo(L, X + 6, y + 18.5, [[a.equipo || 'Dispositivo sin identificar', 1], [marcaModelo(a)], [ajustes(a)]], cajaAR - X - 9);
+  if (CO.n > 1) {
+    // barra del origen y sus circuitos; el que alimenta este tablero va destacado y con su punto de bloqueo
+    const p = CO.pos, izq = p, der = CO.n - 1 - p;
+    let sp = Math.min(11, izq ? (X - 26) / izq : 99, der ? (cajaAR - 6 - X) / der : 99); sp = Math.max(2.4, sp);
+    const xs = CO.lista.map((c, k) => X + (k - p) * sp), yb0 = y + 13;
+    L.linea(Math.min(...xs) - 2.5, yb0, Math.max(...xs) + 2.5, yb0, { w: 0.9 });
+    if (a.barraTension || a.tension) L.texto(Math.min(...xs) - 3.5, yb0 + 0.9, recortar('Barra ' + (a.barraTension || a.tension), 30, 4.4), { pt: 4.4, c: UC.GR, al: 'right' });
+    CO.lista.forEach((c, k) => {
+      if (k === p) return;
+      const xi = xs[k];
+      L.linea(xi, yb0, xi, yb0 + 1.2, { w: 0.25, c: UC.GR }); simInterruptor(L, xi, yb0 + 1.2, 0.36);
+      if (c.reserva) L.linea(xi - 1, yb0 + 7, xi + 1, yb0 + 7, { w: 0.25, c: UC.GR });
+      if (sp >= 5) {
+        L.texto(xi, yb0 + 9.2, recortar(c.id || String(k + 1), sp - 0.6, 3.8, true), { pt: 3.8, b: 1, al: 'center', c: UC.GR });
+        if (sp >= 7 && (c.destino || c.in)) L.texto(xi, yb0 + 11.2, recortar(c.destino || c.in, sp - 0.6, 3.4), { pt: 3.4, al: 'center', c: UC.GR });
+      } else if (k % 2 === 0 || k === CO.n - 1) L.texto(xi, yb0 + 9.2, String(k + 1), { pt: 3.4, al: 'center', c: UC.GR });
+    });
+    L.linea(X, yb0, X, y + 15 + dy, { w: 0.4 });
+  } else L.linea(X, y + 11.5, X, y + 15, { w: 0.4 });
+  const ym1 = simInterruptor(L, X, y + 15 + dy);
+  lineasInfo(L, X + 6, y + 18.5 + dy, [[(a.equipo || 'Dispositivo sin identificar') + (CO.n > 1 ? ` · circuito ${CO.pos + 1} de ${CO.n}` : ''), 1], [marcaModelo(a)], [ajustes(a)], [a.accesorios || '']], cajaAR - X - 9);
   simBloqueo(L, 'PB-1', X - 40, ym1, X - 4.6);
-  zona(20, y, cajaAR - 20, 40, 'alim');
-  L.linea(X, y + 31, X, y + 60, { w: 0.4 });
+  zona(20, y, cajaAR - 20, 40 + dy, 'alim');
+  L.linea(X, y + 31 + dy, X, y + 60 + dy, { w: 0.4 });
   // Cable
   const cab = m.cable || {};
-  lineasInfo(L, X + 3, y + 47, [[cab.seccion ? 'Cable: ' + cab.seccion : ''], [cab.largo ? 'Largo: ' + cab.largo : '']], (otra ? X2 - 8 : 238) - X - 3, 6.3);
+  lineasInfo(L, X + 3, y + 47 + dy, [[cab.seccion ? 'Cable: ' + cab.seccion + (cab.tipo ? ' · ' + cab.tipo : '') : ''], [[cab.largo ? 'Largo: ' + cab.largo : '', cab.canal ? cab.canal : ''].filter(Boolean).join(' · ')]], (otra ? X2 - 8 : 238) - X - 3, 6.3);
   // Otra fuente
   if (otra) {
-    L.rect(168, y, 72, 40, { dash: 1, w: 0.3, c: UC.R });
+    L.rect(168, y, 72, 40 + dy, { dash: 1, w: 0.3, c: UC.R });
     L.texto(171, y + 4.6, 'OTRA FUENTE DE ENERGÍA', { pt: 5.8, b: 1, c: UC.R });
     L.texto(171, y + 9.4, recortar(of.desc || of.ubicacion || 'Sin describir', 66, 7, true), { pt: 7, b: 1 });
     L.linea(X2, y + 11.5, X2, y + 15, { w: 0.4 });
     const ym3 = simInterruptor(L, X2, y + 15);
     envolver(of.equipo || '', 240 - X2 - 8, 6.3, true, 3).forEach((l, i) => L.texto(X2 + 6, y + 20.5 + i * 3.1, l, { pt: 6.3, b: 1 }));
     simBloqueo(L, 'PB-3', X2 - 24, ym3, X2 - 4.6);
-    zona(168, y, 72, 40, 'otra');
+    zona(168, y, 72, 40 + dy, 'otra');
   }
   // Tablero
-  y = 92;
+  y = 92 + dy;
   const yT = y;
   L.texto(23, yT + 5.8, recortar(t.nombre || m.id, 120, 10, true), { pt: 10, b: 1 });
   L.texto(23, yT + 10, recortar([t.tension, t.tag ? 'TAG ' + t.tag : '', 'ID ' + m.id].filter(Boolean).join(' · '), 120, 6), { pt: 6, c: UC.GR });
@@ -3719,6 +4243,7 @@ function construirUni(m, cx = {}) {
         L.texto(xi, yF + 25.5, recortar([o.polos ? o.polos + 'x' : '', o.in].join('') + (o.dif ? ' ' + o.dif : ''), w, 5.2), { pt: 5.2, al: 'center' });
         envolver(o.desc || '', w, 4.8, false, 2).forEach((l, j) => L.texto(xi, yF + 28.2 + j * 2.4, l, { pt: 4.8, al: 'center', c: UC.GR }));
         if (o.destino) L.texto(xi, yF + 33.4, recortar('› ' + o.destino, w, 4.8, true), { pt: 4.8, b: 1, al: 'center', c: UC.R });
+        else if (o.cable || o.kw) L.texto(xi, yF + 33.4, recortar([o.kw, o.cable].filter(Boolean).join(' · '), w, 4.4), { pt: 4.4, al: 'center', c: UC.GR });
       });
       if (!n) L.texto(xCentro + 3, yF + 5, 'Sin salidas registradas', { pt: 6, c: UC.GR });
       fin = yF + (n ? 37 : 10);
@@ -3759,18 +4284,20 @@ function construirUni(m, cx = {}) {
     L.rect(26, yS, 210, finS + 3 - yS, { w: 0.45 });
     finCaja = finS + 8;
   }
-  if (otra) L.linea(X2, 72, X2, yb, { w: 0.4 });
+  if (otra) L.linea(X2, 72 + dy, X2, yb, { w: 0.4 });
   const yFin = Math.min(Math.max(finCaja + 8, yT + 70), 278);
   L.rect(20, yT, 220, yFin - yT, { w: 0.6 });
   if (siUni((m.tp || {}).tiene)) { simTierra(L, 228, yFin - 13, 'TP'); zona(222, yFin - 15, 16, 14, 'tp'); }
   zona(X - 52, 32, 22, 30, 'pb'); zona(X - 52, yT + 14, 22, 24, 'pb');
-  const cargasUsadas = [['enchufe1', 'Enchufe hembra'], ['enchufeJ', 'Enchufe jumbo'], ['ilum', 'Iluminación'], ['motor', 'Motor / ventilador']].filter(([k]) => sal.concat(conSec ? sec.salidas || [] : []).some(o => o.carga === k || (k === 'enchufe1' && o.carga === 'enchufe3')));
+  const cargasUsadas = [['enchufe1', 'Enchufe hembra'], ['enchufeJ', 'Enchufe jumbo'], ['ilum', 'Iluminación'], ['motor', 'Motor / ventilador'], ['motorvdf', 'Motor con VDF'], ['motorps', 'Motor c/ partidor suave'],
+    ['bomba', 'Bomba'], ['trafo', 'Transformador'], ['ups', 'UPS'], ['condensador', 'Condensadores'], ['spd', 'Supresor (SPD)'], ['medicion', 'Medición']].filter(([k]) => sal.concat(conSec ? sec.salidas || [] : []).some(o => o.carga === k || (k === 'enchufe1' && o.carga === 'enchufe3')));
   const conDif = sal.concat(conSec ? sec.salidas || [] : []).some(o => o.dif), extra = cargasUsadas.length || conDif;
   if (yFin <= (extra ? 254 : 262)) {   // simbología (como en los planos del fabricante)
     const ys = extra ? 260 : 268; L.texto(20, ys - 3.5, 'SIMBOLOGÍA', { pt: 5.8, b: 1, c: UC.GR });
     L.rect(20, ys - 1.5, 220, extra ? 22 : 14, { w: 0.2, c: UC.CL });
     if (extra) { let xx = 26;
-      cargasUsadas.forEach(([k, n]) => { simCarga(L, xx, ys + 13, k); L.texto(xx + 5, ys + 17.5, n, { pt: 5 }); xx += 44; });
+      const paso = Math.min(44, 212 / (cargasUsadas.length + (conDif ? 1.6 : 0)));
+      cargasUsadas.forEach(([k, n]) => { simCarga(L, xx, ys + 12, k); L.texto(xx + 4.4, ys + 17.5, recortar(n, paso - 5.5, 5), { pt: 5 }); xx += paso; });
       if (conDif) { L.rect(xx - 1.4, ys + 15.3, 2.8, 2.8, { w: 0.22 }); L.linea(xx - 1.4, ys + 18.1, xx + 1.4, ys + 15.3, { w: 0.18 }); L.texto(xx + 4, ys + 17.5, 'Diferencial 30 mA en la salida', { pt: 5 }); } }
     simInterruptor(L, 26, ys, 0.62); L.texto(30, ys + 6, 'Interruptor (MCCB / MCB)', { pt: 5 });
     L.circ(70, ys + 5, 1.2, { w: 0.3, c: '#0077A8' }); L.circ(76, ys + 5, 2.6, { w: 0.3, c: '#0077A8' }); L.texto(76, ys + 5.8, '50G', { pt: 3.4, b: 1, al: 'center', c: '#0077A8' });
@@ -3849,13 +4376,13 @@ function construirUni(m, cx = {}) {
   if (siUni(dif.tiene)) comp.push([dif.cod || 'RD', dif.tipo || 'Protección diferencial', [dif.marca, dif.modelo].filter(Boolean).join(' '), [dif.I, dif.T, String(dif.regulable || '').toUpperCase() === 'NO' ? 'fijo' : ''].filter(Boolean).join(' · ')]);
   if (siUni(tr.tiene)) comp.push(['T1', tr.tipo || 'Transformador', '', [tr.kva, tr.relacion, tr.grupo].filter(Boolean).join(' · ')]);
   if (siUni((m.trafoCtl || {}).tiene)) { const tc2 = m.trafoCtl; comp.push(['TC', 'Transformador de control' + (tc2.alimenta ? ' (' + tc2.alimenta + ')' : ''), tc2.marca || '', [tc2.relacion, tc2.va, tc2.prot].filter(Boolean).join(' · ')]); }
-  sal.forEach(o => comp.push([o.id || '—', [o.tipo, nombreCarga(o.carga), o.desc, o.destino ? '› ' + o.destino : ''].filter(Boolean).join(' · '), [o.marca, o.modelo].filter(Boolean).join(' '), [o.polos ? o.polos + ' polos' : '', o.in, o.curva ? 'curva ' + o.curva : '', o.dif].filter(Boolean).join(' · ')]));
+  sal.forEach(o => comp.push([o.id || '—', [o.tipo, nombreCarga(o.carga), o.desc, o.kw, o.cable ? 'cable ' + o.cable : '', o.destino ? '› ' + o.destino : ''].filter(Boolean).join(' · '), [o.marca, o.modelo].filter(Boolean).join(' '), [o.polos ? o.polos + ' polos' : '', o.in, o.curva ? 'curva ' + o.curva : '', o.dif].filter(Boolean).join(' · ')]));
   if (siUni((m.sec || {}).tiene)) {
     const sc = m.sec, g2 = sc.general || {}, d2 = sc.dif || {};
     comp.push([(sc.qt || {}).equipo || 'Q-T1', 'Interruptor alimentación transformador T1', '', (sc.qt || {}).calibre || '']);
     comp.push([g2.equipo || 'Q0-B', 'Interruptor general ' + (sc.nombre || 'TDF 400 V'), marcaModelo(g2), ajustes(g2)]);
     if (siUni(d2.tiene)) comp.push([d2.cod || 'RD', (d2.tipo || 'Protección diferencial') + ' (' + (sc.nombre || 'TDF 400 V') + ')', '', [d2.I, d2.T].filter(Boolean).join(' · ')]);
-    (sc.salidas || []).forEach(o => comp.push([o.id || '—', [o.tipo, nombreCarga(o.carga), o.desc].filter(Boolean).join(' · '), [o.marca, o.modelo].filter(Boolean).join(' '), [o.polos ? o.polos + ' polos' : '', o.in, o.curva ? 'curva ' + o.curva : '', o.dif].filter(Boolean).join(' · ')]));
+    (sc.salidas || []).forEach(o => comp.push([o.id || '—', [o.tipo, nombreCarga(o.carga), o.desc, o.kw, o.cable ? 'cable ' + o.cable : ''].filter(Boolean).join(' · '), [o.marca, o.modelo].filter(Boolean).join(' '), [o.polos ? o.polos + ' polos' : '', o.in, o.curva ? 'curva ' + o.curva : '', o.dif].filter(Boolean).join(' · ')]));
   }
   if (siUni((m.tp || {}).tiene)) comp.push(['TP', 'Puesta a tierra', '', (m.tp || {}).desc || '']);
   if (siUni(of.tiene)) comp.push([of.equipo || 'PB-3', 'Otra fuente: ' + (of.desc || ''), '', of.ubicacion || '']);
@@ -4005,12 +4532,54 @@ const SIMB = {
     d(g) { g.l(0, -7, 0, -4); g.c(0, 0, 4); g.t(0, 1.6, 'M', { pt: 9, b: 1 }); } },
   medidor: { n: 'Medidor de energía', ext: [-3.6, -6, 3.6, 6], b: [[0, -6], [0, 6]], at: ['Identificación', 'Tipo', '', ''],
     d(g) { g.l(0, -6, 0, -3); g.p([[-3.5, -3], [3.5, -3], [3.5, 3], [-3.5, 3]]); g.t(0, 1, 'kWh', { pt: 4.4, b: 1 }); g.l(0, 3, 0, 6); } },
+  guarda: { n: 'Guardamotor', ext: [-1.5, -7, 6.6, 7], b: [[0, -7], [0, 7]], at: ['Identificación', 'Rango térmico (A)', 'Marca y modelo', ''],
+    d(g) { SIMB.int.d(g); g.p([[2.8, -2], [6.4, -2], [6.4, 2], [2.8, 2]]); g.t(4.6, 0.9, 'I>', { pt: 3.2, b: 1 }); g.l(1, 0, 2.8, 0, { dash: 1 }); } },
+  rt: { n: 'Relé térmico', ext: [-3, -6, 3, 6], b: [[0, -6], [0, 6]], at: ['Identificación', 'Rango (A)', 'Marca y modelo', ''],
+    d(g) { g.l(0, -6, 0, -3); g.p([[-2.8, -3], [2.8, -3], [2.8, 3], [-2.8, 3]]); g.l(0, -3, 0, -1.2); g.l(0, -1.2, 1.4, -1.2); g.l(1.4, -1.2, 1.4, 1.2); g.l(1.4, 1.2, 0, 1.2); g.l(0, 1.2, 0, 3); g.l(0, 3, 0, 6); } },
+  vdf: { n: 'Variador de frecuencia', ext: [-4, -7, 4, 7], b: [[0, -7], [0, 7]], at: ['Identificación', 'Potencia (kW)', 'Marca y modelo', ''],
+    d(g) { g.l(0, -7, 0, -4); g.p([[-4, -4], [4, -4], [4, 4], [-4, 4]]); g.l(-4, 4, 4, -4); g.t(-1.8, -0.6, '~', { pt: 6 }); g.t(1.9, 3, 'f', { pt: 4.4, b: 1 }); g.l(0, 4, 0, 7); } },
+  ps: { n: 'Partidor suave', ext: [-4, -7, 4, 7], b: [[0, -7], [0, 7]], at: ['Identificación', 'Potencia (kW)', 'Marca y modelo', ''],
+    d(g) { g.l(0, -7, 0, -4); g.p([[-4, -4], [4, -4], [4, 4], [-4, 4]]); g.t(0, 1.2, 'PS', { pt: 4.4, b: 1 }); g.l(0, 4, 0, 7); } },
+  ups: { n: 'UPS', ext: [-4.4, -7, 4.4, 7], b: [[0, -7], [0, 7]], at: ['Identificación', 'Potencia (kVA)', 'Autonomía', ''],
+    d(g) { g.l(0, -7, 0, -4); g.p([[-4.4, -4], [4.4, -4], [4.4, 4], [-4.4, 4]]); g.t(0, 1.2, 'UPS', { pt: 4.2, b: 1 }); g.l(0, 4, 0, 7); } },
+  gen: { n: 'Generador', ext: [-4.1, -4.1, 4.1, 7], b: [[0, 7]], at: ['Identificación', 'Potencia (kVA)', 'Tensión', ''],
+    d(g) { g.c(0, 0, 4); g.t(0, 1.4, 'G', { pt: 7, b: 1 }); g.l(0, 4, 0, 7); } },
+  cond: { n: 'Condensador / banco', ext: [-3.2, -6, 3.2, 6], b: [[0, -6], [0, 6]], at: ['Identificación', 'Potencia (kVAr)', 'Tensión', ''],
+    d(g) { g.l(0, -6, 0, -0.9); g.l(-3, -0.9, 3, -0.9, { w: 0.45 }); g.l(-3, 0.9, 3, 0.9, { w: 0.45 }); g.l(0, 0.9, 0, 6); } },
+  spd: { n: 'Supresor de transientes (SPD)', ext: [-2, -6, 2, 8], b: [[0, -6]], at: ['Identificación', 'Clase / Imax', 'Marca y modelo', ''],
+    d(g) { g.l(0, -6, 0, -3); g.p([[-2, -3], [2, -3], [2, 3], [-2, 3]]); g.l(0.7, -2.2, -0.7, -0.2); g.l(-0.7, -0.2, 0.7, 0.2); g.l(0.7, 0.2, -0.7, 2.2); g.l(0, 3, 0, 5.4); g.l(-1.8, 5.4, 1.8, 5.4); g.l(-1.1, 6.6, 1.1, 6.6); g.l(-0.4, 7.8, 0.4, 7.8); } },
+  tci: { n: 'Transformador de corriente (TC)', ext: [-2.4, -5, 6, 5], b: [[0, -5], [0, 5]], at: ['Identificación', 'Relación (A/5)', 'Clase', ''],
+    d(g) { g.l(0, -5, 0, 5); g.c(0, -0.9, 2.2); g.c(0, 0.9, 2.2); g.l(2.2, 0, 6, 0); } },
+  tpv: { n: 'Transformador de potencial (TP)', ext: [-2.7, -6, 2.7, 6], b: [[0, -6], [0, 6]], at: ['Identificación', 'Relación (V)', 'Clase', ''],
+    d(g) { g.l(0, -6, 0, -4.4); g.c(0, -1.7, 2.6); g.c(0, 1.7, 2.6); g.l(0, 4.4, 0, 6); g.t(3.6, 0.8, 'TP', { pt: 3, b: 1 }); } },
+  amp: { n: 'Amperímetro', ext: [-3, -3, 3, 3], b: [[0, -3], [0, 3]], at: ['Identificación', 'Escala', '', ''],
+    d(g) { g.c(0, 0, 3); g.t(0, 1.4, 'A', { pt: 6, b: 1 }); } },
+  volt: { n: 'Voltímetro', ext: [-3, -3, 3, 3], b: [[0, -3], [0, 3]], at: ['Identificación', 'Escala', '', ''],
+    d(g) { g.c(0, 0, 3); g.t(0, 1.4, 'V', { pt: 6, b: 1 }); } },
+  bobina: { n: 'Bobina (relé / contactor)', ext: [-3, -6, 3, 6], b: [[0, -6], [0, 6]], at: ['Identificación', 'Tensión de bobina', '', ''],
+    d(g) { g.l(0, -6, 0, -2.5); g.p([[-3, -2.5], [3, -2.5], [3, 2.5], [-3, 2.5]]); g.l(0, 2.5, 0, 6); } },
+  pulsa: { n: 'Pulsador (NA)', ext: [-3.4, -7, 3, 7], b: [[0, -7], [0, 7]], at: ['Identificación', 'Función', 'Color', ''],
+    d(g) { g.l(0, -7, 0, -3.5); g.l(0, 3.5, 0, 7); g.l(0, 3.5, -3.2, -2.6); g.l(-1.6, -0.4, 2.6, -0.4, { dash: 1 }); g.l(2.6, -1.8, 2.6, 1); } },
+  lum: { n: 'Luminaria', ext: [-4, -6, 4, 2], b: [[0, -6]], at: ['Identificación', 'Potencia (W)', 'Tipo', ''],
+    d(g) { g.l(0, -6, 0, -2); g.p([[-4, -2], [4, -2], [4, 1.6], [-4, 1.6]]); g.l(-4, -2, 4, 1.6); g.l(-4, 1.6, 4, -2); } },
+  bornes: { n: 'Regleta de bornes', ext: [-6, -1.6, 6, 1.6], b: [], at: ['Identificación', 'Cantidad', '', ''],
+    d(g) { [-4.5, -1.5, 1.5, 4.5].forEach(x => { g.c(x, 0, 1.2); }); g.l(-6, 0, -5.7, 0); g.l(5.7, 0, 6, 0); } },
+  acom: { n: 'Acometida / alimentación', ext: [-2.4, -7, 2.4, 7], b: [[0, 7]], at: ['Origen', 'Tensión', 'Cable', ''],
+    d(g) { g.l(0, -4, 0, 7); g.p([[0, -7], [-2.2, -3.4], [2.2, -3.4]], { fill: 1 }); } },
+  circ: { n: 'Circuito de salida (interruptor + carga)', ext: [-2.5, -7, 3.6, 16], b: [[0, -7]], at: ['Identificación', 'Corriente / polos', 'Destino / carga', 'Cable'],
+    d(g) { SIMB.int.d(g); g.l(0, 7, 0, 13); g.p([[0, 16], [-1.4, 13], [1.4, 13]], { fill: 1 }); } },
   barra: { n: 'Barra', var: 1, b: [], at: ['Identificación', 'Tensión', 'Capacidad', ''],
     ext: (a) => [-(a.lg || 40) / 2, -0.8, (a.lg || 40) / 2, 0.8], d(g, a) { g.l(-(a.lg || 40) / 2, 0, (a.lg || 40) / 2, 0, { w: 1.1 }); } },
   tablero: { n: 'Tablero (envolvente)', var: 1, b: [], at: ['Nombre del tablero', 'Tensión', 'TAG / ID GEO ELEC', 'Ubicación'],
     ext: (a) => [-(a.ancho || 40) / 2, -(a.alto || 30) / 2, (a.ancho || 40) / 2, (a.alto || 30) / 2],
     d(g, a) { const w = (a.ancho || 40) / 2, h = (a.alto || 30) / 2; g.p([[-w, -h], [w, -h], [w, h], [-w, h]], { dash: 1 }); } }
 };
+// Grupos de la paleta de símbolos
+const GRUPOS_SIMB = [['Protección y maniobra', ['int', 'dif', 'rd', 'fus', 'secc', 'cont', 'guarda', 'rt', 'spd']],
+  ['Transformación, fuentes y medida', ['trafo', 'auto', 'tc', 'tci', 'tpv', 'gen', 'ups', 'medidor', 'amp', 'volt', 'acom']],
+  ['Cargas y salidas', ['circ', 'motor', 'vdf', 'ps', 'enchufe', 'lum', 'cond']],
+  ['Control y señalización', ['bobina', 'pulsa', 'pe', 'piloto', 'bornes']],
+  ['Barras, tableros y tierra', ['barra', 'tablero', 'tierra']]];
 const extSim = (a) => { const S = SIMB[a.s]; return typeof S.ext === 'function' ? S.ext(a) : S.ext; };
 // Contexto de dibujo local → papel (rotación en múltiplos de 90°, sentido horario)
 function ctxSim(L, X, Y, rot, col, extra) {
@@ -4764,7 +5333,10 @@ function renderPanelPE() {
   }
   if (PE.modo === 'sim') {
     box.innerHTML = `<h3>Insertar símbolo</h3><p class="muted" style="margin:0 0 8px">Simbología normalizada (IEC 60617 / RIC N°18). Elige uno y toca el plano.</p>
-      <div class="pe-paleta">${Object.keys(SIMB).map(k => `<button type="button" class="${PE.simTipo === k ? 'on' : ''}" data-pe-sim="${k}" title="${esc(SIMB[k].n)}">${iconoSim(k)}<small>${esc(SIMB[k].n)}</small></button>`).join('')}</div>`;
+      <input type="search" id="pe-sim-buscar" placeholder="Buscar símbolo (ej.: variador, TC, UPS)" value="${esc(PE.simQ || '')}" style="margin:0 0 8px">
+      ${GRUPOS_SIMB.map(([g, ks]) => { const f = ks.filter(k => SIMB[k] && (!PE.simQ || (SIMB[k].n + ' ' + k).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(PE.simQ.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''))));
+        return f.length ? `<div class="fp-tipo" style="margin:8px 0 4px">${esc(g)}</div><div class="pe-paleta">${f.map(k => `<button type="button" class="${PE.simTipo === k ? 'on' : ''}" data-pe-sim="${k}" title="${esc(SIMB[k].n)}">${iconoSim(k)}<small>${esc(SIMB[k].n)}</small></button>`).join('')}</div>` : ''; }).join('') || '<p class="muted">Sin resultados.</p>'}`;
+    const bq = $('#pe-sim-buscar'); if (bq) bq.addEventListener('input', () => { PE.simQ = bq.value; const pos = bq.selectionStart; renderPanelPE(); const nb = $('#pe-sim-buscar'); if (nb) { nb.focus(); try { nb.setSelectionRange(pos, pos); } catch (e) {} } });
     return;
   }
   if ((PE.modo === 'tapa' || PE.modo === 'area') && PE.pend.length) { box.innerHTML = `<h3>${PE.modo === 'tapa' ? 'Tapar' : 'Seleccionar área'}</h3><p class="muted">Toca la esquina opuesta.</p><button type="button" class="big" data-pe-acc="cancelar">✖ Cancelar</button>`; return; }
@@ -4936,7 +5508,7 @@ function htmlEsqTipo() {
   UE = { m: PE.m.uni, sug: new Set(), t: {}, sinRef: true };
   try { h = htmlEditorUni(); } finally { UE = UE0; }
   const i9 = h.indexOf('<details class="ue-sec" open><summary>9 ·'); if (i9 > 0) h = h.slice(0, i9);
-  return h.replace(/<div class="ancho ue-esq">[\s\S]*?<\/p><\/div>/, '').replace(/ id="(btn-ue-sal2?|dl-marcas|dl-calibres|dl-icu|ue-dl-pers)"/g, ' id="pe-$1"').replace(/ list="(dl-marcas|dl-calibres|dl-icu)"/g, ' list="pe-$1"');
+  return h.replace(/<div class="ancho ue-esq">[\s\S]*?<\/p><\/div>/, '').replace(/ id="(btn-ue-sal(?:2|N)?|dl-marcas|dl-calibres|dl-icu|dl-cables|ue-dl-pers)"/g, ' id="pe-$1"').replace(/ list="(dl-marcas|dl-calibres|dl-icu|dl-cables)"/g, ' list="pe-$1"');
 }
 function renderEsqPE() {
   if (!PE || !PE.m.uni) return;
@@ -4969,7 +5541,7 @@ $('#pe-esq-form').addEventListener('input', (e) => {
 $('#pe-esq-form').addEventListener('change', (e) => {
   const k = e.target.dataset && e.target.dataset.k; if (!k || !PE) return;
   PE._editando = null;
-  if (/\.(marca|tipo)$/.test(k) && !/^tablero\./.test(k)) renderEsqPE();
+  if ((/\.(marca|tipo)$/.test(k) && !/^tablero\./.test(k)) || /^alim\.(circuitos|posicion)$/.test(k)) renderEsqPE();
 });
 $('#pe-esq-form').addEventListener('focusout', () => { if (PE) PE._editando = null; });
 $('#pe-esq-form').addEventListener('click', (e) => {
@@ -4977,6 +5549,7 @@ $('#pe-esq-form').addEventListener('click', (e) => {
   const sg = e.target.closest('[data-seg] button');
   if (sg) { const k = sg.closest('[data-seg]').dataset.seg; cambioEsq(u => setP(u, k, sg.dataset.v), null, true); return; }
   if (e.target.closest('#pe-btn-ue-sal2')) { cambioEsq(u => { const sc = u.sec = u.sec || {}; (sc.salidas = sc.salidas || []).push({ id: 'Q' + (sc.salidas.length + 11), carga: 'enchufe3', tipo: 'MCB (miniatura)', desc: '', polos: '3', in: '', dif: '30 mA', destino: '', destinoId: '' }); }, null, true); return; }
+  if (e.target.closest('#pe-btn-ue-salN')) { cambioEsq(u => agregarVariasSal(u.salidas = u.salidas || []), null, true); return; }
   if (e.target.closest('#pe-btn-ue-sal')) { cambioEsq(u => { (u.salidas = u.salidas || []).push({ id: 'Q' + (u.salidas.length + 1), carga: 'tablero', tipo: 'MCCB (caja moldeada)', desc: '', polos: '3', in: '', dif: '', destino: '', destinoId: '' }); }, null, true); return; }
   const d = e.target.closest('[data-sal-del]');
   if (d) { const [b, i] = d.dataset.salDel.split(':'); if (confirm('¿Quitar esta salida?')) cambioEsq(u => getP(u, b).splice(+i, 1), null, true); return; }
@@ -5312,12 +5885,14 @@ const TIPOS_BLOQUEO = ['Candado departamental + candados personales + tarjetas',
   'Retiro de fusibles + tarjeta', 'Candado + tarjeta'];
 let UE = null;   // { m, t, sug:Set, sucio, base }
 const getP = (o, p) => p.split('.').reduce((a, k) => (a == null ? a : a[k]), o);
-function setP(o, p, v) { const ks = p.split('.'); let a = o; ks.slice(0, -1).forEach(k => { if (a[k] == null) a[k] = /^\d+$/.test(k) ? [] : {}; a = a[k]; }); a[ks[ks.length - 1]] = v; }
+function setP(o, p, v) { const ks = p.split('.'); let a = o; ks.slice(0, -1).forEach((k, i) => { if (a[k] == null) a[k] = /^\d+$/.test(ks[i + 1]) ? [] : {}; a = a[k]; }); a[ks[ks.length - 1]] = v; }
 // ===== Esquemas estándar por tipo de tablero (base: planos ELEC de Producción/Acarreo, checklists ELEC-005 a 010 y PT-ELE-003) =====
 // Cada esquema precarga las protecciones, la protección diferencial, los transformadores y las salidas típicas del tipo.
 // Los valores quedan marcados como "sugeridos" (amarillo) hasta que se confirmen con la placa del tablero.
 const CARGAS = [['tablero', 'Alimentador a otro tablero'], ['enchufe3', 'Enchufe hembra trifásico'], ['enchufe1', 'Enchufe hembra monofásico'], ['enchufeJ', 'Enchufe hembra jumbo'],
-  ['ilum', 'Iluminación'], ['motor', 'Motor / ventilador'], ['control', 'Circuito de control'], ['reserva', 'Reserva']];
+  ['ilum', 'Iluminación'], ['motor', 'Motor / ventilador'], ['motorvdf', 'Motor con variador de frecuencia'], ['motorps', 'Motor con partidor suave'], ['bomba', 'Bomba'],
+  ['trafo', 'Transformador / autotransformador'], ['ups', 'UPS / respaldo'], ['condensador', 'Banco de condensadores'], ['spd', 'Supresor de transientes (SPD)'],
+  ['medicion', 'Medición / instrumentos'], ['control', 'Circuito de control'], ['reserva', 'Reserva']];
 const nombreCarga = (k) => (CARGAS.find(c => c[0] === k) || [])[1] || '';
 const SAL = (id, carga, tipo, polos, inn, extra = {}) => Object.assign({ id, carga, tipo, polos, in: inn, curva: '', dif: '', marca: '', modelo: '', desc: '', destino: '', destinoId: '' }, extra);
 const MCB = 'MCB (miniatura)', MCCB = 'MCCB (caja moldeada)', CTL_400 = { tiene: 'SI', relacion: '400/220 V', va: '100 VA', prot: 'Fusibles 2 A (prim.) + 2 A (sec.)', alimenta: 'Luces piloto, bobina de disparo, parada de emergencia' };
@@ -5467,6 +6042,21 @@ function fUni(k, label, opt = {}) {
     : `<input data-k="${k}" class="${opt.may ? 'may' : ''}${sug}" value="${esc(v)}" placeholder="${esc(opt.ph || '')}"${opt.lista ? ` list="${opt.lista}"` : ''}>`;
   return `<div class="ue-f${opt.ancho ? ' ancho' : ''}"><label>${esc(label)}${opt.req ? ' *' : ''}</label>${ctl}</div>`;
 }
+// Detalle de los demás circuitos del tablero de origen (opcional): identificación, destino y corriente
+// Agrega N salidas copiando la última (mismo tipo, polos, corriente y carga) con identificación correlativa
+function agregarVariasSal(lista) {
+  const n = parseInt(prompt('¿Cuántas salidas iguales a la última agregar? (1 a 24)', '4'), 10); if (!(n > 0)) return;
+  const base = lista[lista.length - 1] || { carga: 'enchufe3', tipo: 'MCB (miniatura)', polos: '3', in: '', dif: '30 mA' };
+  const pref = String(base.id || 'Q').replace(/\d+$/, '') || 'Q', num = Math.max(0, ...lista.map(x => parseInt(String(x.id || '').match(/(\d+)$/)?.[1] || 0, 10)));
+  for (let i = 1; i <= Math.min(24, n); i++) lista.push(Object.assign({}, base, { id: pref + (num + i), destino: '', destinoId: '' }));
+}
+function htmlCircOrigen(m) {
+  const co = circuitosOrigen(m); if (co.n < 2) return '';
+  return `<div class="ancho ue-circ"><label>Otros circuitos del tablero de origen (opcional: identificación, a qué alimenta y corriente; escribe RESERVA si está libre)</label>
+    <div class="ue-circ-g">${co.lista.map((c, k) => k === co.pos
+      ? `<div class="ue-circ-f sel"><b>${k + 1}</b><span>Este tablero · ${esc(c.id || 'PB-1')}</span></div>`
+      : `<div class="ue-circ-f"><b>${k + 1}</b><input data-k="alim.circs.${k}.id" value="${esc(c.id)}" placeholder="Q-A${k + 1}"><input data-k="alim.circs.${k}.destino" class="may" value="${esc(c.destino)}" placeholder="Alimenta a…"><input data-k="alim.circs.${k}.in" value="${esc(c.in)}" placeholder="In" list="dl-calibres"></div>`).join('')}</div></div>`;
+}
 const segU = (k, label, ops, req) => `<div class="ue-f ancho"><label>${esc(label)}${req ? ' *' : ''}</label><div class="seg" data-seg="${k}">${ops.map(([v, t]) =>
   `<button type="button" data-v="${v}" class="${String(getP(UE.m, k) || '') === v ? 'sel' : ''}">${esc(t)}</button>`).join('')}</div></div>`;
 const SINO = [['SI', 'Sí'], ['NO', 'No']];
@@ -5528,6 +6118,7 @@ function htmlEditorUni() {
       ${/MCB/.test(s.tipo || '') ? fUni(`${base}.${i}.curva`, 'Curva', { opciones: ['B', 'C', 'D'] }) : ''}${fUni(`${base}.${i}.dif`, 'Diferencial', { opciones: ['30 mA', '100 mA', '300 mA'] })}
       ${datalistsProt(`${base}.${i}`, s)}${fUni(`${base}.${i}.marca`, 'Marca', { lista: 'dl-marcas' })}${fUni(`${base}.${i}.modelo`, 'Modelo', { lista: 'dl-mod-' + `${base}.${i}`.replace(/\W/g, '-') })}
       ${fUni(`${base}.${i}.desc`, 'Descripción / carga', { ph: 'Enchufe 32 A, alumbrado…', ancho: 1 })}
+      ${fUni(`${base}.${i}.cable`, 'Cable de la salida', { ph: '4x6 mm² + T', lista: 'dl-cables' })}${fUni(`${base}.${i}.kw`, 'Potencia de la carga', { ph: '15 kW' })}
       ${fUni(`${base}.${i}.destinoId`, 'Alimenta al tablero (GEO ELEC)', { opciones: ids.map(x => x.id), ancho: 1 })}
       ${fUni(`${base}.${i}.destino`, 'Destino (texto en el plano)', { ph: 'TDA N°12', ancho: 1 })}</div></div>`;
   const sal = (m.salidas || []).map((s, i) => htmlSal('salidas', s, i)).join('');
@@ -5553,9 +6144,16 @@ function htmlEditorUni() {
     ${fUni('alim.nombre', 'Nombre del origen', { req: 1, ph: 'CCDD N°3 CALLE 33 ACCESO 6', may: 1, ancho: 1 })}
     ${fUni('alim.equipo', 'Dispositivo que se bloquea (PB-1)', { req: 1, ph: 'Interruptor salida N°3 / Q-A3', ancho: 1 })}
     ${fUni('alim.tension', 'Tensión de origen', { opciones: TENSIONES })}
+    ${fUni('alim.circuitos', 'Cantidad de circuitos del tablero de origen', { opciones: Array.from({ length: 48 }, (_, i) => String(i + 1)) })}
+    ${(parseInt(a.circuitos, 10) || 1) > 1 ? fUni('alim.posicion', 'Circuito N° que alimenta este tablero', { opciones: Array.from({ length: parseInt(a.circuitos, 10) }, (_, i) => String(i + 1)) }) : ''}
     ${camposProt('alim', a)}
+    ${fUni('alim.accesorios', 'Accesorios del dispositivo (PB-1)', { ph: 'Bobina MX, contacto auxiliar, enclavamiento', ancho: 1 })}
     ${fUni('alim.tipoBloqueo', 'Tipo de bloqueo PB-1', { opciones: TIPOS_BLOQUEO, vacio: false, ancho: 1 })}
-    ${fUni('cable.seccion', 'Cable (sección)', { ph: '3x70+1x35 mm²' })}${fUni('cable.largo', 'Largo', { ph: '150 m' })}</div></details>
+    ${htmlCircOrigen(m)}
+    <h4 class="ancho" style="margin:12px 0 0">Conductor de alimentación</h4>
+    ${fUni('cable.seccion', 'Cable (sección)', { ph: '3x70+1x35 mm²', lista: 'dl-cables' })}${fUni('cable.largo', 'Largo', { ph: '150 m' })}
+    ${fUni('cable.tipo', 'Tipo de cable', { opciones: ['XTMU', 'RV-K', 'EVA', 'THHN', 'Cordón portátil (SOOW)', 'Minero tipo G-GC', 'Otro'] })}${fUni('cable.canal', 'Canalización', { opciones: ['Escalerilla', 'Bandeja', 'Tubo conduit', 'Mensajero / catenaria', 'Directo en pared', 'Subterráneo'] })}
+    <datalist id="dl-cables">${['3x2,5+T mm²', '3x4+T mm²', '3x6+T mm²', '3x10+T mm²', '3x16+1x10 mm²', '3x25+1x16 mm²', '3x35+1x16 mm²', '3x50+1x25 mm²', '3x70+1x35 mm²', '3x95+1x50 mm²', '3x120+1x70 mm²', '3x150+1x95 mm²', '3x185+1x95 mm²', '3x240+1x120 mm²'].map(x => `<option value="${x}">`).join('')}</datalist></div></details>
   <details class="ue-sec" open><summary>4 · Interruptor general (PB-2)</summary><div class="ue-g">
     ${fUni('general.equipo', 'Identificación', { ph: 'Q0' })}
     ${camposProt('general', m.general)}
@@ -5580,7 +6178,7 @@ function htmlEditorUni() {
   </div></details>
   <details class="ue-sec" open><summary>6 · Barra y salidas (${(m.salidas || []).length})</summary>
     <div class="ue-g">${fUni('barra.tension', 'Tensión de barra', { opciones: TENSIONES })}</div>${sal}
-    <button type="button" class="big" id="btn-ue-sal">＋ Agregar salida</button></details>
+    <div class="grid2"><button type="button" class="big" id="btn-ue-sal">＋ Agregar salida</button><button type="button" class="big" id="btn-ue-salN">＋ Agregar varias iguales</button></div></details>
   <details class="ue-sec"${siUni(sc.tiene) ? ' open' : ''}><summary>6b · Transformador T1 y tablero de servicios 400 V (centro de distribución)</summary>
     <p class="muted" style="margin:0 0 6px">En los CCDD: desde la barra de 600 V, el interruptor Q-T1 alimenta el transformador T1 (sección 5) y el TDF 400 V de servicios (fuerza trifásica y monofásica).</p>
     <div class="ue-g">${segU('sec.tiene', '¿Tiene transformador T1 y tablero de servicios 400 V?', SINO, 1)}
@@ -5694,7 +6292,7 @@ $('#ue-form').addEventListener('change', (e) => {
   const el = e.target;
   if (el.id === 'ue-ref-hoja') { UE.m.ref = el.value ? { hoja: el.value, i: null } : null; guardarLocalUni(); renderEditorUni(); return; }
   const k = el.dataset && el.dataset.k; if (!k || !UE) return;
-  if (/\.(marca|tipo)$/.test(k) && !/^tablero\./.test(k)) { guardarLocalUni(); renderEditorUni(); return; }
+  if ((/\.(marca|tipo)$/.test(k) && !/^tablero\./.test(k)) || /^alim\.(circuitos|posicion)$/.test(k)) { guardarLocalUni(); renderEditorUni(); return; }
   if (k === 'alim.idTablero') {
     const id = el.value, e2 = uniEmitido(id), t2 = buscarCache(id);
     UE.m.alim.nombre = e2 ? e2.modelo.tablero.nombre : nombreTab(t2);
@@ -5713,6 +6311,7 @@ $('#ue-form').addEventListener('click', (e) => {
   const r = e.target.closest('[data-ref-i]');
   if (r) { const i = +r.dataset.refI; UE.m.ref = { hoja: REF.tableros[i].hoja, i }; guardarLocalUni(); renderEditorUni(); return; }
   if (e.target.closest('#btn-ue-sal2')) { const sc = UE.m.sec = UE.m.sec || {}; const n = (sc.salidas || []).length + 11; (sc.salidas = sc.salidas || []).push({ id: 'Q' + n, carga: 'enchufe3', tipo: 'MCB (miniatura)', desc: '', polos: '3', in: '', dif: '30 mA', destino: '', destinoId: '' }); guardarLocalUni(); renderEditorUni(); return; }
+  if (e.target.closest('#btn-ue-salN')) { const lista = UE.m.salidas = UE.m.salidas || []; agregarVariasSal(lista); guardarLocalUni(); renderEditorUni(); return; }
   if (e.target.closest('#btn-ue-sal')) { const n = (UE.m.salidas || []).length + 1; (UE.m.salidas = UE.m.salidas || []).push({ id: 'Q' + n, carga: 'enchufe3', tipo: 'MCB (miniatura)', desc: '', polos: '3', in: '', dif: '', destino: '', destinoId: '' }); guardarLocalUni(); renderEditorUni(); return; }
   const d = e.target.closest('[data-sal-del]');
   if (d) { const [b, i] = d.dataset.salDel.split(':'); if (confirm('¿Quitar esta salida?')) { getP(UE.m, b).splice(+i, 1); guardarLocalUni(); renderEditorUni(); } return; }
@@ -6265,7 +6864,7 @@ function abrirPersona(p) {
   $('#pe-nombre').value = p ? p.nombre : ''; $('#pe-rut').value = p ? rutFmt(p.rut) : '';
   $('#pe-cargo').value = p ? (CARGOS_PERS.find(c => c.toLocaleUpperCase('es-CL') === p.cargo) || '') : '';
   $('#pe-motivo').value = ''; $('#pe-box-motivo').hidden = !p; $('#pers-error').textContent = '';
-  $('#btn-pe-guardar').textContent = p ? 'Guardar cambios' : 'Crear usuario y contraseña';
+  $('#btn-pers-guardar').textContent = p ? 'Guardar cambios' : 'Crear usuario y contraseña';
   botonesSeg($('#pe-grupo'), GRUPOS_PERS, peGrupo, v => {
     peGrupo = v; renderPeGrupo();
     if (v === 'Administrativo' && !$('#pe-cargo').value) $('#pe-cargo').value = 'Administrativo';
@@ -6278,7 +6877,7 @@ function abrirPersona(p) {
 $('#btn-pers-nueva').addEventListener('click', () => abrirPersona(null));
 $('#pe-rut').addEventListener('blur', () => { const r = rutValido($('#pe-rut').value); if (r) $('#pe-rut').value = r; });
 $('#btn-pe-cancel').addEventListener('click', volver);
-$('#btn-pe-guardar').addEventListener('click', async () => {
+$('#btn-pers-guardar').addEventListener('click', async () => {
   const may = (s) => s.trim().replace(/\s+/g, ' ').toLocaleUpperCase('es-CL');
   const nombre = may($('#pe-nombre').value), rut = rutValido($('#pe-rut').value), cargo = $('#pe-cargo').value;
   const transv = GRUPOS_TRANSV.includes(peGrupo), faltan = [];
@@ -6290,7 +6889,7 @@ $('#btn-pe-guardar').addEventListener('click', async () => {
   if (peEdita && !$('#pe-motivo').value.trim()) faltan.push('motivo del cambio');
   if (faltan.length) { $('#pers-error').textContent = 'Falta completar: ' + faltan.join(', ') + '.'; return; }
   const persona = { nombre, rut, cargo, grupo: peGrupo, nivel: transv ? 'Transversal' : peNivel };
-  const btn = $('#btn-pe-guardar'); btn.disabled = true;
+  const btn = $('#btn-pers-guardar'); btn.disabled = true;
   try {
     if (peEdita) {
       const j = await accionAdmin({ accion: 'editarUsuario', usuario: peEdita.usuario, cambios: persona, motivo: may($('#pe-motivo').value) });
@@ -7157,6 +7756,7 @@ window.addEventListener('pagehide', () => cerrarCamara(true));
 // ===================== ARRANQUE =====================
 $('#version-app').textContent = 'Versión ' + VERSION_APP;
 renderAdminUI();
+$('#tile-chkd-btn').addEventListener('click', () => requiereLogin(() => requiereFirma(() => exigirChkDiario(null), 'los checklists diarios se firman'), 'Para completar los checklists diarios'));
 $('#btn-iniciar').addEventListener('click', () => requiereLogin(() => requiereFirma(() => ir('actividad'), 'cada mantención e inspección queda firmada por quien la realiza'), 'Para iniciar una mantención o inspección'));
 document.querySelectorAll('#v-actividad [data-act]').forEach(b => b.addEventListener('click', () => {
   actividadInicial = b.dataset.act;
