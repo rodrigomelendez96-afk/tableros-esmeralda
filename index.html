@@ -108,6 +108,12 @@
     border: 0; border-radius: 50%; background: rgba(0,0,0,.65); color: #fff; font-size: 16px; line-height: 1; }
   .fila-btn { display: flex; gap: 8px; flex-wrap: wrap; }
   .btn-foto.sec { background: #fff; color: var(--tinta); border: 1px solid var(--borde); }
+  .imp-tab { max-height: 340px; overflow: auto; border: 1px solid var(--borde); border-radius: 8px; margin-top: 6px; }
+  .imp-tab table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .imp-tab th, .imp-tab td { padding: 4px 6px; border-bottom: 1px solid var(--borde); text-align: left; vertical-align: top; }
+  .imp-tab th { position: sticky; top: 0; background: #F4F6F8; }
+  .imp-tab tr.ya td { color: #6B7280; } .imp-tab tr.mal td { color: #8A1C24; }
+  .ok-msg { color: #135C2A; font-weight: 700; }
   .drop-on { outline: 3px dashed #0077A8 !important; outline-offset: 3px; background-color: rgba(0, 119, 168, 0.06); border-radius: 10px; }
   .drop-on label.btn-foto.sec { border-color: #0077A8; background: #E6F4FA; }
   label.btn-foto.drop-ok { box-shadow: 0 0 0 3px #2E8B57 !important; }
@@ -278,6 +284,18 @@
   #ue-prev .ue-svg { width: 100%; height: 100%; display: block; user-select: none; -webkit-user-select: none; }
   .ue-lienzo { cursor: grab; } .ue-lienzo.arrastra { cursor: grabbing; }
   .ue-lienzo.sin-zonas .ue-zona { fill: transparent; stroke: none; }
+  .ue-zona.guia { fill: rgba(255, 196, 0, .22) !important; stroke: #D98C00 !important; stroke-width: .6 !important; }
+  .guia-bar { position: sticky; top: 0; z-index: 3; background: #FFFBEB; border: 1px solid #F2D27A; border-radius: 12px; padding: 10px 12px; margin: 0 0 10px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .guia-bar h3 { margin: 8px 0 2px; font-size: 17px; } .guia-bar p { margin: 2px 0; font-size: 14px; }
+  .guia-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .guia-tog { background: #fff; border: 1px solid var(--borde); border-radius: 8px; padding: 6px 10px; font-size: 13px; cursor: pointer; }
+  .guia-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+  .guia-chips button { min-width: 34px; height: 30px; border-radius: 999px; border: 2px solid transparent; font-weight: 800; font-size: 12.5px; cursor: pointer; }
+  .guia-chips .ok { background: #E3F4E8; color: #135C2A; } .guia-chips .fal { background: #FDE8EA; color: #8A1C24; } .guia-chips .ama { background: #FFF1C9; color: #7A5300; }
+  .guia-chips .act { border-color: #1F2937; }
+  .guia-est { font-weight: 700; } .guia-est.fal { color: #8A1C24; } .guia-est.ok { color: #135C2A; } .guia-est .ama { color: #7A5300; font-weight: 600; }
+  .guia-nav { display: flex; gap: 8px; margin: 6px 0 14px; } .guia-nav button { flex: 1; min-height: 46px; border-radius: 10px; font-weight: 800; font-size: 15px; border: 1px solid var(--borde); background: #fff; cursor: pointer; }
+  .guia-nav button.primary { background: #1F2937; color: #fff; } .guia-nav button:disabled { opacity: .4; }
   #ue-form details.ue-sec { margin: 0 0 8px; }
   #ue-prev .ue-zona { fill: rgba(0, 119, 168, 0.06); stroke: rgba(0, 119, 168, 0.55); stroke-width: 0.35; stroke-dasharray: 1.6 1.2; cursor: pointer; }
   #ue-prev .ue-zona:hover { fill: rgba(0, 119, 168, 0.16); }
@@ -468,6 +486,12 @@
       <h3>📐 Diagramas unilineales</h3>
       <p class="muted">Se confeccionan desde la ficha de cada tablero (botón "Confeccionar diagrama en GEO ELEC"). Al emitir, el PDF queda como diagrama oficial del tablero.</p>
       <div id="adm-uni"></div>
+    </div>
+    <div class="card">
+      <h3>📥 Importar tableros desde Excel (gestión de infraestructura GOM)</h3>
+      <p class="muted">Carga la planilla exportada (columnas Infraestructura, Tipo, Nivel, Postura, Voltajes…). Se crean las fichas de los tableros cuyo TAG GOM no está registrado; los que ya existen no se tocan.</p>
+      <div class="foto-acciones"><label class="btn-foto sec">📄 Elegir planilla (.xlsx / .csv)<input type="file" id="imp-arch" accept=".xlsx,.xls,.csv"></label></div>
+      <div id="imp-res"></div>
     </div>
     <div class="card">
       <h3>🗄 Registrar tablero (ficha sin mantención)</h3>
@@ -1439,7 +1463,7 @@ const CONFIG = {
 };
 
 // Versión visible al pie de la pantalla de inicio (sirve para confirmar que el teléfono tiene la última)
-const VERSION_APP = 'v44 · 10-11-2026';
+const VERSION_APP = 'v45 · 10-11-2026';
 const NIVELES = ['SNV', 'Producción', 'Acarreo', 'Hundimiento', 'UCL'];
 const NIVEL_ETQ = { SNV: 'SNV · Sub nivel ventilación', UCL: 'UCL' };
 const EMPRESA = 'GEOVITA';
@@ -1489,8 +1513,16 @@ const TIPOS = [
   { key: 'TDF400', codigo: 'TDF',   nombre: 'TDF 400 V – Tablero de Fuerza 400 V', checklist: 'TDF400' },
   { key: 'TDF600', codigo: 'TDF',   nombre: 'TDF 600 V – Tablero de Fuerza 600 V', checklist: 'TDF600' },
   { key: 'TPV',    codigo: 'TPV',   nombre: 'TPV – Tablero Partidor Ventilador',   checklist: 'GENERAL' },
-  { key: 'CDD',    codigo: 'CDD',   nombre: 'CDD – Centro de Distribución',        checklist: 'CDD' }
+  { key: 'CDD',    codigo: 'CDD',   nombre: 'CDD – Centro de Distribución',        checklist: 'CDD' },
+  { key: 'TBT',    codigo: 'TBT',   nombre: 'TBT – Transformador de Baja Tensión (centro de distribución)', checklist: 'CDD' },
+  { key: 'TGF',    codigo: 'TGF',   nombre: 'TGF – Tablero General de Fuerza',     checklist: 'GENERAL' },
+  { key: 'TDI',    codigo: 'TDI',   nombre: 'TDI – Tablero de Instrumentación',    checklist: 'GENERAL' },
+  { key: 'TPB',    codigo: 'TPB',   nombre: 'TPB – Tablero Partidor Bomba',        checklist: 'GENERAL' },
+  { key: 'ECI',    codigo: 'ECI',   nombre: 'ECI – Equipo Protección de Incendio (agente extintor)', checklist: 'GENERAL' },
+  { key: 'PCI',    codigo: 'PCI',   nombre: 'PCI – Panel Contra Incendio',         checklist: 'GENERAL' }
 ];
+// Tipos sin plano tipo propio: usan el esquema estándar más parecido
+const PLANT_ALIAS = { TBT: 'CDD', TGF: 'TDF600', TDI: 'TSM', TPB: 'TPV' };
 
 const CODIGO_NIVEL = { 'UCL': 'UCL', 'Producción': 'PRO', 'Acarreo': 'ACA', 'SNV': 'SNV', 'Hundimiento': 'HUN' };
 
@@ -6068,6 +6100,7 @@ function renderEsqPE() {
   if (abiertos.length) ds.forEach((d, i) => { if (abiertos[i] != null) d.open = abiertos[i]; });
   else ds.forEach((d, i) => { d.open = i < 1; });
   if (PE.bloqueado) box.querySelectorAll('input,select,textarea,button').forEach(x => { x.disabled = true; });
+  aplicarGuia('#pe-esq-form');
 }
 function irAZonaPE(z) {
   if (!PE || !PE.m.uni) return;
@@ -6586,7 +6619,7 @@ const PLANTILLAS = {
       trafoCtl: Object.assign({}, CTL_400, { relacion: '600/220 V', alimenta: 'Contactor, luz piloto, parada de emergencia' }), barra: { tension: '600 V' }, tp: { tiene: 'SI', desc: 'Barra de tierra' },
       salidas: [SAL('Q1', 'motor', 'Guardamotor', '3', '63 A', { desc: 'Ventilador (partida directa)' })] } }
 };
-const clavePlantilla = (t) => { const tp = tipoPorNombre(t.tipo); return tp && PLANTILLAS[tp.key] ? tp.key : ''; };
+const clavePlantilla = (t) => { const tp = tipoPorNombre(t.tipo); return !tp ? '' : PLANTILLAS[tp.key] ? tp.key : PLANTILLAS[PLANT_ALIAS[tp.key]] ? PLANT_ALIAS[tp.key] : ''; };
 // Aplica el esquema estándar: conserva lo registrado en terreno (origen, punto de bloqueo, cable) y marca lo precargado como sugerido
 function aplicarPlantilla(m, key, sug) {
   const P = PLANTILLAS[key]; if (!P) return [];
@@ -6875,8 +6908,13 @@ function renderEditorUni() {
   const abiertos = [...document.querySelectorAll('#ue-form details')].map(d => d.open);
   $('#ue-form').innerHTML = htmlEditorUni(); combos($('#ue-form'));
   if (abiertos.length) document.querySelectorAll('#ue-form details').forEach((d, i) => { if (abiertos[i] != null) d.open = abiertos[i]; });
-  renderRefVista(); actualizarUni();
+  renderRefVista(); actualizarUni(); setTimeout(() => aplicarGuia('#ue-form'), 0);
 }
+['input', 'change'].forEach(ev => document.addEventListener(ev, (e) => {
+  const raiz = e.target.closest && (e.target.closest('#ue-form') ? '#ue-form' : e.target.closest('#pe-esq-form') ? '#pe-esq-form' : null);
+  if (!raiz || !GUIA.on) return; clearTimeout(GUIA.t); GUIA.t = setTimeout(() => { const est = $(raiz + ' .guia-est'); if (!est) return; const d = [...$(raiz).querySelectorAll('details.ue-sec')][GUIA.paso[raiz] || 0]; if (!d) return;
+    const fa = faltanSec(d); est.className = 'guia-est ' + (fa.falta.length ? 'fal' : 'ok'); est.innerHTML = (fa.falta.length ? '⚠ Falta: ' + esc(fa.falta.join(', ')) : '✔ Paso completo') + (fa.amar.length ? ` · <span class="ama">${fa.amar.length} dato(s) precargado(s) en amarillo: confírmalos con la placa</span>` : ''); }, 250);
+}));
 // Validaciones: los errores impiden emitir; los avisos se muestran pero permiten emitir
 function validarUni(m) {
   const err = [], av = [], a = m.alim || {}, g = m.general || {}, f = m.firmas || {}, of = m.otraFuente || {};
@@ -6935,7 +6973,7 @@ function actualizarUni(soloPrev) {
   ueTimer = setTimeout(() => {
     try {
       const L = construirUni(Object.assign({}, m, { firmas: firmasPrevia() }), contextoUni(m, true));
-      UEV.pags = L.pags; UEV.zonas = L.zonas.map(z => `<rect class="ue-zona" data-zona="${z.z}" x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="1.5"/>`).join('');
+      UEV.pags = L.pags; UEV.zz = L.zonas; UEV.zonas = L.zonas.map(z => `<rect class="ue-zona${UEV.guia && UEV.guia.includes(String(z.z).split(':')[0]) ? ' guia' : ''}" data-zona="${z.z}" x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="1.5"/>`).join('');
       dibujarVistaUni();
     } catch (err) { $('#ue-prev').innerHTML = `<p class="error">No se pudo dibujar: ${esc(err.message)}</p>`; }
   }, 250);
@@ -7026,10 +7064,86 @@ const modeloLimpio = () => { const m = JSON.parse(JSON.stringify(UE.m)); m._sug 
 $('#ue-descrev').addEventListener('input', () => { if (UE) { UE.m.descRev = $('#ue-descrev').value.trim(); guardarLocalUni(); actualizarUni(true); } });
 // Tocar un componente del diagrama abre sus datos en el formulario
 const SEC_ZONA = { tablero: '2', alim: '3', general: '4', dif: '5', trafo: '5', trafoCtl: '5', salida: '6', sec: '6b', secsal: '6b', tp: '7', otra: '8', pb: '9' };
+// ===== MODO GUIADO: un paso a la vez, con explicación simple, lo que falta y el plano enfocado en esa parte =====
+const GUIA_PASOS = {
+  '1': ['Referencias del tablero', 'Adjunta fotos del tablero abierto, de su placa o un plano existente. No es obligatorio, pero ayuda a quien revisa y aprueba.', []],
+  '2': ['¿Qué tablero es?', 'Confirma el nombre, la tensión y las fases. Normalmente ya viene completo desde la ficha del tablero.', ['tablero']],
+  '3': ['¿De dónde llega la energía? (PB-1)', 'Elige el tablero o CCDD de origen y el interruptor que alimenta a este tablero: es el primer punto de bloqueo. Si el origen tiene varios circuitos, indica cuál es el de este tablero.', ['alim']],
+  '4': ['Interruptor general (PB-2)', 'Es el interruptor que corta todo el tablero. Copia los datos de su placa: marca, modelo y calibre. Si no sabes un dato, elige "Otro (escribir)".', ['general']],
+  '5': ['Diferencial y transformadores', 'Responde Sí o No. Si hay protección diferencial, indica su sensibilidad y su tipo (A, AC, B…). Lo mismo con transformadores dentro del tablero.', ['dif', 'trafo', 'trafoCtl']],
+  '6': ['Salidas del tablero', 'Una fila por cada interruptor de salida: qué alimenta y su corriente. Para enchufes iguales usa "Agregar varias iguales".', ['salida']],
+  '6b': ['Transformador T1 y servicios 400 V', 'Solo para centros de distribución (CDD/TBT) con transformador interno y tablero de servicios.', ['trafo', 'sec', 'secsal']],
+  '7': ['Puesta a tierra', 'Indica dónde se conecta la tierra del tablero (malla, barra del CCDD…).', ['tp']],
+  '8': ['Otras fuentes de energía (PB-3)', 'Grupo generador, UPS, baterías o respaldo desde otro tablero. Si no hay, responde No.', ['otra']],
+  '9': ['Puntos de bloqueo', 'Se arman solos con los pasos anteriores. Revisa que el orden sea el correcto y agrega los que falten.', ['pb']],
+  '10': ['Observaciones', 'Cualquier aclaración útil para quien use el diagrama en terreno.', []],
+  '11': ['Firmas y envío', 'Revisa la "Revisión de seguridad" (abajo) y firma para enviar a aprobación.', []]
+};
+const GUIA = { on: ls.get('guiaOn', true), paso: {} };
+const numSec = (d) => ((d.querySelector('summary') || {}).textContent || '').trim().split(' ·')[0];
+function faltanSec(d) {
+  const falta = [], amar = [];
+  d.querySelectorAll('.ue-f').forEach(f => {
+    const lab = f.querySelector('label'), c = f.querySelector('input,select,textarea'); if (!lab || !c || c.disabled) return;
+    const t = lab.textContent.replace(/\s*\*$/, '');
+    if (/\*\s*$/.test(lab.textContent) && !String(c.value || '').trim()) falta.push(t);
+    else if (c.classList.contains('sug') && c.value) amar.push(t);
+  });
+  d.querySelectorAll('.val-falta').forEach(c => falta.push(c.getAttribute('aria-label') || 'dato marcado'));
+  return { falta: [...new Set(falta)], amar };
+}
+function aplicarGuia(raiz) {
+  const box = $(raiz); if (!box) return;
+  const ds = [...box.querySelectorAll('details.ue-sec')]; if (!ds.length) return;
+  box.querySelectorAll('.guia-bar, .guia-nav').forEach(x => x.remove());
+  const bar = document.createElement('div'); bar.className = 'guia-bar';
+  if (!GUIA.on) {
+    ds.forEach(d => { d.hidden = false; });
+    bar.innerHTML = `<button type="button" class="guia-tog" data-guia="on">🧭 Usar modo guiado (paso a paso)</button>`; box.prepend(bar); return;
+  }
+  let i = Math.max(0, Math.min(ds.length - 1, GUIA.paso[raiz] || 0)); GUIA.paso[raiz] = i;
+  ds.forEach((d, k) => { d.hidden = k !== i; if (k === i) d.open = true; });
+  const n = numSec(ds[i]), P = GUIA_PASOS[n] || [ds[i].querySelector('summary').textContent, '', []], fa = faltanSec(ds[i]);
+  const chips = ds.map((d, k) => { const f = faltanSec(d); return `<button type="button" data-guia-ir="${k}" class="${k === i ? 'act' : ''} ${f.falta.length ? 'fal' : f.amar.length ? 'ama' : 'ok'}" title="${esc((GUIA_PASOS[numSec(d)] || [numSec(d)])[0])}">${esc(numSec(d))}</button>`; }).join('');
+  bar.innerHTML = `<div class="guia-top"><b>🧭 Paso ${i + 1} de ${ds.length}</b><button type="button" class="guia-tog" data-guia="off">Ver todo el formulario</button></div>
+    <div class="guia-chips">${chips}</div>
+    <h3>${esc(P[0])}</h3><p>${esc(P[1])}</p>
+    <p class="guia-est ${fa.falta.length ? 'fal' : 'ok'}">${fa.falta.length ? '⚠ Falta: ' + esc(fa.falta.join(', ')) : '✔ Paso completo'}${fa.amar.length ? ` · <span class="ama">${fa.amar.length} dato(s) precargado(s) en amarillo: confírmalos con la placa</span>` : ''}</p>`;
+  box.prepend(bar);
+  const nav = document.createElement('div'); nav.className = 'guia-nav';
+  nav.innerHTML = `<button type="button" data-guia-paso="-1"${i ? '' : ' disabled'}>◀ Anterior</button><button type="button" class="primary" data-guia-paso="1"${i < ds.length - 1 ? '' : ' disabled'}>Siguiente ▶</button>`;
+  ds[i].after(nav);
+  enfocarGuia(raiz, P[2]);
+}
+// Enfoca en el plano la parte que se está completando (y la resalta)
+function enfocarGuia(raiz, claves) {
+  const usaUE = raiz === '#ue-form', L = usaUE ? { zonas: UEV.zz || [] } : (PE && PE.L) || { zonas: [] };
+  document.querySelectorAll('.ue-zona.guia').forEach(r => r.classList.remove('guia'));
+  const zs = (L.zonas || []).filter(z => claves.includes(String(z.z).split(':')[0]));
+  if (!zs.length) return;
+  const x0 = Math.min(...zs.map(z => z.x)) - 12, y0 = Math.min(...zs.map(z => z.y)) - 12, x1 = Math.max(...zs.map(z => z.x + z.w)) + 12, y1 = Math.max(...zs.map(z => z.y + z.h)) + 12;
+  const w = Math.max(x1 - x0, 120), h = Math.max(y1 - y0, 80), cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+  if (usaUE) {
+    const r = $('#ue-lienzo').getBoundingClientRect(), asp = r.width && r.height ? r.width / r.height : 1.4, W = Math.max(w, h * asp), H = W / asp;
+    UEV.vb = [cx - W / 2, cy - H / 2, W, H]; UEV.pag = 0; UEV.guia = claves; dibujarVistaUni();
+  } else if (PE) {
+    const svg = $('#pe-svg svg'), r = svg ? svg.getBoundingClientRect() : { width: 1.4, height: 1 }, asp = r.width / (r.height || 1), W = Math.max(w, h * asp);
+    PE.view = Object.assign({}, PE.view, { x: cx - W / 2, y: cy - W / asp / 2, w: W, h: W / asp }); dibujarPEPronto();
+  }
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-guia], [data-guia-ir], [data-guia-paso]'); if (!b) return;
+  const raiz = b.closest('#ue-form') ? '#ue-form' : b.closest('#pe-esq-form') ? '#pe-esq-form' : null; if (!raiz) return;
+  if (b.dataset.guia) { GUIA.on = b.dataset.guia === 'on'; ls.set('guiaOn', GUIA.on); if (!GUIA.on && raiz === '#ue-form') { UEV.vb = null; UEV.guia = null; dibujarVistaUni(); } }
+  else if (b.dataset.guiaIr) GUIA.paso[raiz] = +b.dataset.guiaIr;
+  else GUIA.paso[raiz] = (GUIA.paso[raiz] || 0) + (+b.dataset.guiaPaso);
+  aplicarGuia(raiz); $(raiz).scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
 function irAZonaUni(z, raiz = '#ue-form') {
   const [k, i] = z.split(':'), n = SEC_ZONA[k]; if (!n) return false;
   const det = [...document.querySelectorAll(raiz + ' details')].find(d => (d.querySelector('summary') || {}).textContent.trim().startsWith(n + ' ·'));
   if (!det) return false;
+  if (GUIA.on) { const ds = [...document.querySelectorAll(raiz + ' details.ue-sec')]; GUIA.paso[raiz] = ds.indexOf(det); aplicarGuia(raiz); }
   det.open = true;
   let destino = det;
   if ((k === 'salida' || k === 'secsal') && i != null) destino = det.querySelectorAll('.ue-sal')[+i] || det;
@@ -7045,7 +7159,7 @@ function dibujarVistaUni() {
   if (UEV.pag >= UEV.pags.length) UEV.pag = 0;
   const vb = UEV.vb || [0, 0, UNI_HOJA.W, UNI_HOJA.H], p = UEV.pags[UEV.pag]; if (!p) { box.innerHTML = ''; return; }
   let svg = uniASvg(p, { clase: 'ue-svg', viewBox: vb.map(v => Math.round(v * 100) / 100).join(' ') });
-  if (UEV.pag === 0) svg = svg.replace('</svg>', UEV.zonas + '</svg>');
+  if (UEV.pag === 0) svg = svg.replace('</svg>', (UEV.zz || []).map(z => `<rect class="ue-zona${UEV.guia && UEV.guia.includes(String(z.z).split(':')[0]) ? ' guia' : ''}" data-zona="${z.z}" x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="1.5"/>`).join('') + '</svg>');
   box.innerHTML = svg;
   const b1 = $('#ue-barra [data-uev="p1"]'); if (b1) b1.hidden = UEV.pags.length < 2;
   document.querySelectorAll('#ue-barra [data-uev^="p"]').forEach(b => b.classList.toggle('on', b.dataset.uev === 'p' + UEV.pag));
@@ -7662,6 +7776,84 @@ document.addEventListener('click', async (e) => {
 });
 
 // Envía una acción de administrador; actualiza el tablero en el teléfono si el servidor lo devuelve
+// ---- Importación masiva desde la planilla de gestión de infraestructura (GOM) ----
+const IMP = { filas: [] };
+const COD_GOM = { TDA: 'TDA', TEJ: 'TEJ', TDFSM: 'TSM', TEFSM: 'TSM', TSM: 'TSM', TGF: 'TGF', TPV: 'TPV', TDI: 'TDI', TPB: 'TPB', ECI: 'ECI', PCI: 'PCI', TBT: 'TBT', CDD: 'CDD', TDFYC: 'TDFYC' };
+const nivelGOM = (n) => { const x = String(n || '').toUpperCase(); return /VENTILACI|SNV/.test(x) ? 'SNV' : /PRODUCCI/.test(x) ? 'Producción' : /ACARREO/.test(x) ? 'Acarreo' : /HUNDIMIENTO/.test(x) ? 'Hundimiento' : /UCL/.test(x) ? 'UCL' : ''; };
+const normTag = (t) => String(t || '').toUpperCase().replace(/\s+/g, '').replace(/^GOM-?4600030339-?/, '');
+function cargarSheetJS() {
+  // primero la copia local (lib/xlsx.full.min.js en GitHub); si no está, desde cdnjs
+  const cargar = (src) => new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = src; sc.onload = ok; sc.onerror = no; document.head.appendChild(sc); });
+  return window.XLSX ? Promise.resolve() : cargar('./lib/xlsx.full.min.js').catch(() => cargar('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js')).catch(() => { throw new Error('No se pudo cargar el lector de Excel: sube lib/xlsx.full.min.js a GitHub o revisa la señal.'); });
+}
+function filaGOM(r) {
+  const g = (re) => { const k = Object.keys(r).find(x => re.test(x.normalize('NFD').replace(/[̀-ͯ]/g, ''))); return k ? String(r[k] ?? '').trim() : ''; };
+  const tag = g(/^infraestructura$/i).toUpperCase(), m = tag.match(/-([A-Z]+)-(\d+)$/), cod = m ? m[1] : '';
+  const volt = g(/^voltaje/i), tipoTxt = g(/^tipo/i), nivel = nivelGOM(g(/^nivel$/i));
+  let key = cod === 'TDF' ? (/600/.test(volt) ? 'TDF600' : 'TDF400') : COD_GOM[cod] || '';
+  if (!key && /\(([A-Z]+)\)/.test(tipoTxt)) key = COD_GOM[tipoTxt.match(/\(([A-Z]+)\)/)[1]] || '';
+  const tp = TIPOS.find(x => x.key === key), postura = g(/^postura/i).toUpperCase().replace(/\s+/g, ' '), area = g(/^area/i).toUpperCase(), segr = g(/^segregaci/i);
+  const ubic = [postura, /C\.?C\.?D\.?D/i.test(segr) ? 'EN C.C.D.D.' : '', area].filter(Boolean).join(' · ');
+  const nm = postura.match(/N\s*[°º]\s*(\d+[A-Z]?)/), num = nm ? nm[1] : '';   // N° del tablero escrito en la postura (ej.: "TDF N°33 CALLE 63")
+  const f = g(/^fecha/i), fm = f.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+  const err = [!tag && 'sin TAG', !tp && 'tipo no reconocido (' + (cod || tipoTxt) + ')', !nivel && 'nivel no reconocido'].filter(Boolean);
+  return { tag, tipoKey: key, tipoCodigo: tp ? tp.codigo : '', tipoNombre: tp ? tp.nombre : tipoTxt, nivel, ubicacion: ubic, numero: num, tension: volt, fecha: fm ? `${fm[3]}-${fm[2].padStart(2, '0')}-${fm[1].padStart(2, '0')}` : '',
+    baja: /baja/i.test(g(/^estatus|^estado/i)), empresa: g(/^empresa/i), contrato: g(/^contrato/i), err };
+}
+async function leerPlanillaGOM(file) {
+  const box = $('#imp-res'); box.innerHTML = '<p class="muted">Leyendo planilla…</p>';
+  try {
+    await cargarSheetJS();
+    const wb = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: false, raw: false });
+    const filas = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '', raw: false }).map(filaGOM).filter(x => x.tag || x.tipoNombre);
+    const reg = {}; (ls.get('tableros', { lista: [] }).lista || []).forEach(t => { if (t.tag) reg[normTag(t.tag)] = t.id; });
+    filas.forEach(x => { x.existe = reg[normTag(x.tag)] || ''; });
+    // TAG GOM repetido en la planilla: si uno está dado de baja se usa el disponible; si hay dos disponibles se deja para revisar en GOM
+    const grupos = {}; filas.forEach(x => { (grupos[normTag(x.tag)] = grupos[normTag(x.tag)] || []).push(x); });
+    Object.values(grupos).filter(g => g.length > 1).forEach(g => {
+      const act = g.filter(x => !x.baja);
+      if (act.length <= 1) g.filter(x => x.baja).forEach(x => x.err.push('TAG repetido: queda el que está disponible'));
+      else act.forEach(x => x.err.push('TAG GOM repetido en la planilla con otra ubicación: revisar en GOM')), g.filter(x => x.baja).forEach(x => x.err.push('TAG repetido'));
+    });
+    IMP.filas = filas; renderImport();
+  } catch (e) { box.innerHTML = `<p class="error">${esc(e.message)}</p>`; }
+}
+function renderImport(msg) {
+  const F = IMP.filas, nuevos = F.filter(x => !x.existe && !x.err.length), activos = nuevos.filter(x => !x.baja), ex = F.filter(x => x.existe), malos = F.filter(x => x.err.length);
+  const porTipo = {}; nuevos.forEach(x => { const k = (TIPOS.find(t => t.key === x.tipoKey) || {}).codigo || x.tipoKey; porTipo[k] = (porTipo[k] || 0) + 1; });
+  $('#imp-res').innerHTML = `<div class="imp-res">
+    <p><b>${F.length}</b> filas leídas · <b style="color:#135C2A">${nuevos.length} por crear</b> (${activos.length} disponibles, ${nuevos.length - activos.length} dados de baja) · ${ex.length} ya registrados${malos.length ? ` · <b style="color:#8A1C24">${malos.length} con problemas</b>` : ''}</p>
+    <p class="muted" style="margin:0 0 8px">${Object.entries(porTipo).map(([k, n]) => `${esc(k)}: ${n}`).join(' · ')}</p>
+    ${msg ? `<p class="${/✔/.test(msg) ? 'ok-msg' : 'muted'}">${msg}</p>` : ''}
+    <details><summary>Ver el detalle (${F.length})</summary><div class="imp-tab"><table><thead><tr><th>TAG GOM</th><th>Tipo</th><th>Nivel</th><th>Ubicación</th><th>Estado</th></tr></thead><tbody>
+    ${F.map(x => `<tr class="${x.err.length ? 'mal' : x.existe ? 'ya' : ''}"><td>${esc(x.tag)}</td><td>${esc((TIPOS.find(t => t.key === x.tipoKey) || {}).codigo || x.tipoNombre)}${x.tension ? ' · ' + esc(x.tension) : ''}</td><td>${esc(x.nivel)}</td><td>${esc(x.ubicacion)}</td>
+      <td>${x.err.length ? '⚠ ' + esc(x.err.join(', ')) : x.existe ? (x.creado ? '✔ creado ' : 'ya existe ') + esc(x.existe) : x.baja ? 'nuevo (dado de baja)' : 'nuevo'}</td></tr>`).join('')}</tbody></table></div></details>
+    ${nuevos.length ? `<label class="chk" style="margin-top:10px"><input type="checkbox" id="imp-bajas"> Crear también los ${nuevos.length - activos.length} dados de baja (quedan como BAJA, solo para historial)</label>
+    <button class="big primary" id="btn-imp-crear" style="margin-top:10px">Crear ${activos.length} fichas de tableros</button>` : ''}</div>`;
+  const cb = $('#imp-bajas'); if (cb) cb.addEventListener('change', () => { $('#btn-imp-crear').textContent = `Crear ${cb.checked ? nuevos.length : activos.length} fichas de tableros`; });
+}
+$('#imp-arch').addEventListener('change', (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) leerPlanillaGOM(f); });
+$('#imp-res').addEventListener('click', async (e) => {
+  if (!e.target.closest('#btn-imp-crear')) return;
+  const conBajas = $('#imp-bajas') && $('#imp-bajas').checked, lote = IMP.filas.filter(x => !x.existe && !x.err.length && (conBajas || !x.baja));
+  if (!lote.length) return;
+  if (!navigator.onLine) { toast('Se necesita señal para crear los tableros.'); return; }
+  if (!confirm(`Se crearán ${lote.length} fichas de tableros en GEO ELEC (sin mantención, con su ID y QR). ¿Continuar?`)) return;
+  const btn = e.target.closest('button'); btn.disabled = true; let hechos = 0, errores = [];
+  for (let i = 0; i < lote.length; i += 25) {
+    const parte = lote.slice(i, i + 25);
+    btn.textContent = `Creando… ${hechos} de ${lote.length}`;
+    try {
+      const j = await accionAdmin({ accion: 'importarTableros', filas: parte.map(x => ({ tag: x.tag, tipoCodigo: x.tipoCodigo, tipoNombre: x.tipoNombre, nivel: x.nivel, ubicacion: x.ubicacion, numero: x.numero, fecha: x.fecha, baja: x.baja, tension: x.tension })) });
+      (j.creados || []).concat(j.existentes || []).forEach(c => { const x = IMP.filas.find(f => normTag(f.tag) === normTag(c.tag)); if (x) { x.existe = c.id; x.creado = !!c.nuevo; } });
+      (j.errores || []).forEach(c => errores.push(c.tag + ': ' + c.error));
+      hechos += parte.length;
+    } catch (err) { errores.push('Lote ' + (i / 25 + 1) + ': ' + err.message); break; }
+  }
+  try { await sincronizar(); } catch (er) {}
+  renderImport(errores.length ? 'Terminado con observaciones: ' + esc(errores.slice(0, 5).join(' · ')) : `✔ ${hechos} tableros creados. Ya aparecen en Mantenciones / Inspecciones con la alerta "Sin mantención registrada".`);
+});
+
 // ---- Alta de tablero desde administración (sin mantención) ----
 const AT = { nivel: '', uni: 'No' };
 function abrirAltaTab() {
