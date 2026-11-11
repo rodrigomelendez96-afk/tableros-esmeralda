@@ -284,6 +284,18 @@
   #ue-prev .ue-svg { width: 100%; height: 100%; display: block; user-select: none; -webkit-user-select: none; }
   .ue-lienzo { cursor: grab; } .ue-lienzo.arrastra { cursor: grabbing; }
   .ue-lienzo.sin-zonas .ue-zona { fill: transparent; stroke: none; }
+  body.pe-uni .sin-pe-uni { display: none !important; } .solo-pe-uni { display: none; } body.pe-uni .solo-pe-uni { display: block; }
+  .uev-dib { background: #FFF5E6 !important; border-color: #F0B45E !important; }
+  .mov-tabs { display: none; }
+  @media (max-width: 899px) {
+    .mov-tabs { display: flex; gap: 6px; position: sticky; top: var(--hdr, 90px); z-index: 6; background: var(--fondo, #F1F3F5); padding: 6px 0; }
+    .mov-tabs button { flex: 1; min-height: 46px; border-radius: 10px; border: 1px solid var(--borde); background: #fff; font-weight: 800; font-size: 15px; }
+    .mov-tabs button.on { background: #1F2937; color: #fff; border-color: #1F2937; }
+    body.mt-datos .pe-wrap > .pe-main { display: none; }
+    body.mt-plano .pe-wrap > .pe-side { display: none; }
+    body.mt-plano .pe-lienzo { height: calc(100vh - 230px) !important; min-height: 320px; }
+    .guia-bar { top: calc(var(--hdr, 90px) + 58px); }
+  }
   .ue-zona.guia { fill: rgba(255, 196, 0, .22) !important; stroke: #D98C00 !important; stroke-width: .6 !important; }
   .guia-bar { position: sticky; top: 0; z-index: 3; background: #FFFBEB; border: 1px solid #F2D27A; border-radius: 12px; padding: 10px 12px; margin: 0 0 10px; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
   .guia-bar h3 { margin: 8px 0 2px; font-size: 17px; } .guia-bar p { margin: 2px 0; font-size: 14px; }
@@ -624,6 +636,7 @@
       <p class="muted" id="pe-sub" style="margin:4px 0 0"></p>
       <div class="aviso" id="pe-aviso" hidden style="margin:12px 0 0"></div>
     </div>
+    <div class="mov-tabs" data-mt="pe"><button type="button" data-mt-v="datos">📝 Datos</button><button type="button" data-mt-v="plano">🗺 Plano</button></div>
     <div class="pe-wrap"><div class="pe-main">
     <div class="pe-barra" id="pe-barra"></div>
     <div class="pe-lienzo" id="pe-lienzo"><div id="pe-svg" style="width:100%;height:100%"></div></div>
@@ -638,11 +651,12 @@
     <div class="card" id="pe-caj"><h3>🗂 Recuadro del plano</h3>
       <p class="muted" style="margin:4px 0 0">Datos del rótulo (formato GEOVITA, RIC N°18). Vienen del rótulo original del DWG y se pueden corregir. Las firmas, la revisión y la fecha las completa la app.</p>
       <div class="ue-g" id="pe-caj-campos"></div></div>
-    <div class="grid2" style="margin-bottom:12px">
+    <button class="big primary solo-pe-uni" id="btn-pe-listo-uni" style="margin-bottom:12px">✔ Listo, volver al diagrama del tablero</button>
+    <div class="grid2 sin-pe-uni" style="margin-bottom:12px">
       <button class="big" id="btn-pe-pdf">📄 Vista previa PDF</button>
       <button class="big" id="btn-pe-dxf">⤓ DXF (AutoCAD)</button>
     </div>
-    <div class="card adm">
+    <div class="card adm sin-pe-uni">
       <h3>Emitir revisión</h3>
       <label for="pe-descrev">Descripción de la revisión</label>
       <input id="pe-descrev" class="may" placeholder="Ej.: Se agregan puntos de bloqueo / Cambio de interruptor TDF N°94">
@@ -650,8 +664,8 @@
       <p class="error" id="pe-error"></p>
       <button class="big primary" id="btn-pe-emitir">✍ Firmar y enviar a aprobación</button>
     </div>
-    <button class="big" id="btn-pe-guardar">Guardar borrador</button>
-    <button class="big" id="btn-pe-descartar" hidden>Descartar borrador</button>
+    <button class="big sin-pe-uni" id="btn-pe-guardar">Guardar borrador</button>
+    <button class="big sin-pe-uni" id="btn-pe-descartar" hidden>Descartar borrador</button>
     <button class="big" id="btn-pe-volver">Volver a los planos</button>
   </section>
 
@@ -662,6 +676,7 @@
       <p class="muted" id="ue-sub" style="margin:4px 0 0"></p>
       <div class="aviso" id="ue-aviso" hidden style="margin:12px 0 0"></div>
     </div>
+    <div class="mov-tabs" data-mt="ue"><button type="button" data-mt-v="datos">📝 Datos</button><button type="button" data-mt-v="plano">🗺 Plano</button></div>
     <div class="pe-wrap"><div class="pe-main">
       <div class="pe-barra" id="ue-barra">
         <button type="button" data-uev="ver"><span>⤢</span><small>Ver todo</small></button>
@@ -671,6 +686,7 @@
         <button type="button" data-uev="p1" hidden><span>🗐</span><small>Hoja 2</small></button>
         <button type="button" data-uev="zonas" class="toggle on"><span>▦</span><small>Componentes</small></button>
         <button type="button" data-uev="pdf"><span>📄</span><small>Vista PDF</small></button>
+        <button type="button" data-uev="dibujo" class="uev-dib"><span>✏️</span><small>Dibujo libre / bloqueos</small></button>
       </div>
       <div class="pe-lienzo ue-lienzo" id="ue-lienzo"><div id="ue-prev" style="width:100%;height:100%"></div></div>
       <p class="muted" style="margin:6px 2px 10px">El plano se redibuja solo con cada dato. Rueda o dos dedos para recorrer, Ctrl + rueda o pellizco para acercar, doble clic para ampliar. Toca un componente (recuadro azul) para ir a sus datos en el panel.</p>
@@ -1463,7 +1479,7 @@ const CONFIG = {
 };
 
 // Versión visible al pie de la pantalla de inicio (sirve para confirmar que el teléfono tiene la última)
-const VERSION_APP = 'v45 · 10-11-2026';
+const VERSION_APP = 'v46 · 11-11-2026';
 const NIVELES = ['SNV', 'Producción', 'Acarreo', 'Hundimiento', 'UCL'];
 const NIVEL_ETQ = { SNV: 'SNV · Sub nivel ventilación', UCL: 'UCL' };
 const EMPRESA = 'GEOVITA';
@@ -2854,7 +2870,7 @@ function restaurarVista() {
         exigirChkDiario(null); return true; }
       case 'fichap': if (!c.id) return false; abrirFichaPers({ usuario: c.id }); return true;
       case 'repochk': if (!puedeRepoChk()) return false; abrirRepoChk(); return true;
-      case 'plano-ed': if (!c.id || !esAdmin()) return false; abrirEditorPlano(c.id); return true;
+      case 'plano-ed': if (!c.id || !esAdmin()) return false; if (/^UNI-/.test(c.id)) { abrirEditorUni(c.id.slice(4)); return true; } document.body.classList.remove('pe-uni'); abrirEditorPlano(c.id); return true;
       case 'uni-ed': if (!c.id || !esAdmin()) return false; abrirEditorUni(c.id); return true;
       case 'ficha': if (!c.id) return false; abrirFicha(c.id); return true;
       case 'docs': if (typeof abrirDocs === 'function' && c.id) { abrirDocs(c.id); return true; } return false;
@@ -4593,7 +4609,13 @@ function bloqueosUni(m) {
   const sc = m.sec || {};
   if (siUni(sc.tiene)) b.push({ id: 'PB-' + (b.length + 1), rol: 'Alimentación transformador T1', equipo: ((sc.qt || {}).equipo || 'Q-T1') + ' (aísla T1 y ' + (sc.nombre || 'TDF 400 V') + ')', ubicacion: (m.tablero || {}).nombre || '', tipo: (sc.qt || {}).tipoBloqueo || TIPOS_BLOQUEO[0] });
   if (siUni(of.tiene)) b.push({ id: 'PB-' + (b.length + 1), rol: 'Otra fuente de energía', equipo: of.equipo || '', ubicacion: of.ubicacion || of.desc || '', tipo: of.tipoBloqueo || 'Candado + tarjeta' });
-  (m.pbExtra || []).filter(x => x.equipo || x.ubicacion).forEach(x => b.push({ id: 'PB-' + (b.length + 1), rol: 'Adicional', equipo: x.equipo || '', detalle: det(x), ubicacion: x.ubicacion || '', tipo: x.tipoBloqueo || x.tipoBl || (TIPOS_BLOQUEO.includes(x.tipo) ? x.tipo : '') || 'Candado + tarjeta' }));
+  // Bloqueo individual de un circuito de salida: permite intervenir solo ese circuito sin cortar el interruptor general
+  const indiv = (lista, pref) => (lista || []).forEach((o, i) => { if (siUni(o.pb) && (o.id || o.desc)) b.push({ id: 'PB-' + (b.length + 1), rol: 'Bloqueo individual de circuito', ref: pref + ':' + i,
+    equipo: [o.id, o.desc].filter(Boolean).join(' ') + ' (solo para intervenir este circuito; no requiere bloquear el interruptor general)', detalle: det(o), ubicacion: (m.tablero || {}).nombre || '', tipo: o.tipoBloqueo || TIPOS_BLOQUEO[0] }); });
+  indiv(m.salidas, 'salida'); if (siUni(sc.tiene)) indiv(sc.salidas, 'secsal');
+  (m.pbExtra || []).filter(x => x.equipo || x.ubicacion).forEach(x => b.push({ id: 'PB-' + (b.length + 1), rol: 'Adicional', equipo: x.equipo || '', detalle: det(x), ubicacion: x.ubicacion || '', en: x.en || '', tipo: x.tipoBloqueo || x.tipoBl || (TIPOS_BLOQUEO.includes(x.tipo) ? x.tipo : '') || 'Candado + tarjeta' }));
+  // marcados a mano en el plano con las herramientas de dibujo
+  ((m.dib || {}).pb || []).forEach(p => b.push({ id: 'PB-' + (b.length + 1), rol: 'Adicional (marcado en el plano)', equipo: p.equipo || 'POR IDENTIFICAR', detalle: [p.prot, marcaModelo(p), p.calibre, p.ajuste, p.accesorios].filter(Boolean).join(' · '), ubicacion: p.ubic || p.tablero || '', tipo: p.tipo || TIPOS_BLOQUEO[0] }));
   return b;
 }
 const CODIGO_UNI = (id) => 'RE-' + CONFIG.CONTRATO + '-ELEC-UNI-' + id;
@@ -4779,6 +4801,8 @@ function construirUni(m, cx = {}) {
         L.linea(xi, yF, xi, yF + 3, { w: 0.35 });
         simInterruptor(L, xi, yF + 3, 0.72);
         if (o.dif) { L.rect(xi + 2.4, yF + 6.6, 2.8, 2.8, { w: 0.22 }); L.linea(xi + 2.4, yF + 9.4, xi + 5.2, yF + 6.6, { w: 0.18 }); }
+        { const ix = lista.indexOf(o), pbS = BL.find(bq => bq.ref === pref + ':' + ix) || BL.find(bq => bq.en && o.id && bq.en === o.id);   // punto de bloqueo en esta salida
+          if (pbS) { simPB(L, xi - 7, yF + 8.6, 6.4, pbS.id); L.linea(xi - 4.4, yF + 6.9, xi - 1.4, yF + 6.9, { c: UC.R, w: 0.35 }); L.poli([[xi - 0.7, yF + 6.9], [xi - 1.9, yF + 6.3], [xi - 1.9, yF + 7.5]], { c: UC.R, w: 0.15, fill: UC.R }); } }
         simCarga(L, xi, yF + 14.5, o.carga);
         zona(xi - Math.max(5, w / 2), yF, Math.max(10, w), 36, pref + ':' + lista.indexOf(o));
         L.texto(xi, yF + 22.6, recortar(o.id || '—', w, 6.2, true), { pt: 6.2, b: 1, al: 'center' });
@@ -4944,6 +4968,13 @@ function construirUni(m, cx = {}) {
   L.p = pAct;
   nPag.total = L.pags.length;
   for (let i = 0; i < L.pags.length; i++) { L.p = i; cajetin(i + 1); }
+  // símbolos, textos, líneas y puntos de bloqueo agregados con las herramientas de dibujo
+  const dib = m.dib || {};
+  if ((dib.add || []).length || (dib.pb || []).length) {
+    const Lo = new Lienzo(); Lo.defs = L.defs = L.defs || {};
+    dibujarAgregados(Lo, transformPlano({ tipo: 'uni' }), { uni: m, uniDe: true, add: dib.add || [], pb: dib.pb || [] }, false);
+    L.pags[0].push(...Lo.pags[0]);
+  }
   return L;
 }
 
@@ -5028,7 +5059,7 @@ async function hojaPorId(id) {
 }
 const areaPlano = (base) => base && base.tipo === 'uni' ? UNI_AREA : PLA_AREA;
 // En los planos tipo, los PB agregados se numeran después de los del esquema (PB-1 origen, PB-2 general…)
-const pbOff = (m) => m && m.uni ? bloqueosUni(Object.assign({}, m.uni, { pbExtra: [] })).length : 0;
+const pbOff = (m) => m && m.uni ? bloqueosUni(Object.assign({}, m.uni, { pbExtra: m.uniDe ? (m.uni.pbExtra || []) : [], dib: null })).length : 0;
 const pbN = (m, i) => 'PB-' + (pbOff(m) + i + 1);
 // Símbolo estándar de PUNTO DE BLOQUEO: triángulo rojo con borde amarillo (alto contraste) y número
 function simPB(L, cx, cy, h, etiqueta, bl) {
@@ -5421,9 +5452,10 @@ function dibujarAgregados(L, T, m, ed) {
 }
 // Plano tipo: esquema unilineal estándar del tipo de tablero + lo agregado en el editor
 function uniDePlano(hoja, m) {
-  const u = JSON.parse(JSON.stringify(m.uni || modeloTipo(hoja.tipoKey)));
-  u.pbExtra = (m.pb || []).map(p => ({ equipo: p.equipo || 'POR IDENTIFICAR', ubicacion: p.ubic || p.tablero || '', tipoBloqueo: p.tipo || TIPOS_BLOQUEO[0],
-    tipo: p.prot || '', marca: p.marca || '', modelo: p.modelo || '', polos: p.polos || '', calibre: p.calibre || '', disparo: p.ajuste || '', accesorios: p.accesorios || '' }));
+  const u = JSON.parse(JSON.stringify(m.uni || modeloTipo(hoja.tipoKey))); delete u.dib;
+  u.pbExtra = (m.uniDe ? (u.pbExtra || []) : []).concat((m.pb || []).map(p => ({ equipo: p.equipo || 'POR IDENTIFICAR', ubicacion: p.ubic || p.tablero || '', tipoBloqueo: p.tipo || TIPOS_BLOQUEO[0],
+    tipo: p.prot || '', marca: p.marca || '', modelo: p.modelo || '', polos: p.polos || '', calibre: p.calibre || '', disparo: p.ajuste || '', accesorios: p.accesorios || '' })));
+  if (m.uniDe) return u;
   Object.assign(u, { rev: m.rev ?? 0, firmas: m.firmas || {}, fechaEmision: m.fechaEmision, descRev: m.descRev || (m.rev ? '' : 'ESQUEMA ESTÁNDAR GEO ELEC') });
   return u;
 }
@@ -5431,6 +5463,7 @@ function construirTipo(hoja, base, m, cx = {}) {
   const ed = !!cx.editor, T = transformPlano(base);
   const hist = ((PLADATA.historial || {})[m.id] || []).filter(x => x.rev < (m.rev ?? 0)).map(x => ({ rev: x.rev, fecha: x.fecha, por: x.por, desc: x.desc }));
   if (!hist.length && m.rev) hist.push({ rev: 0, fecha: '', por: '', desc: 'ESQUEMA ESTÁNDAR GEO ELEC' });
+  if (m.uniDe) { const L = construirUni(uniDePlano(hoja, m), contextoUni(m.uni, true)); L.T = T; L.defs = L.defs || {}; const Lo = new Lienzo(); Lo.defs = L.defs; dibujarAgregados(Lo, T, m, ed); if (ed && cx.marcas) cx.marcas(Lo, T); L.pags[0].push(...Lo.pags[0]); return L; }
   const L = construirUni(uniDePlano(hoja, m), { tipo: 1, historial: hist, borrador: !ed && (m.estado === 'BORRADOR' || m.estado === 'POR APROBAR'), porAprobar: m.estado === 'POR APROBAR', codigo: CODIGO_PLA(m.id) });
   L.T = T; L.defs = L.defs || {};
   const Lo = new Lienzo(); Lo.defs = L.defs;
@@ -5515,6 +5548,7 @@ const PE_AYUDA = {
 };
 async function abrirEditorPlano(id) {
   if (!esAdmin()) { toast('Solo el administrador edita planos.'); return; }
+  document.body.classList.remove('pe-uni');
   const hoja = await hojaPorId(id);
   if (!hoja) { toast('Plano no disponible sin señal.'); return; }
   let base;
@@ -5543,7 +5577,28 @@ async function abrirEditorPlano(id) {
   ir('plano-ed', { id });
   setTimeout(() => { ajustarVistaPE(); renderEditorPlano(); renderCajPE(); renderEsqPE(); }, 30);
 }
-function guardarLocalPla() { if (PE) ls.set('plaLocal:' + PE.m.id, { m: PE.m, guardado: new Date().toISOString() }); }
+function guardarLocalPla() { if (!PE) return; if (PE.uniEd) { sincUniDesdePE(); return; } ls.set('plaLocal:' + PE.m.id, { m: PE.m, guardado: new Date().toISOString() }); }
+// ---- Herramientas de dibujo dentro del diagrama unilineal de un tablero (mismo editor de los planos tipo) ----
+function sincUniDesdePE() {
+  if (!PE || !PE.uniEd || !UE) return;
+  const u = JSON.parse(JSON.stringify(PE.m.uni)); u.dib = { add: JSON.parse(JSON.stringify(PE.m.add || [])), pb: JSON.parse(JSON.stringify(PE.m.pb || [])) };
+  UE.m = u; guardarLocalUni();
+}
+function abrirDibujoUni() {
+  if (!UE) return;
+  const key = clavePlantilla(UE.t || {}) || 'TDF400', nom = (UE.m.tablero || {}).nombre || UE.m.id;
+  const dib = UE.m.dib || {}, uni = JSON.parse(JSON.stringify(UE.m)); delete uni.dib;
+  const hoja = { id: 'UNI-' + UE.m.id, tipoKey: key, nombre: nom, uniDe: true }, base = { tipo: 'uni', w: 420, h: 297, e: [], pb: [], cab: {} };
+  const m = { id: hoja.id, uniDe: true, uni, add: JSON.parse(JSON.stringify(dib.add || [])), pb: JSON.parse(JSON.stringify(dib.pb || [])), del: [], txt: {}, mv: {}, caj: {}, rev: UE.m.rev, estado: 'BORRADOR', firmas: {} };
+  PE = { hoja, base, m, T: transformPlano(base), modo: 'ver', sel: [], pend: [], undo: [], redo: [], grid: false, view: { x: 0, y: 0, w: 420, h: 297 }, orto: true, bloqueado: false, simTipo: 'int', uniEd: true };
+  $('#pe-titulo').textContent = '✏️ Dibujo libre · Diagrama unilineal ' + nom;
+  $('#pe-sub').textContent = CODIGO_UNI(UE.m.id) + ' · Rev. ' + UE.m.rev + ' en confección';
+  $('#pe-aviso').hidden = false; $('#pe-aviso').textContent = 'Agrega puntos de bloqueo donde se necesiten (por ejemplo, en un interruptor de salida para intervenir solo ese circuito), símbolos, textos y conductores. Todo queda en el diagrama de este tablero. Al terminar: "✔ Listo, volver al diagrama".';
+  document.body.classList.add('pe-uni'); $('#pe-caj').hidden = true; $('#pe-esq').hidden = false;
+  ir('plano-ed', { id: hoja.id });
+  setTimeout(() => { ajustarVistaPE(); renderEditorPlano(); renderEsqPE(); }, 30);
+}
+function volverDibujoUni() { sincUniDesdePE(); PE = null; document.body.classList.remove('pe-uni'); ir('uni-ed'); renderEditorUni(); }
 function cambioPE(fn) {
   if (!PE || PE.bloqueado) { if (PE && PE.bloqueado) toast('La revisión está esperando aprobación.'); return false; }
   PE.undo.push(JSON.stringify(PE.m)); if (PE.undo.length > 60) PE.undo.shift(); PE.redo = [];
@@ -6105,6 +6160,7 @@ function renderEsqPE() {
 function irAZonaPE(z) {
   if (!PE || !PE.m.uni) return;
   if (z.startsWith('pb')) { $('#pe-pbs').scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+  if (esMovil()) vistaMovil('datos');
   if (irAZonaUni(z, '#pe-esq-form')) toast('Datos del componente abiertos en "Esquema del tablero".', 2200);
 }
 function cambioEsq(fn, clave, redibujarForm) {
@@ -6193,7 +6249,8 @@ $('#btn-pe-pdf').addEventListener('click', async () => {
   catch (err) { toast(err.message, 5000); }
 });
 $('#btn-pe-dxf').addEventListener('click', () => { if (PE) descargarBlob(dxfABlob(uniADxf(construirPlano(PE.hoja, PE.base, modeloPlaLimpio()))), nombreArchPla(PE.hoja, PE.m, 'dxf')); });
-$('#btn-pe-volver').addEventListener('click', () => { PE = null; ir('planos'); });
+$('#btn-pe-volver').addEventListener('click', () => { if (PE && PE.uniEd) { volverDibujoUni(); return; } PE = null; ir('planos'); });
+$('#btn-pe-listo-uni').addEventListener('click', volverDibujoUni);
 function validarPlano(m) {
   const err = [], av = [];
   if (!String(m.descRev || '').trim()) err.push('Escribe la descripción de la revisión.');
@@ -6814,13 +6871,16 @@ function htmlEditorUni() {
       ${fUni(`${base}.${i}.desc`, 'Descripción / carga', { ph: 'Enchufe 32 A, alumbrado…', ancho: 1 })}
       ${fUni(`${base}.${i}.cable`, 'Cable de la salida', { ph: '4x6 mm² + T', lista: 'dl-cables' })}${fUni(`${base}.${i}.kw`, 'Potencia de la carga', { ph: '15 kW' })}
       ${fUni(`${base}.${i}.destinoId`, 'Alimenta al tablero (GEO ELEC)', { opciones: ids.map(x => x.id), ancho: 1 })}
-      ${fUni(`${base}.${i}.destino`, 'Destino (texto en el plano)', { ph: 'TDA N°12', ancho: 1 })}</div></div>`;
+      ${fUni(`${base}.${i}.destino`, 'Destino (texto en el plano)', { ph: 'TDA N°12', ancho: 1 })}
+      ${segU(`${base}.${i}.pb`, '⚠ ¿Punto de bloqueo individual de este circuito? (para intervenirlo sin cortar el interruptor general)', SINO)}
+      ${siUni(s.pb) ? fUni(`${base}.${i}.tipoBloqueo`, 'Tipo de bloqueo', { opciones: TIPOS_BLOQUEO, vacio: false, ancho: 1 }) : ''}</div></div>`;
   const sal = (m.salidas || []).map((s, i) => htmlSal('salidas', s, i)).join('');
   const sc = m.sec || {}, sal2 = (sc.salidas || []).map((s, i) => htmlSal('sec.salidas', s, i)).join('');
   const pbx = (m.pbExtra || []).map((p, i) => `<div class="ue-sal"><div class="ue-sal-h"><b>Punto de bloqueo adicional</b><span><button type="button" data-pbx-del="${i}" aria-label="Quitar">✕</button></span></div>
       <div class="ue-g">${fUni(`pbExtra.${i}.equipo`, 'Identificación del dispositivo', { ph: 'Seccionador S1', ancho: 1 })}${fUni(`pbExtra.${i}.ubicacion`, 'Ubicación', { ancho: 1 })}
       ${camposProt(`pbExtra.${i}`, p)}${fUni(`pbExtra.${i}.accesorios`, 'Accesorios', { ph: 'Bobina MX, contacto auxiliar', ancho: 1 })}
-      ${fUni(`pbExtra.${i}.tipoBloqueo`, 'Tipo de bloqueo', { opciones: TIPOS_BLOQUEO, vacio: false, ancho: 1 })}</div></div>`).join('');
+      ${fUni(`pbExtra.${i}.tipoBloqueo`, 'Tipo de bloqueo', { opciones: TIPOS_BLOQUEO, vacio: false, ancho: 1 })}
+      ${fUni(`pbExtra.${i}.en`, 'Dibujar el triángulo PB en la salida (opcional)', { opciones: (m.salidas || []).concat(siUni((m.sec || {}).tiene) ? m.sec.salidas || [] : []).map(o => o.id).filter(Boolean), ancho: 1 })}</div></div>`).join('');
   const a = m.alim || {}, nombres = [...new Set(ls.get('personal', []).filter(p => p.estado === 'ACTIVO').map(p => p.nombre))];
   return (UE.sinRef ? '' : htmlRefUni()) + `
   <datalist id="ue-dl-pers">${nombres.map(n => `<option value="${esc(n)}">`).join('')}</datalist>
@@ -7064,6 +7124,21 @@ const modeloLimpio = () => { const m = JSON.parse(JSON.stringify(UE.m)); m._sug 
 $('#ue-descrev').addEventListener('input', () => { if (UE) { UE.m.descRev = $('#ue-descrev').value.trim(); guardarLocalUni(); actualizarUni(true); } });
 // Tocar un componente del diagrama abre sus datos en el formulario
 const SEC_ZONA = { tablero: '2', alim: '3', general: '4', dif: '5', trafo: '5', trafoCtl: '5', salida: '6', sec: '6b', secsal: '6b', tp: '7', otra: '8', pb: '9' };
+// Teléfono: una cosa a la vez (Datos o Plano) para que la pantalla no salte al editar
+const esMovil = () => matchMedia('(max-width: 899px)').matches;
+const altoCabecera = () => { const h = document.querySelector('header'); if (h) document.documentElement.style.setProperty('--hdr', h.offsetHeight + 'px'); };
+altoCabecera(); window.addEventListener('resize', altoCabecera);
+function vistaMovil(v) {
+  v = v || ls.get('mtVista', 'datos'); ls.set('mtVista', v);
+  document.body.classList.toggle('mt-datos', v === 'datos'); document.body.classList.toggle('mt-plano', v === 'plano');
+  document.querySelectorAll('.mov-tabs button').forEach(b => b.classList.toggle('on', b.dataset.mtV === v));
+  if (v === 'plano') setTimeout(() => {
+    if (PE && !$('#v-plano-ed').hidden) { ajustarVistaPE(); dibujarPE(); }
+    else if (UE) { if (!UEV.vb && esMovil()) { const r = $('#ue-lienzo').getBoundingClientRect(), W = 236; UEV.vb = [8, 26, W, W * (r.height || 600) / (r.width || 400)]; } dibujarVistaUni(); }   // en el teléfono abre en la zona del dibujo, a todo el ancho
+  }, 30);
+}
+document.addEventListener('click', (e) => { const b = e.target.closest('.mov-tabs [data-mt-v]'); if (b) { vistaMovil(b.dataset.mtV); window.scrollTo({ top: 0 }); } });
+vistaMovil();
 // ===== MODO GUIADO: un paso a la vez, con explicación simple, lo que falta y el plano enfocado en esa parte =====
 const GUIA_PASOS = {
   '1': ['Referencias del tablero', 'Adjunta fotos del tablero abierto, de su placa o un plano existente. No es obligatorio, pero ayuda a quien revisa y aprueba.', []],
@@ -7108,6 +7183,7 @@ function aplicarGuia(raiz) {
   bar.innerHTML = `<div class="guia-top"><b>🧭 Paso ${i + 1} de ${ds.length}</b><button type="button" class="guia-tog" data-guia="off">Ver todo el formulario</button></div>
     <div class="guia-chips">${chips}</div>
     <h3>${esc(P[0])}</h3><p>${esc(P[1])}</p>
+    ${P[2].length ? '<button type="button" class="guia-tog guia-verplano" data-guia-plano="1">🗺 Ver esta parte en el plano</button>' : ''}
     <p class="guia-est ${fa.falta.length ? 'fal' : 'ok'}">${fa.falta.length ? '⚠ Falta: ' + esc(fa.falta.join(', ')) : '✔ Paso completo'}${fa.amar.length ? ` · <span class="ama">${fa.amar.length} dato(s) precargado(s) en amarillo: confírmalos con la placa</span>` : ''}</p>`;
   box.prepend(bar);
   const nav = document.createElement('div'); nav.className = 'guia-nav';
@@ -7132,12 +7208,14 @@ function enfocarGuia(raiz, claves) {
   }
 }
 document.addEventListener('click', (e) => {
-  const b = e.target.closest('[data-guia], [data-guia-ir], [data-guia-paso]'); if (!b) return;
+  const b = e.target.closest('[data-guia], [data-guia-ir], [data-guia-paso], [data-guia-plano]'); if (!b) return;
   const raiz = b.closest('#ue-form') ? '#ue-form' : b.closest('#pe-esq-form') ? '#pe-esq-form' : null; if (!raiz) return;
+  if (b.dataset.guiaPlano) { vistaMovil('plano'); const d = [...$(raiz).querySelectorAll('details.ue-sec')][GUIA.paso[raiz] || 0]; setTimeout(() => enfocarGuia(raiz, (GUIA_PASOS[numSec(d)] || [0, 0, []])[2]), 60); window.scrollTo({ top: 0 }); return; }
   if (b.dataset.guia) { GUIA.on = b.dataset.guia === 'on'; ls.set('guiaOn', GUIA.on); if (!GUIA.on && raiz === '#ue-form') { UEV.vb = null; UEV.guia = null; dibujarVistaUni(); } }
   else if (b.dataset.guiaIr) GUIA.paso[raiz] = +b.dataset.guiaIr;
   else GUIA.paso[raiz] = (GUIA.paso[raiz] || 0) + (+b.dataset.guiaPaso);
-  aplicarGuia(raiz); $(raiz).scrollIntoView({ behavior: 'smooth', block: 'start' });
+  aplicarGuia(raiz);
+  if (esMovil()) window.scrollTo({ top: Math.max(0, $(raiz).getBoundingClientRect().top + window.scrollY - 130) }); else $(raiz).scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 function irAZonaUni(z, raiz = '#ue-form') {
   const [k, i] = z.split(':'), n = SEC_ZONA[k]; if (!n) return false;
@@ -7148,7 +7226,7 @@ function irAZonaUni(z, raiz = '#ue-form') {
   let destino = det;
   if ((k === 'salida' || k === 'secsal') && i != null) destino = det.querySelectorAll('.ue-sal')[+i] || det;
   else if (k === 'dif' || k === 'trafo' || k === 'trafoCtl') destino = det.querySelector(`[data-seg="${k}.tiene"]`) || det;
-  destino.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  destino.scrollIntoView({ behavior: esMovil() ? 'auto' : 'smooth', block: 'start' });
   destino.classList.add('ue-flash'); setTimeout(() => destino.classList.remove('ue-flash'), 1600);
   return true;
 }
@@ -7177,6 +7255,7 @@ $('#ue-barra').addEventListener('click', async (e) => {
   if (a === 'ver') { UEV.vb = null; dibujarVistaUni(); }
   else if (a === 'mas') zoomUEV(1.4); else if (a === 'menos') zoomUEV(1 / 1.4);
   else if (a === 'p0' || a === 'p1') { UEV.pag = +a.slice(1); UEV.vb = null; dibujarVistaUni(); }
+  else if (a === 'dibujo') abrirDibujoUni();
   else if (a === 'zonas') { b.classList.toggle('on'); $('#ue-lienzo').classList.toggle('sin-zonas', !b.classList.contains('on')); }
   else if (a === 'pdf') { try { const doc = await pdfUni(UE.m, true); verDocumento({ titulo: 'Vista previa (borrador)', codigo: CODIGO_UNI(UE.m.id) + ' · Rev. ' + UE.m.rev, blobLocal: doc.output('blob'), mime: 'application/pdf', nombre: nombreArchUni(UE.m, 'pdf', 1) }); } catch (err) { toast(err.message, 5000); } }
 });
@@ -7206,6 +7285,7 @@ lzU.addEventListener('pointerup', finPtrU); lzU.addEventListener('pointercancel'
 $('#ue-prev').addEventListener('click', (ev) => {
   if (!UE || UEV.mov > 6) return;
   const zn = ev.target.closest && ev.target.closest('[data-zona]');
+  if (zn && esMovil()) vistaMovil('datos');
   if (zn && irAZonaUni(zn.dataset.zona)) toast('Datos del componente abiertos en "Esquema del tablero".', 2200);
 });
 $('#btn-ue-pdf').addEventListener('click', async () => { if (UE) try { descargarBlob((await pdfUni(UE.m, true)).output('blob'), nombreArchUni(UE.m, 'pdf', 1)); } catch (err) { toast(err.message, 5000); } });
