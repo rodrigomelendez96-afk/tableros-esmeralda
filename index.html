@@ -466,6 +466,7 @@
     <button type="button" class="aviso-pend aprob-card" id="ini-aprobar" data-ir="aprobar" hidden></button>
     <button type="button" class="aviso-pend aprob-card" id="ini-chkrev" hidden></button>
     <button type="button" class="aviso-pend aprob-card" id="ini-difpend" hidden></button>
+    <button type="button" class="aviso-pend aprob-card" id="ini-difval" hidden></button>
     <button type="button" class="aviso-pend" id="ini-pend" data-ir="envios" hidden></button>
     <button class="big primary inicio-act" id="btn-iniciar">⚡ Iniciar actividad<small>Inspección mensual o mantención trimestral</small></button>
 
@@ -1648,7 +1649,7 @@ const CONFIG = {
 };
 
 // Versión visible al pie de la pantalla de inicio (sirve para confirmar que el teléfono tiene la última)
-const VERSION_APP = 'v47 · 13-11-2026';
+const VERSION_APP = 'v49 · 13-11-2026';
 const NIVELES = ['SNV', 'Producción', 'Acarreo', 'Hundimiento', 'UCL'];
 const NIVEL_ETQ = { SNV: 'SNV · Sub nivel ventilación', UCL: 'UCL' };
 const EMPRESA = 'GEOVITA';
@@ -8857,6 +8858,11 @@ const EXIGIR_DIF = () => ls.get('exigirDif', CONFIG.EXIGIR_DIFUSION !== false) !
 const difHoy = () => { const d = ls.get('difHoy', null), s = sesion(); return d && s && d.fecha === diaISO() && d.usuario === s.usuario ? d : null; };
 const difusionLista = () => !EXIGIR_DIF() || !!(difHoy() && difHoy().listo);
 const difEstado = () => { const e = ls.get('difEstado', null), s = sesion(); return e && s && e.usuario === s.usuario ? e : null; };
+const puedeValidarDif = () => { const p = perfilSesion() || {}; return CARGOS_REVISAN.test(p.cargo || '') || p.grupo === 'Administrativo'; };
+const difPorValidar = () => { const e = difEstado(); return e && puedeValidarDif() ? (e.dadas || []).filter(d => d.estado === 'EN FIRMA' && (d.part || []).some(p => p.f && !p.aus)) : []; };
+// Listado completo: todos los participantes ya firmaron → vuelve a quien lo difunde para su firma de validación
+const difCompleta = (d) => { const a = (d.part || []).filter(p => !p.aus); return d.estado === 'EN FIRMA' && a.length > 0 && a.every(p => p.f); };
+const difParaMiFirma = () => { const e = difEstado(), yo = (sesion() || {}).usuario; return e ? (e.dadas || []).filter(d => d.difusor.usuario === yo && difCompleta(d)) : []; };
 const yoEnDif = (d) => (d.part || []).find(p => p.u === (sesion() || {}).usuario && !p.aus);
 const difPorFirmar = () => { const e = difEstado(); return e ? (e.mias || []).filter(d => d.estado === 'EN FIRMA' && yoEnDif(d) && !yoEnDif(d).f) : []; };
 const difBuscar = (id) => { const e = difEstado() || {}; return (e.dadas || []).concat(e.mias || []).find(d => d.id === id); };
@@ -8870,6 +8876,8 @@ function refrescarDif() {
       ls.set('difEstado', Object.assign({}, j, { usuario: s.usuario }));
       ls.set('difHoy', { fecha: j.hoy || diaISO(), usuario: s.usuario, listo: !!j.listo, id: j.listoId || '' });
       renderTileDif(); renderAvisoDif(); renderCardDif();
+      const av = ls.get('difAvisadas', []), nuevas = difParaMiFirma().filter(d => !av.includes(d.id));
+      if (nuevas.length) { ls.set('difAvisadas', av.concat(nuevas.map(d => d.id)).slice(-60)); toast('✍ Todos firmaron tu listado de asistencia: firma para validarlo.', 6000); }
       if (!$('#v-dif').hidden) renderDif(); if (!$('#v-dif-det').hidden && DD.id) renderDifDet();
       return true;
     } catch (e) { return false; } finally { refrescandoDif = null; }
@@ -8879,10 +8887,16 @@ function refrescarDif() {
 function renderTileDif() {
   const el = $('#tile-dif'); if (!el) return;
   if (!sesionActiva()) { el.textContent = 'Reflexión y listado de asistencia · ingresa con tu usuario'; return; }
-  const pf = difPorFirmar().length;
+  const pf = difPorFirmar().length, pv = difPorValidar().length;
+  if (difParaMiFirma().length) { el.innerHTML = '<span class="rojo">Todos firmaron · firma para validar</span>'; return; }
+  if (pv) { el.innerHTML = `<span class="rojo">${pv} por validar</span>`; return; }
   el.innerHTML = !EXIGIR_DIF() ? 'Reflexión y listado de asistencia' : difusionLista() ? '<span class="verde">Hoy: asistencia validada ✔</span>' : pf ? `<span class="rojo">${pf} por firmar</span>` : '<span class="amar">Hoy: pendiente</span>';
 }
 function renderAvisoDif() {
+  const v = $('#ini-difval');
+  const mios = sesionActiva() ? difParaMiFirma() : [];
+  if (v && mios.length) { v.hidden = false; v.innerHTML = `✍ <b>${mios.length === 1 ? 'Todos firmaron tu listado de asistencia' : mios.length + ' listados de asistencia con todas las firmas'}</b><small style="display:block;font-weight:500">Falta tu firma digital como relator para validarlo y habilitar al personal</small>`; }
+  else if (v) { const n = sesionActiva() ? difPorValidar().length : 0; v.hidden = !n; v.innerHTML = n ? `✔ <b>${n} listado${n > 1 ? 's' : ''} de asistencia con firmas por validar</b><small style="display:block;font-weight:500">El personal ya firmó la reflexión: valida para generar el documento con las firmas</small>` : ''; }
   const b = $('#ini-difpend'); if (!b) return;
   const pf = sesionActiva() ? difPorFirmar().length : 0;
   b.hidden = !pf; b.innerHTML = pf ? `💬 <b>${pf} reflexión${pf > 1 ? 'es' : ''} del día por firmar</b><small style="display:block;font-weight:500">Lee la reflexión y firma tu asistencia para quedar habilitado</small>` : '';
@@ -8899,6 +8913,10 @@ function renderCardDif() {
 $('#btn-cd-dif').addEventListener('click', () => ir('dif'));
 $('#tile-dif-btn').addEventListener('click', () => requiereLogin(() => ir('dif'), 'Para ver la reflexión del día'));
 $('#ini-difpend').addEventListener('click', () => ir('dif'));
+$('#ini-difval').addEventListener('click', () => { const m = difParaMiFirma(); if (m.length === 1) abrirDifDet(m[0].id); else ir('dif'); });
+// El supervisor se entera de las firmas sin tener que abrir la pantalla: se consulta cada minuto mientras la app está abierta
+setInterval(() => { if (!document.hidden && sesionActiva() && puedeValidarDif()) refrescarDif(); }, 60000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && sesionActiva()) refrescarDif(); });
 $('#btn-dif-volver').addEventListener('click', () => ir('chkd'));
 $('#btn-dd-volver').addEventListener('click', () => ir('dif'));
 $('#btn-rd-volver').addEventListener('click', () => ir('dif'));
@@ -8925,15 +8943,15 @@ function renderDif() {
     : '<p class="muted">Aún no te incluyen en un listado de asistencia de hoy. Pide a tu supervisor que haga la reflexión del día; te aparecerá aquí para firmar.</p>';
   $('#dif-estado').innerHTML = h;
   // Difusor
-  const rev = CARGOS_REVISAN.test(s.perfil.cargo || '');
-  $('#dif-dadas-card').hidden = !rev;
+  const rev = puedeValidarDif(), crea = CARGOS_REVISAN.test(s.perfil.cargo || '');
+  $('#dif-dadas-card').hidden = !rev; $('#btn-dif-nueva').hidden = !crea;
   if (rev) {
     const lista = (e.dadas || []).filter(d => d.estado !== 'ANULADA');
     $('#dif-dadas').innerHTML = lista.length ? lista.map(d => {
       const act = d.part.filter(p => !p.aus), fir = act.filter(p => p.f).length;
-      return `<div class="dif-fila"><b>${esc(d.ref || 'Reflexión')}</b><small>${esc(horaDif(d))} · ${fir} de ${act.length} firmaron</small>
-        <span class="badge ${ETQ_DIF[d.estado][0]}">${ETQ_DIF[d.estado][1]}</span>
-        <div class="acc-adm"><button type="button" data-dif-abrir="${esc(d.id)}">Abrir</button>${d.estado === 'VALIDADA' ? `<button type="button" class="btn-pdf" data-dif-pdf="${esc(d.id)}">📄 PDF</button>` : fir ? `<button type="button" class="primary" data-dif-validar="${esc(d.id)}">✔ Validar</button>` : ''}</div></div>`; }).join('')
+      return `<div class="dif-fila"><b>${esc(d.ref || 'Reflexión')}</b><small>${esc(horaDif(d))} · relator ${esc(d.difusor.nombre)} · ${fir} de ${act.length} firmaron</small>
+        <span class="badge ${d.estado === 'EN FIRMA' && fir ? 'no' : ETQ_DIF[d.estado][0]}">${difCompleta(d) ? 'todos firmaron · firma para validar' : d.estado === 'EN FIRMA' && fir ? 'por validar' : ETQ_DIF[d.estado][1]}</span>
+        <div class="acc-adm"><button type="button" data-dif-abrir="${esc(d.id)}">Abrir</button>${d.estado === 'VALIDADA' ? `<button type="button" class="btn-pdf" data-dif-pdf="${esc(d.id)}">📄 Ver</button><button type="button" data-dif-desc="${esc(d.id)}">⤓ Descargar</button>` : fir ? `<button type="button" class="btn-pdf" data-dif-prev="${esc(d.id)}">📄 Con las firmas</button><button type="button" class="primary" data-dif-validar="${esc(d.id)}">✔ Validar</button>` : ''}</div></div>`; }).join('')
       : '<p class="muted">Aún no has enviado ninguna reflexión en los últimos días.</p>';
   }
 }
@@ -8941,6 +8959,8 @@ document.addEventListener('click', (e) => {
   const a = e.target.closest('[data-dif-abrir]'); if (a) { abrirDifDet(a.dataset.difAbrir); return; }
   const v = e.target.closest('[data-dif-validar]'); if (v) { validarDifusion(v.dataset.difValidar); return; }
   const p = e.target.closest('[data-dif-pdf]'); if (p) { verPdfDif(p.dataset.difPdf); return; }
+  const dd = e.target.closest('[data-dif-desc]'); if (dd) { verPdfDif(dd.dataset.difDesc, true); return; }
+  const pv = e.target.closest('[data-dif-prev]'); if (pv) { previaDif(pv.dataset.difPrev); return; }
 });
 $('#btn-dif-nueva').addEventListener('click', () => abrirDifNueva({}));
 $('#btn-dif-repo').addEventListener('click', () => abrirRepoDif());
@@ -8949,18 +8969,18 @@ const DD = { id: '' };
 function abrirDifDet(id) { DD.id = id; $('#dd-error').textContent = ''; cargarEventos().then(renderDifDet); renderDifDet(); ir('dif-det'); }
 function renderDifDet() {
   const d = difBuscar(DD.id); if (!d) { $('#dd-cuerpo').innerHTML = '<p class="muted">No se encontró la difusión.</p>'; return; }
-  const yo = yoEnDif(d), soyDif = d.difusor.usuario === (sesion() || {}).usuario, act = d.part.filter(p => !p.aus), fir = act.filter(p => p.f).length;
+  const yo = yoEnDif(d), soyDif = d.difusor.usuario === (sesion() || {}).usuario, puedeVal = soyDif || puedeValidarDif(), act = d.part.filter(p => !p.aus), fir = act.filter(p => p.f).length;
   $('#dd-titulo').textContent = '🧾 Listado de asistencia';
   $('#dd-sub').textContent = `${horaDif(d)} · relator: ${d.difusor.nombre} (${d.difusor.cargo})`;
-  $('#dd-cuerpo').innerHTML = `<p><span class="badge ${ETQ_DIF[d.estado][0]}">${ETQ_DIF[d.estado][1]}</span> <b>${fir} de ${act.length}</b> firmaron${d.fVal ? ' · validada ' + esc(d.fVal) : ''}</p>
+  $('#dd-cuerpo').innerHTML = `${difCompleta(d) && puedeVal ? '<p class="aviso-chkd warn" style="margin:0 0 8px">✍ Todos los participantes ya firmaron. Firma con tu firma digital para validar el listado y generar el documento con todas las firmas.</p>' : ''}<p><span class="badge ${ETQ_DIF[d.estado][0]}">${ETQ_DIF[d.estado][1]}</span> <b>${fir} de ${act.length}</b> firmaron${d.fVal ? ' · validada ' + esc(d.fVal) : ''}</p>
     <p class="muted" style="margin:6px 0 0"><b>Contenido:</b> ${esc(d.contenido).replace(/\n/g, '<br>')}</p>${d.obs ? `<p class="muted" style="margin:6px 0 0"><b>Observaciones / compromisos:</b> ${esc(d.obs)}</p>` : ''}
     <p class="muted" style="margin:6px 0 0">${esc([d.area, d.empresa, d.duracion ? d.duracion + ' h' : ''].filter(Boolean).join(' · '))}</p>`;
   $('#dd-part').innerHTML = d.part.map(p => `<li><div class="info"><b>${esc(p.n)}</b><small>${esc(p.c)}${p.f ? ' · firmó ' + esc(p.f.split(' · ')[0]) : ''}</small></div><span class="badge ${p.aus ? 'no' : p.f ? 'ok' : 'warn'}">${p.aus ? 'ausente' : p.f ? 'firmó ✔' : 'pendiente'}</span></li>`).join('');
   $('#dd-ref').innerHTML = htmlReflexion(eventoPorId(d.refId));
   let acc = '';
   if (yo && !yo.f && d.estado === 'EN FIRMA') acc += '<button type="button" class="big primary" id="btn-dd-firmar">✍ Firmar mi asistencia</button>';
-  if (soyDif && d.estado === 'EN FIRMA') acc += `<button type="button" class="big primary" id="btn-dd-validar"${fir ? '' : ' disabled'}>✔ Validar y firmar el listado</button><button type="button" class="big" id="btn-dd-part">👥 Agregar o quitar participantes</button>`;
-  if (d.estado === 'VALIDADA') acc += '<button type="button" class="big" id="btn-dd-pdf">📄 Ver el PDF validado</button>';
+  if (puedeVal && d.estado === 'EN FIRMA') acc += `<button type="button" class="big primary" id="btn-dd-validar"${fir ? '' : ' disabled'}>✔ Validar y firmar el listado</button><button type="button" class="big" id="btn-dd-prev"${fir ? '' : ' disabled'}>📄 Ver el documento con las firmas actuales</button>${soyDif ? '<button type="button" class="big" id="btn-dd-part">👥 Agregar o quitar participantes</button>' : ''}`;
+  if (d.estado === 'VALIDADA') acc += '<button type="button" class="big primary" id="btn-dd-pdf">📄 Ver el PDF validado con las firmas</button><button type="button" class="big" id="btn-dd-desc">⤓ Descargar el PDF</button>';
   if (soyDif && d.estado !== 'ANULADA') acc += '<button type="button" class="big" id="btn-dd-anular">🗑 Anular este listado</button>';
   $('#dd-acc').innerHTML = acc;
 }
@@ -8970,6 +8990,8 @@ $('#dd-acc').addEventListener('click', async (e) => {
   else if (e.target.closest('#btn-dd-validar')) validarDifusion(d.id);
   else if (e.target.closest('#btn-dd-part')) abrirDifNueva({ editar: d.id });
   else if (e.target.closest('#btn-dd-pdf')) verPdfDif(d.id);
+  else if (e.target.closest('#btn-dd-desc')) verPdfDif(d.id, true);
+  else if (e.target.closest('#btn-dd-prev')) previaDif(d.id);
   else if (e.target.closest('#btn-dd-anular')) {
     const m = pedirMotivo('Anular este listado de asistencia' + (d.estado === 'VALIDADA' ? ' YA VALIDADO (los participantes quedarán sin habilitación por este listado)' : '') + '.'); if (!m) return;
     try { await postPersonal({ accion: 'anularDif', token: sesion().token, id: d.id, motivo: m }, 60000); toast('Listado anulado.'); await refrescarDif(); ir('dif'); } catch (err) { $('#dd-error').textContent = 'No se pudo anular: ' + err.message; }
@@ -8997,11 +9019,21 @@ async function validarDifusion(id) {
     const dd = Object.assign({}, d, { part: d.part.map(p => p.f ? p : Object.assign({}, p, { aus: 1 })) });
     const pdf = pdfListado(dd, { firmasImg: d.firmasImg || {}, final: { nombre: fz.nombre, cargo: fz.cargo, rut: fz.rut, fecha: fz.fecha, codigo: firma.codigo, img: fz.img }, ev: eventoPorId(d.refId) }).output('datauristring').split(',')[1];
     const j = await postPersonal({ accion: 'validarDif', token: sesion().token, id: d.id, firma, pdf }, 120000);
-    toast(`Listado validado ✔ · ${j.asistentes} asistente(s) habilitados.`, 4500); await refrescarDif(); if (!$('#v-dif-det').hidden) ir('dif');
+    toast(`Listado validado ✔ · ${j.asistentes} asistente(s) habilitados.`, 4500); await refrescarDif();
+    await ArchDB.put({ fileId: 'chk-dif-' + d.id, blob: await (await fetch('data:application/pdf;base64,' + pdf)).blob(), mime: 'application/pdf', nombre: 'PG-SIG-07-R01_' + d.fecha + '.pdf' }).catch(() => {});
+    if (!$('#v-dif-det').hidden) renderDifDet(); verPdfDif(d.id, false, Object.assign({}, d, { estado: 'VALIDADA' }));   // se abre el documento ya con todas las firmas (desde el visor se puede descargar)
   } catch (err) { $('#dd-error').textContent = 'No se pudo validar: ' + err.message; toast('No se pudo validar: ' + err.message, 5000); }
 }
-async function verPdfDif(id) {
-  const d = difBuscar(id) || (RD.lista || []).find(x => x.id === id) || difFicha[id]; if (!d) return;
+// Vista previa del documento con las firmas que ya hay (antes de validar)
+async function previaDif(id) {
+  const d = difBuscar(id); if (!d) return;
+  if (!window.jspdf) { toast('El generador de PDF aún está cargando.'); return; }
+  await cargarEventos();
+  const dd = Object.assign({}, d, { part: d.part.filter(p => p.f) });
+  verDocumento({ titulo: 'Vista previa · listado con las firmas actuales', codigo: 'PG-SIG-07-R01 · ' + fDMA(d.fecha) + ' · sin validar', blobLocal: pdfListado(dd, { firmasImg: d.firmasImg || {}, preview: true, ev: eventoPorId(d.refId) }).output('blob'), mime: 'application/pdf', nombre: `PG-SIG-07-R01_${d.fecha}_${id}_previa.pdf` });
+}
+async function verPdfDif(id, descargar, obj) {
+  const d = obj || difBuscar(id) || (RD.lista || []).find(x => x.id === id) || difFicha[id]; if (!d) return;
   try {
     let blob = (await ArchDB.get('chk-dif-' + id).catch(() => null) || {}).blob;
     if (!blob) {
@@ -9010,6 +9042,7 @@ async function verPdfDif(id) {
       blob = await (await fetch('data:application/pdf;base64,' + j.data)).blob();
       if (d.estado === 'VALIDADA') await ArchDB.put({ fileId: 'chk-dif-' + id, blob, mime: 'application/pdf', nombre: 'PG-SIG-07-R01_' + d.fecha + '.pdf' }).catch(() => {});
     }
+    if (descargar) { descargarBlob(blob, `PG-SIG-07-R01_${d.fecha}_${id}.pdf`); toast('PDF descargado ✔', 2500); return; }
     verDocumento({ titulo: 'Listado de asistencia · ' + (d.ref || ''), codigo: 'PG-SIG-07-R01 · ' + fDMA(d.fecha), blobLocal: blob, mime: 'application/pdf', nombre: `PG-SIG-07-R01_${d.fecha}_${id}.pdf` });
   } catch (err) { toast('No se pudo abrir el PDF: ' + err.message, 5000); }
 }
@@ -9137,7 +9170,8 @@ function pdfListado(d, opt = {}) {
   const fin = opt.final || {}, rel = d.difusor || {};
   rect(M, y, c1, 13); txt(rel.nombre || '', M + 1.5, y + 5, { pt: 8, mw: c1 - 3 }); rect(M + c1, y, c2, 13); txt(rel.cargo || '', M + c1 + 1.5, y + 5, { pt: 7.5, mw: c2 - 3 });
   rect(M + c1 + c2, y, c3, 13); txt(rut(rel.rut), M + c1 + c2 + 1.5, y + 5, { pt: 8 }); rect(M + c1 + c2 + c3, y, c4, 13);
-  if (fin.img) { img(fin.img, M + c1 + c2 + c3 + 2, y + 0.8, 26, 9); txt((fin.fecha || '') + ' · cód. ' + (fin.codigo || ''), M + c1 + c2 + c3 + 2, y + 11.6, { pt: 4.8 }); }
+  const imgRel = (opt.firmasImg || {})[rel.usuario] || (fin.nombre && fin.nombre === rel.nombre ? fin.img : '');   // firma del relator (si valida otra persona, su firma va en el pie)
+  if (imgRel) { img(imgRel, M + c1 + c2 + c3 + 2, y + 0.8, 26, 9); txt(String(d.fIni || '').split(' · ').slice(-2).join(' · ') || ((fin.fecha || '') + ' · cód. ' + (fin.codigo || '')), M + c1 + c2 + c3 + 2, y + 11.6, { pt: 4.4, mw: c4 - 3 }); }
   y += 13;
   // Contenido y observaciones
   rect(M, y, AN, 22); txt('CONTENIDO PROGRAMÁTICO / TEMAS TRATADOS:', M + 1.5, y + 3.8, { b: 1, pt: 7 }); parrafo(d.contenido, M + 2, y + 8, AN - 4, 7.2, 3.1, 4); y += 22;
@@ -9172,7 +9206,7 @@ function pdfListado(d, opt = {}) {
   [['DURACIÓN (HORAS)', String(d.duracion || ''), 8], ['NÚMERO DE ASISTENTES', String(asist), 70], ['HORAS-PERSONA DE CAPACITACIÓN', dur ? (Math.round(dur * asist * 100) / 100).toString().replace('.', ',') : '', 128]].forEach(([t, v, dx]) => { txt(t, M + dx, y + 4, { b: 1, pt: 6.6 }); const w = doc.getTextWidth(t); rect(M + dx + w + 1.5, y, 14, 6); txt(v, M + dx + w + 8.5, y + 4.2, { pt: 7.5, al: 'center' }); });
   y += 7.5;
   const aus = (d.part || []).filter(p => p.aus);
-  txt(`Documento generado y validado digitalmente en GEO ELEC · ID ${d.id}${fin.fecha ? ' · validado ' + fin.fecha + ' · cód. ' + fin.codigo : ''}${d.fIni ? ' · envío: ' + d.fIni : ''}`, M, Math.min(y + 1, PH - 6), { pt: 5, c: [90, 90, 90], mw: AN });
+  txt(opt.preview ? `VISTA PREVIA SIN VALIDAR · documento con las firmas recibidas hasta ahora · ID ${d.id}` : `Documento generado y validado digitalmente en GEO ELEC · ID ${d.id}${fin.fecha ? ' · validado por ' + (fin.nombre || '') + (fin.cargo ? ' (' + fin.cargo + ')' : '') + ' · ' + fin.fecha + ' · cód. ' + fin.codigo : ''}${d.fIni ? ' · envío: ' + d.fIni : ''}`, M, Math.min(y + 1, PH - 6), { pt: 5, c: opt.preview ? [160, 0, 0] : [90, 90, 90], mw: AN, b: !!opt.preview });
   if (aus.length) txt('Ausentes (no firmaron): ' + aus.map(p => p.n).join(' / '), M, Math.min(y + 4, PH - 3), { pt: 5, c: [90, 90, 90], mw: AN });
   // Anexo: reflexión del día
   const ev = opt.ev;
@@ -9191,7 +9225,7 @@ function pdfListado(d, opt = {}) {
 // ---- Repositorio de difusiones (auditoría) ----
 const RD = { lista: [], filtro: null };
 function abrirRepoDif() {
-  if (!puedeRepoChk()) { toast('El repositorio es para supervisores, jefes, prevención de riesgos y el administrador.'); return; }
+  if (!puedeRepoChk() && !puedeValidarDif()) { toast('El repositorio es para supervisores, jefes, prevención de riesgos y el administrador.'); return; }
   const d30 = new Date(); d30.setDate(d30.getDate() - 30);
   if (!$('#rd-desde').value) $('#rd-desde').value = diaISO(d30); if (!$('#rd-hasta').value) $('#rd-hasta').value = diaISO();
   ir('repodif'); buscarRepoDif();
@@ -9211,7 +9245,7 @@ function renderRepoDif() {
   $('#rd-card').hidden = !RD.lista.length;
   $('#rd-res').innerHTML = `<ul class="lista">${RD.lista.map(x => { const act = x.part.filter(p => !p.aus), fir = act.filter(p => p.f).length;
     return `<li class="con-adm"><div class="info"><b>💬 ${esc(x.ref || 'Reflexión del día')}</b><small>${esc(horaDif(x))} · relator ${esc(x.difusor.nombre)} · ${fir} asistente(s)${x.part.some(p => p.aus) ? ' · ' + x.part.filter(p => p.aus).length + ' ausente(s)' : ''}</small></div>
-      <span class="badge ${ETQ_DIF[x.estado][0]}">${ETQ_DIF[x.estado][1]}</span><div class="acc-adm">${x.pdf ? `<button type="button" class="btn-pdf" data-dif-pdf="${esc(x.id)}">📄 PDF</button>` : ''}</div></li>`; }).join('')}</ul>`;
+      <span class="badge ${ETQ_DIF[x.estado][0]}">${ETQ_DIF[x.estado][1]}</span><div class="acc-adm">${x.pdf ? `<button type="button" class="btn-pdf" data-dif-pdf="${esc(x.id)}">📄 Ver</button><button type="button" data-dif-desc="${esc(x.id)}">⤓ Descargar</button>` : ''}</div></li>`; }).join('')}</ul>`;
 }
 $('#btn-rd-buscar').addEventListener('click', buscarRepoDif);
 $('#btn-rd-zip').addEventListener('click', async () => {
