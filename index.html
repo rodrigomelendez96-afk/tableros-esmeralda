@@ -1651,7 +1651,7 @@ const CONFIG = {
 };
 
 // Versión visible al pie de la pantalla de inicio (sirve para confirmar que el teléfono tiene la última)
-const VERSION_APP = 'v50 · 13-11-2026';
+const VERSION_APP = 'v51 · 13-11-2026';
 const NIVELES = ['SNV', 'Producción', 'Acarreo', 'Hundimiento', 'UCL'];
 const NIVEL_ETQ = { SNV: 'SNV · Sub nivel ventilación', UCL: 'UCL' };
 const EMPRESA = 'GEOVITA';
@@ -2528,9 +2528,11 @@ function guardarFichaPropia(usuario, f) { if (f) ls.set('fichaPropia', Object.as
 // Consulta al servidor con el modo administrador o con la sesión de la persona
 async function getFichaServ(params, ms = 30000) {
   const q = Object.assign({ clave: CONFIG.CLAVE }, params);
+  // Si el equipo está en modo administrador Y hay una sesión de usuario, se envían ambos: varias consultas (difusiones, checklists, ficha propia)
+  // identifican a la persona por su token, y sin él el servidor respondía "Sesión vencida" aunque la sesión estuviera vigente.
   if (esAdmin()) q.claveAdmin = ls.get('claveAdmin', '');
-  else if (sesionActiva()) q.token = sesion().token;
-  else throw new Error('Ingresa con tu usuario para ver la ficha y sus documentos.');
+  if (sesionActiva()) q.token = sesion().token;
+  if (!q.claveAdmin && !q.token) throw new Error('Ingresa con tu usuario para ver la ficha y sus documentos.');
   const r = await fetchT(CONFIG.SCRIPT_URL + '?' + Object.entries(q).map(([k, v]) => k + '=' + encodeURIComponent(v)).join('&'), {}, ms);
   const j = await r.json(); if (!j.ok) throw new Error(j.error || 'error');
   return j;
@@ -8883,7 +8885,7 @@ function refrescarDif() {
       if (nuevas.length) { ls.set('difAvisadas', av.concat(nuevas.map(d => d.id)).slice(-60)); toast('✍ Todos firmaron tu listado de asistencia: firma para validarlo.', 6000); }
       if (!$('#v-dif').hidden) renderDif(); if (!$('#v-dif-det').hidden && DD.id) renderDifDet();
       return true;
-    } catch (e) { ls.set('difConsulta', { hora: new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }), error: e.message || 'sin conexión con el servidor' }); if (!$('#v-dif').hidden) renderDif(); return false; } finally { refrescandoDif = null; }
+    } catch (e) { ls.set('difConsulta', { hora: new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }), error: /Sesi[oó]n vencida/i.test(e.message || '') ? 'tu sesión caducó en el servidor: cierra sesión y vuelve a ingresar con señal' : (e.message || 'sin conexión con el servidor') }); if (!$('#v-dif').hidden) renderDif(); return false; } finally { refrescandoDif = null; }
   })();
   return refrescandoDif;
 }
