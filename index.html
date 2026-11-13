@@ -951,7 +951,9 @@
       <div id="dif-estado"></div>
     </div>
     <div class="card" id="dif-dadas-card" hidden>
-      <h3>📣 Mis difusiones (últimos días)</h3>
+      <h3>📣 Difusiones por enviar, firmar y validar</h3>
+      <p class="muted" id="dif-consulta" style="margin:0 0 6px"></p>
+      <button type="button" class="big" id="btn-dif-actualizar" style="margin-bottom:6px">🔄 Actualizar ahora</button>
       <div id="dif-dadas"></div>
       <button type="button" class="big primary" id="btn-dif-nueva" style="margin-top:10px">➕ Nueva reflexión y listado de asistencia</button>
       <button type="button" class="big" id="btn-dif-repo">📚 Repositorio de difusiones (auditoría)</button>
@@ -1649,7 +1651,7 @@ const CONFIG = {
 };
 
 // Versión visible al pie de la pantalla de inicio (sirve para confirmar que el teléfono tiene la última)
-const VERSION_APP = 'v49 · 13-11-2026';
+const VERSION_APP = 'v50 · 13-11-2026';
 const NIVELES = ['SNV', 'Producción', 'Acarreo', 'Hundimiento', 'UCL'];
 const NIVEL_ETQ = { SNV: 'SNV · Sub nivel ventilación', UCL: 'UCL' };
 const EMPRESA = 'GEOVITA';
@@ -8855,15 +8857,16 @@ const contenidoReflexion = (ev) => ev ? `REFLEXIÓN DEL DÍA: ${ev.titulo}.\nEVE
 // Flujo: el supervisor/difusor arma el listado con el personal de la app y lo envía firmado → cada participante lee la reflexión y firma →
 // el difusor valida con su firma final (PDF con todas las firmas) → los que firmaron quedan habilitados para mantener e inspeccionar ese día.
 const EXIGIR_DIF = () => ls.get('exigirDif', CONFIG.EXIGIR_DIFUSION !== false) !== false;
-const difHoy = () => { const d = ls.get('difHoy', null), s = sesion(); return d && s && d.fecha === diaISO() && d.usuario === s.usuario ? d : null; };
+const difHoy = () => { const d = ls.get('difHoy', null), s = sesion(); return d && s && d.fecha === diaISO() && lcU(d.usuario) === lcU(s.usuario) ? d : null; };
 const difusionLista = () => !EXIGIR_DIF() || !!(difHoy() && difHoy().listo);
-const difEstado = () => { const e = ls.get('difEstado', null), s = sesion(); return e && s && e.usuario === s.usuario ? e : null; };
+const difEstado = () => { const e = ls.get('difEstado', null), s = sesion(); return e && s && lcU(e.usuario) === lcU(s.usuario) ? e : null; };
 const puedeValidarDif = () => { const p = perfilSesion() || {}; return CARGOS_REVISAN.test(p.cargo || '') || p.grupo === 'Administrativo'; };
 const difPorValidar = () => { const e = difEstado(); return e && puedeValidarDif() ? (e.dadas || []).filter(d => d.estado === 'EN FIRMA' && (d.part || []).some(p => p.f && !p.aus)) : []; };
 // Listado completo: todos los participantes ya firmaron → vuelve a quien lo difunde para su firma de validación
 const difCompleta = (d) => { const a = (d.part || []).filter(p => !p.aus); return d.estado === 'EN FIRMA' && a.length > 0 && a.every(p => p.f); };
-const difParaMiFirma = () => { const e = difEstado(), yo = (sesion() || {}).usuario; return e ? (e.dadas || []).filter(d => d.difusor.usuario === yo && difCompleta(d)) : []; };
-const yoEnDif = (d) => (d.part || []).find(p => p.u === (sesion() || {}).usuario && !p.aus);
+const difParaMiFirma = () => { const e = difEstado(), yo = lcU((sesion() || {}).usuario); return e ? (e.dadas || []).filter(d => lcU(d.difusor.usuario) === yo && difCompleta(d)) : []; };
+const lcU = (u) => String(u || '').toLowerCase();
+const yoEnDif = (d) => (d.part || []).find(p => lcU(p.u) === lcU((sesion() || {}).usuario) && !p.aus);
 const difPorFirmar = () => { const e = difEstado(); return e ? (e.mias || []).filter(d => d.estado === 'EN FIRMA' && yoEnDif(d) && !yoEnDif(d).f) : []; };
 const difBuscar = (id) => { const e = difEstado() || {}; return (e.dadas || []).concat(e.mias || []).find(d => d.id === id); };
 let refrescandoDif = null;
@@ -8873,14 +8876,14 @@ function refrescarDif() {
   refrescandoDif = (async () => {
     try {
       const j = await getFichaServ({ accion: 'difusiones', dias: 3 }, 45000), s = sesion();
-      ls.set('difEstado', Object.assign({}, j, { usuario: s.usuario }));
+      ls.set('difEstado', Object.assign({}, j, { usuario: s.usuario })); ls.set('difConsulta', { hora: new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }), error: '' });
       ls.set('difHoy', { fecha: j.hoy || diaISO(), usuario: s.usuario, listo: !!j.listo, id: j.listoId || '' });
       renderTileDif(); renderAvisoDif(); renderCardDif();
       const av = ls.get('difAvisadas', []), nuevas = difParaMiFirma().filter(d => !av.includes(d.id));
       if (nuevas.length) { ls.set('difAvisadas', av.concat(nuevas.map(d => d.id)).slice(-60)); toast('✍ Todos firmaron tu listado de asistencia: firma para validarlo.', 6000); }
       if (!$('#v-dif').hidden) renderDif(); if (!$('#v-dif-det').hidden && DD.id) renderDifDet();
       return true;
-    } catch (e) { return false; } finally { refrescandoDif = null; }
+    } catch (e) { ls.set('difConsulta', { hora: new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }), error: e.message || 'sin conexión con el servidor' }); if (!$('#v-dif').hidden) renderDif(); return false; } finally { refrescandoDif = null; }
   })();
   return refrescandoDif;
 }
@@ -8943,7 +8946,8 @@ function renderDif() {
     : '<p class="muted">Aún no te incluyen en un listado de asistencia de hoy. Pide a tu supervisor que haga la reflexión del día; te aparecerá aquí para firmar.</p>';
   $('#dif-estado').innerHTML = h;
   // Difusor
-  const rev = puedeValidarDif(), crea = CARGOS_REVISAN.test(s.perfil.cargo || '');
+  const dc = ls.get('difConsulta', null); $('#dif-consulta').innerHTML = dc ? (dc.error ? `<span style="color:#8A1C24">⚠ No se pudo consultar al servidor (${esc(dc.hora)}): ${esc(dc.error)}</span>` : `Última consulta al servidor: ${esc(dc.hora)}`) : '';
+  const rev = puedeValidarDif(), crea = rev;
   $('#dif-dadas-card').hidden = !rev; $('#btn-dif-nueva').hidden = !crea;
   if (rev) {
     const lista = (e.dadas || []).filter(d => d.estado !== 'ANULADA');
@@ -8963,13 +8967,19 @@ document.addEventListener('click', (e) => {
   const pv = e.target.closest('[data-dif-prev]'); if (pv) { previaDif(pv.dataset.difPrev); return; }
 });
 $('#btn-dif-nueva').addEventListener('click', () => abrirDifNueva({}));
+$('#btn-dif-actualizar').addEventListener('click', async () => { const b = $('#btn-dif-actualizar'); b.disabled = true; b.textContent = 'Consultando…'; await refrescarDif(); b.disabled = false; b.textContent = '🔄 Actualizar ahora'; renderDif(); });
+// Las imágenes de las firmas se piden solo al ver el documento o validar (así la consulta periódica es liviana)
+async function cargarFirmasDif(d) {
+  if (d.firmasImg && Object.keys(d.firmasImg).length) return d.firmasImg;
+  const j = await getFichaServ({ accion: 'firmasDif', id: d.id }, 60000); d.firmasImg = j.firmas || {}; return d.firmasImg;
+}
 $('#btn-dif-repo').addEventListener('click', () => abrirRepoDif());
 // ---- Detalle (para firmar o administrar) ----
 const DD = { id: '' };
 function abrirDifDet(id) { DD.id = id; $('#dd-error').textContent = ''; cargarEventos().then(renderDifDet); renderDifDet(); ir('dif-det'); }
 function renderDifDet() {
   const d = difBuscar(DD.id); if (!d) { $('#dd-cuerpo').innerHTML = '<p class="muted">No se encontró la difusión.</p>'; return; }
-  const yo = yoEnDif(d), soyDif = d.difusor.usuario === (sesion() || {}).usuario, puedeVal = soyDif || puedeValidarDif(), act = d.part.filter(p => !p.aus), fir = act.filter(p => p.f).length;
+  const yo = yoEnDif(d), soyDif = lcU(d.difusor.usuario) === lcU((sesion() || {}).usuario), puedeVal = soyDif || puedeValidarDif(), act = d.part.filter(p => !p.aus), fir = act.filter(p => p.f).length;
   $('#dd-titulo').textContent = '🧾 Listado de asistencia';
   $('#dd-sub').textContent = `${horaDif(d)} · relator: ${d.difusor.nombre} (${d.difusor.cargo})`;
   $('#dd-cuerpo').innerHTML = `${difCompleta(d) && puedeVal ? '<p class="aviso-chkd warn" style="margin:0 0 8px">✍ Todos los participantes ya firmaron. Firma con tu firma digital para validar el listado y generar el documento con todas las firmas.</p>' : ''}<p><span class="badge ${ETQ_DIF[d.estado][0]}">${ETQ_DIF[d.estado][1]}</span> <b>${fir} de ${act.length}</b> firmaron${d.fVal ? ' · validada ' + esc(d.fVal) : ''}</p>
@@ -9016,6 +9026,7 @@ async function validarDifusion(id) {
   const firma = { fecha: fz.fecha, iso: fz.iso, codigo: await codigoFirma(['DIFVAL', d.id, fz.usuario, fz.iso, fir.map(p => p.u).join(',')]) };
   await cargarEventos();
   try {
+    await cargarFirmasDif(d);
     const dd = Object.assign({}, d, { part: d.part.map(p => p.f ? p : Object.assign({}, p, { aus: 1 })) });
     const pdf = pdfListado(dd, { firmasImg: d.firmasImg || {}, final: { nombre: fz.nombre, cargo: fz.cargo, rut: fz.rut, fecha: fz.fecha, codigo: firma.codigo, img: fz.img }, ev: eventoPorId(d.refId) }).output('datauristring').split(',')[1];
     const j = await postPersonal({ accion: 'validarDif', token: sesion().token, id: d.id, firma, pdf }, 120000);
@@ -9029,6 +9040,7 @@ async function previaDif(id) {
   const d = difBuscar(id); if (!d) return;
   if (!window.jspdf) { toast('El generador de PDF aún está cargando.'); return; }
   await cargarEventos();
+  try { await cargarFirmasDif(d); } catch (e) { toast('No se pudieron cargar las firmas: ' + e.message, 5000); return; }
   const dd = Object.assign({}, d, { part: d.part.filter(p => p.f) });
   verDocumento({ titulo: 'Vista previa · listado con las firmas actuales', codigo: 'PG-SIG-07-R01 · ' + fDMA(d.fecha) + ' · sin validar', blobLocal: pdfListado(dd, { firmasImg: d.firmasImg || {}, preview: true, ev: eventoPorId(d.refId) }).output('blob'), mime: 'application/pdf', nombre: `PG-SIG-07-R01_${d.fecha}_${id}_previa.pdf` });
 }
@@ -9053,7 +9065,7 @@ const ACT_TIPOS = ['Curso interno', 'Curso externo', 'Taller o práctica', 'Char
 async function abrirDifNueva(opt = {}) {
   if (!sesionActiva()) { requiereLogin(() => abrirDifNueva(opt), 'Para hacer la reflexión y el listado de asistencia'); return; }
   const per = perfilSesion();
-  if (!CARGOS_REVISAN.test(per.cargo || '')) { toast('Solo un supervisor, jefe o prevencionista puede hacer la reflexión y el listado de asistencia.', 4500); return; }
+  if (!puedeValidarDif()) { toast('Solo un supervisor, jefe, prevencionista o personal Administrativo puede hacer la reflexión y el listado de asistencia.', 4500); return; }
   await cargarEventos(); await cargarPersonalGrupos();
   const ya = opt.editar ? difBuscar(opt.editar) : null, ev = ya ? eventoPorId(ya.refId) : eventoDelDia(diaISO());
   DN = { edit: ya ? ya.id : '', ev, sel: new Set(ya ? ya.part.filter(p => !p.aus).map(p => p.u) : []), firmados: new Set(ya ? ya.part.filter(p => p.f).map(p => p.u) : []),
