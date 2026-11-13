@@ -2,8 +2,7 @@
 // Si cambias index.html, sube el número de versión para que los teléfonos actualicen.
 const VERSION = 'tableros-esm-v47';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png',
-  './favicon.png', './logo-globo.png',
-  './Eventos_Significativos_DET.pdf', './logo-geovita.png',
+  './favicon.png', './logo-globo.png', './logo-geovita.png',
   './lib/jsQR.js', './lib/qrcode.js', './lib/jspdf.umd.min.js',
   './lib/pdf.min.js', './lib/pdf.worker.min.js'];
 
@@ -11,6 +10,7 @@ self.addEventListener('install', (e) => {
   e.waitUntil((async () => {
     const c = await caches.open(VERSION);
     await c.addAll(SHELL);
+    await c.add('./lib/eventos.json').catch(() => {});   // reflexiones del día (eventos significativos): disponibles sin señal
     await c.add('./planos-ref/index.json').catch(() => {});   // opcional: si aún no se sube la carpeta, la app igual se instala
     // Planos eléctricos (vectoriales) disponibles sin señal en la mina
     try {
